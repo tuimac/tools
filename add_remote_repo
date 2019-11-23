@@ -19,6 +19,7 @@ fi
 echo -en "Comment below\n> "
 read COMMENT
 
+#git reset --hard "{URL}" master
 #git rm -r --cached .
 git add .
 git commit -m "${COMMENT}"
