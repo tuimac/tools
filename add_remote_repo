@@ -1,6 +1,6 @@
 #!/bin/bash
 
-URL="https://github.com/tuimac/Tools.git"
+URL="https://github.com/tuimac/tools.git"
 
 [[ ! -e .git ]] && git init
 
