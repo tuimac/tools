@@ -1,3 +1,9 @@
+#This script back up kvm image and take snapshot.
+#You can back up automatically if you execute this script by crond.
+#Caution:
+#If you take daily back up by this script, you have to consider capacity of volume because KVM images are so large.
+#Only take daily snapshot, then you can comment out following function :backup_image()
+
 #!/bin/bash
 
 #Initial variables
