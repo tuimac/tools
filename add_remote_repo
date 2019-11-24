@@ -21,8 +21,8 @@ USERNAME=`git config --global --get user.name`
 echo -en "Comment below\n> "
 read COMMENT
 
-#git reset --hard "{URL}" master
-#git rm -r --cached .
+git reset --hard "${URL}" master
+git rm -r --cached .
 git add .
 git commit -m "${COMMENT}"
 git remote add origin "${URL}"
