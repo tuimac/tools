@@ -2,12 +2,14 @@
 
 URL="https://github.com/tuimac/tools.git"
 
-[[ ! -e .git ]] && git init
+EMAIL=`git config --global --get user.email`
+USERNAME=`git config --global --get user.name`
 
-if [ "$1" = "" ]; then
-    echo -e "Select files.\nExit."
-    exit 1
-fi
+[[ $EMAIL = "" ]] && git config --global user.email 'tuimac.devadm01@gmail.com'
+[[ $USERNAME = "" ]] && git config --global user.name 'tuimac'
+
+[[ ! -e .git ]] && git init
+[[ "$1" = "" ]] && { echo -e "Select files.\nExit."; exit 1; }
 #    echo -en "Add all files to repository.\nIs that OK?[Y/N]> "
 #    read ANSWER
 #    [[ ! $ANSWER = "Y" ]] && { exit 1; }
