@@ -18,8 +18,10 @@ USERNAME=`git config --global --get user.name`
 #    git add "$1"
 #fi
 
-echo -en "Comment below\n> "
-read COMMENT
+#echo -en "Comment below\n> "
+#read COMMENT
+
+COMMENT="upload"
 
 #git reset --hard "{URL}" master
 #git rm -r --cached .
