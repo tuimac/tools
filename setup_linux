@@ -3,5 +3,3 @@
 localectl set-keymap jp106
 localectl set-keymap jp-OADG109A
 localectl set-locale LANG=ja_JP.utf8
-
-
