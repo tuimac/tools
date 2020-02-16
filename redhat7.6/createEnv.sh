@@ -61,7 +61,7 @@ function vimrc(){
         autocmd FileType yaml       setlocal sw=2 sts=2 ts=2 et
     endif
     " > $VIMRC
-    sudo cp $VIMRC $ROOT_VIMRC
+    [[ ! -e $ROOT_VIMRC ]] && { sudo cp $VIMRC $ROOT_VIMRC; }
 }
 
 function redhat7_6_mount(){
@@ -82,7 +82,7 @@ function redhat7_6_mount(){
     sudo echo $uuid >> $fstab
     sudo umount $target
     sudo mount -a
-    if [ `df -h | grep $device` == "" ]; then
+    if [ "$(df -h | grep $device)" != "" ]; then
         echo "Completed."
     else
         echo "You didn't mount on properly."
