@@ -1,5 +1,0 @@
-#!/bin/bash
-
-docker network create --driver overlay --subnet 10.10.0.0/30 --gateway 10.10.0.1 nginx
-docker network create --driver overlay --subnet 10.10.0.4/30 --gateway 10.10.0.5 django
-docker network create --driver overlay --subnet 10.10.0.8/30 --gateway 10.10.0.9 mysql
