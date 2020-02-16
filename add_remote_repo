@@ -27,7 +27,6 @@ function readComment(){
 }
 
 function main(){
-	COMMENT="uploaded"
     URL="https://github.com/tuimac/tools.git"   
     
     checkArg $1
@@ -36,10 +35,10 @@ function main(){
 	readComment
 
 	[[ ! -e .git ]] && git init
-	git remote rm origin
-	git reset --hard "{URL}" master
-	git rm -r --cached .
-	git add .
+	#git remote rm origin
+	#git reset --hard "{URL}" master
+	#git rm -r --cached .
+	git add $1
 	git commit -m "${COMMENT}"
 	git remote add origin "${URL}"
 	git pull origin master
