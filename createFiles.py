@@ -2,18 +2,14 @@
 
 from multiprocessing import Process, cpu_count
 from random import gauss
-<<<<<<< HEAD
-from os import statvfs, urandom, mkdir
-=======
-from os import statvfs, urandom
->>>>>>> 5062e7cc2492bdc19dee422c331464f8807908ae
+from os import statvfs, urandom, mkdir, path
 import cPickle
 
 def writeObject(filepath):
     # Unit is byte.
     data_size = 104857600
     f = open(filepath, 'wb')
-    cPickle.dump(urandom(data_size))
+    cPickle.dump(urandom(data_size), f)
     f.close()
 
 def manageWrite(basename):
@@ -21,7 +17,7 @@ def manageWrite(basename):
     fileindex = 1
     stat = statvfs(dir)
     dir = dir + basename + "dir/"
-    mkdir(dir)
+    if path.exists(dir): mkdir(dir)
 
     while True:
         free_space = stat.f_frsize * stat.f_blocks
