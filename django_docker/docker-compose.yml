@@ -1,0 +1,40 @@
+version: '3'
+
+services:
+    nginx:
+        build: ./nginx
+        container_name: nginx
+        ports:
+            - '8888:80'
+            - '4444:443'
+        volumes:
+            - "./nginx/volume:/var/www/html"
+        depends_on:
+            - django
+        tty: true
+        stdin_open: true
+    django:
+        build: ./django
+        container_name: django
+        command: uwsgi --plugin python,http mysite.ini
+        entrypoint: /root/entrypoint.sh
+        volumes:
+            - "./django/volume:/tmp/req"
+        tty: true
+        stdin_open: true
+    mysql:
+        build: ./mysql
+        container_name: mysql
+        environment:
+            #Change this infomation when you use this...
+            MYSQL_USER: test
+            MYSQL_ROOT_PASSWORD: password
+            MYSQL_PASSWORD: password
+            MYSQL_DATABASE: django
+        volumes:
+            - "./mysql/volume:/var/log/mysql"
+        tty: true
+networks:
+    default:
+        external:
+            name: br0
