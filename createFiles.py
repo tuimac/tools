@@ -2,7 +2,11 @@
 
 from multiprocessing import Process, cpu_count
 from random import gauss
+<<<<<<< HEAD
 from os import statvfs, urandom, mkdir
+=======
+from os import statvfs, urandom
+>>>>>>> 5062e7cc2492bdc19dee422c331464f8807908ae
 import cPickle
 
 def writeObject(filepath):
