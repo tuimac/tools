@@ -7,7 +7,6 @@ import traceback
 import re
 from collections import deque
 
-
 class App:
     def calc(formula):
         try:
