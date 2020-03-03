@@ -10,8 +10,9 @@ def writeObject(filepath):
     # Unit is byte.
     data_size = 1048576
     with open(filepath, 'wb') as f:
-        letters = list(ascii_letters + digits)
-        cPickle.dump(''.join(choice(letters) for _ in xrange(data_size)), f)
+        #letters = list(ascii_letters + digits)
+        #cPickle.dump(''.join(choice(letters) for _ in xrange(data_size)), f)
+        cPickle.dump(urandom(data_size), f)
 
 def manageWrite(basename):
     dir = "/data/"
