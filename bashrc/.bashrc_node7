@@ -105,5 +105,5 @@ if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
     . /etc/bash_completion
 fi
 
-cat /home/tuidev/.login_screen
 uptime
+alias vi="vim"

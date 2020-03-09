@@ -7,11 +7,10 @@ import traceback
 import re
 from collections import deque
 
-
 class App:
     def calc(formula):
         try:
-            def operation(operator, x, y):
+            def operation(operator, x=0, y=0):
                 x = int(x)
                 y = int(y)
                 result = {
@@ -24,7 +23,7 @@ class App:
 
             if type(formula) is list:
                 formula = "".join(formula)
-            if re.match("[^\+\-\*\/\(\)|\d+]", formula):
+            if re.match("[^\+\-\*\/\(\)|^\d+]", formula):
                 return "ERROR"
             formula = re.findall("([\+\-\*\/\(\)]|\d+)", formula)
             numbers = deque()
@@ -33,6 +32,8 @@ class App:
             length = len(formula)
 
             while i < length:
+                print(numbers)
+                print(operators)
                 c = formula[i]
                 if c == "(":
                     numbers.append(App.calc(formula[i + 1:]))
@@ -42,7 +43,15 @@ class App:
                 elif c == ")":
                     break
                 elif re.match("[*/]", c):
-                    numbers.append(operation(c, numbers.pop(), formula[i + 1]))
+                    y = 0
+                    if formula[i + 1] == "(":
+                        y = App.calc(formula[i + 1:])
+                        for c in formula[i:]:
+                            if c == ")":break
+                            else: i += 1
+                    else:
+                        y = formula[i + 1]
+                    numbers.append(operation(c, numbers.pop(), y))
                     i = i + 1
                 elif re.match("[+-]", c):
                     operators.append(c)
@@ -51,7 +60,11 @@ class App:
                 i += 1
 
             while operators:
-                numbers.append(operation(operators.pop(),numbers.pop(), numbers.pop()))
+                if numbers:
+                    x = numbers.pop()
+                if numbers:
+                    y = numbers.pop()
+                numbers.append(operation(operators.pop(), x, y))
 
             answer = numbers.pop()
             if int(answer) == answer:
@@ -66,7 +79,7 @@ class ServerHandler(BaseHTTPRequestHandler):
         param = urlparse(self.path)
         query = param.query
 
-        body = App.calc(query)
+        body = str(App.calc(query)) + "\n"
 
         self.send_response(200)
         self.send_header("Content-type", "text/html; charset=utf-8")
