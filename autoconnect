@@ -1,0 +1,48 @@
+#!/bin/bash
+# This is the script that your linux connect to deviec via bluetooth
+# You can use this script for connecting to your target device automatically.
+#
+# ~How To Use~
+# Add macaddress of your device to "TARGET" list then save it, run it.
+# 
+############################################
+# Add macaddresses of target devices.
+TARGET=(
+    "FF:FF:FF:FF:FF:FF"
+)
+
+# Direct log file location.
+LOG="/opt/bluetooth/autoconnect.log"
+############################################
+
+# Each connecting action
+function connect(){
+    local macaddress=$1
+    local exctime=`date`
+    expect -c "
+    set timeout 5
+    spawn bluetoothctl
+    expect \"*]# \"
+    send \"connect ${macaddress}\r\"
+    expect \"Connection successful\"
+    send \"exit 0\r\"
+    " > /dev/null
+    if [ $? -ne 0 ]; then
+        echo -en ${exctime}" Connect to "${macaddress}" has been failed.\n" >> ${LOG}
+        return 1
+    else
+        echo -en ${exctime}" Connect to "${macaddress}" has been successed.\n" >> ${LOG}
+        return 0
+    fi
+}
+
+# Run connect() fuction by each devices
+function main(){
+    local log=
+    for device in ${TARGET[@]}; do
+        connect $device
+    done
+}
+
+# Call main() function
+main

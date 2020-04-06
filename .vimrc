@@ -1,9 +1,10 @@
 colorscheme koehler
 syntax on
-set nocompatible
-set backspace=indent,eol,start
 filetype plugin indent on
 syntax enable
+nnoremap <Esc><Esc> :nohlsearch<CR><ESC>
+set nocompatible
+set backspace=indent,eol,start
 set clipboard=unnamed,autoselect
 set number
 set listchars=tab:^\ ,trail:~
@@ -13,19 +14,17 @@ set softtabstop=4
 set shiftwidth=4
 set autoindent
 set ruler
-nnoremap <Esc><Esc> :nohlsearch<CR><ESC>
 set ttimeoutlen=10
 set hlsearch
 set ignorecase
 set smartcase
 set wildmenu
-set directory=~/.vim/swap
+set noswapfile
 set backup
 set backupdir=~/.vim/backup
 set undofile
 set undodir=~/.vim/undo
 set encoding=utf-8
-
 set statusline=%#LineNr#
 set statusline+=%F
 set statusline+=%#Cursor#
@@ -37,6 +36,7 @@ set statusline+=\[%{&fileformat}\]
 set statusline+=\ %p%%
 set statusline+=\ %l:%c
 set laststatus=2
+set paste
 
 if has("autocmd")
     filetype plugin on
@@ -45,10 +45,10 @@ if has("autocmd")
     "sts=shiftwidth
     "ts=tabstop
     "et=expandtab
+	autocmd BufNewFile,BufRead *.sh setfiletype bash
 
     autocmd FileType c          setlocal sw=4 sts=4 ts=4 et
     autocmd FileType html       setlocal sw=2 sts=2 ts=2 et
-    autocmd FileType xml        setlocal sw=2 sts=2 ts=2 et
     autocmd FileType ruby       setlocal sw=4 sts=4 ts=4 et
     autocmd FileType js         setlocal sw=4 sts=4 ts=4 et
     autocmd FileType zsh        setlocal sw=4 sts=4 ts=4 et
@@ -61,4 +61,8 @@ if has("autocmd")
     autocmd FileType sass       setlocal sw=4 sts=4 ts=4 et
     autocmd FileType javascript setlocal sw=4 sts=4 ts=4 et
     autocmd FileType yaml       setlocal sw=2 sts=2 ts=2 et
+    autocmd FileType python     setlocal sw=4 sts=4 ts=4 et
+    autocmd FileType bash		setlocal sw=4 sts=4 ts=4 et
 endif
+
+autocmd BufWritePre * :%s/\s\+$//ge:
