@@ -36,7 +36,6 @@ set statusline+=\[%{&fileformat}\]
 set statusline+=\ %p%%
 set statusline+=\ %l:%c
 set laststatus=2
-set paste
 
 if has("autocmd")
     filetype plugin on
