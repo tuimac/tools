@@ -36,7 +36,6 @@ set statusline+=\[%{&fileformat}\]
 set statusline+=\ %p%%
 set statusline+=\ %l:%c
 set laststatus=2
-set paste
 
 if has("autocmd")
     filetype plugin on
@@ -64,5 +63,3 @@ if has("autocmd")
     autocmd FileType python     setlocal sw=4 sts=4 ts=4 et
     autocmd FileType bash		setlocal sw=4 sts=4 ts=4 et
 endif
-
-autocmd BufWritePre * :%s/\s\+$//ge:
