@@ -27,8 +27,8 @@
 
 ########### Variables ###########
 SUFFIX="autosnapshot"
-DOMAINS=("kubernetes")
-GENERATIONS=(100)
+DOMAINS=("test1" "test2")
+GENERATIONS=(5 10)
 #################################
 
 ######################################
