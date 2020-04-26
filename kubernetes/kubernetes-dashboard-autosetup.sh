@@ -111,6 +111,7 @@ kubectl taint nodes ${masterNodeName} node-role.kubernetes.io/master:NoSchedule-
 MANIFEST=$HOME/metrics-server/deploy/1.8+/metrics-server-deployment.yaml
 
 ## Edit metrics-server deployment manifest to run metrics server pod properly.
+## https://github.com/kubernetes-sigs/metrics-server/issues/131
 git clone -b release-0.3 https://github.com/kubernetes-sigs/metrics-server.git
 sed -i 32d $MANIFEST
 sed -i 32i'\        image: k8s.gcr.io/metrics-server:v0.3.6' $MANIFEST
@@ -127,6 +128,7 @@ openssl x509 -req -sha256 -days 365 -in certs/dashboard.csr -signkey certs/dashb
 
 # Deploy Kubernetes Dashboard.
 # If you want to change Kubernetes Dashboard's port, you can change port below "nodePort:" value.
+# https://devblogs.microsoft.com/premier-developer/bypassing-authentication-for-the-local-kubernetes-cluster-dashboard/
 curl -O https://raw.githubusercontent.com/kubernetes/dashboard/v2.0.0-beta8/aio/deploy/recommended.yaml
 sed -i 40i'\  type: NodePort' recommended.yaml
 sed -i 44i'\      nodePort: 30000' recommended.yaml
@@ -145,6 +147,7 @@ DUMPFILE="secret.yaml"
 ## Kubernetes Dashboard. So delete secret and recreate secret correspond to self-signed certification,
 ## then generate keys and certification infomation from that secret.
 ## Finally that information insert into Kubernetes Dashboard's manifest then reflect to environment.
+## https://github.com/kubernetes/dashboard/issues/3804
 kubectl -n kubernetes-dashboard delete secret kubernetes-dashboard-certs
 kubectl -n kubernetes-dashboard create secret generic kubernetes-dashboard-certs --from-file=$HOME/certs
 kubectl -n kubernetes-dashboard get secret kubernetes-dashboard-certs -oyaml > $DUMPFILE
