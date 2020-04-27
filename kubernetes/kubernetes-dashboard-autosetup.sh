@@ -185,5 +185,5 @@ EOF"
 kubectl delete -f $ROLEFILE
 kubectl apply -f $ROLEFILE
 
-# Starting Kubernetes Dashboard take some time so sleep 10 seconds.
+# Becouse starting Kubernetes Dashboard take time.
 sleep 10
