@@ -17,21 +17,22 @@
 # OS requirements is below:
 # OS : CentOS7.6
 
-# The premise is run this script by except root user.
+# The premise of run this script is exec this script by except root user.
 [[ $USER == "root" ]] && { echo "Don't run this script by root user."; exit 1; }
 
 # Initialized variables.
 ipaddress=`hostname -i`
 masterNodeName=`hostname -s`
 
-# Disable swap.
+# Kubernetes v1.18+ need swap off.
+# https://github.com/kubernetes/kubernetes/issues/53533
 sudo swapoff -a
 sudo sed -i '/ swap / s/^/#/' /etc/fstab
 
 # Install docker and some other stuff
 sudo yum install -y yum-utils device-mapper-persistent-data lvm2 docker git
 
-# To set up docker
+# Set up docker environment.
 sudo usermod -aG docker $(id -g)
 sudo systemctl enable docker
 sudo systemctl start docker
