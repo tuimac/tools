@@ -1,6 +1,8 @@
 colorscheme koehler
 syntax on
-filetype plugin indent on
+filetype on
+filetype plugin on
+filetype indent on
 syntax enable
 nnoremap <Esc><Esc> :nohlsearch<CR><ESC>
 set nocompatible
@@ -21,9 +23,9 @@ set smartcase
 set wildmenu
 set noswapfile
 set backup
-set backupdir=~/.vim/backup
+set backupdir=/etc/vim/backup
 set undofile
-set undodir=~/.vim/undo
+set undodir=/etc/vim/undo
 set encoding=utf-8
 set statusline=%#LineNr#
 set statusline+=%F
@@ -38,13 +40,7 @@ set statusline+=\ %l:%c
 set laststatus=2
 
 if has("autocmd")
-    filetype plugin on
-    filetype indent on
-    "sw=softtabstop
-    "sts=shiftwidth
-    "ts=tabstop
-    "et=expandtab
-    autocmd BufNewFile,BufRead *.sh setfiletype bash
+        autocmd BufNewFile,BufRead *.sh setfiletype bash
 
     autocmd FileType c          setlocal sw=4 sts=4 ts=4 et
     autocmd FileType html       setlocal sw=2 sts=2 ts=2 et
@@ -60,5 +56,7 @@ if has("autocmd")
     autocmd FileType javascript setlocal sw=4 sts=4 ts=4 et
     autocmd FileType yaml       setlocal sw=2 sts=2 ts=2 et
     autocmd FileType python     setlocal sw=4 sts=4 ts=4 et
-    autocmd FileType bash		setlocal sw=4 sts=4 ts=4 et
+    autocmd FileType bash               setlocal sw=4 sts=4 ts=4 et
+    au filetype html        set omnifunc=htmlcomplete#CompleteTags
+    au filetype xml         set omnifunc=xmlcomplete#CompleteTags
 endif
