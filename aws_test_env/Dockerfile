@@ -10,7 +10,7 @@ ADD requirements.txt /root/requirements.txt
 ADD .aws /root/.aws
 
 RUN yum update -y && \
-    yum install -y iproute curl unzip git tree && \
+    yum install -y iproute curl unzip git tree vim* && \
     dnf install -y python3 && \
     pip3 install -r requirements.txt && \
     mkdir -p /etc/vim/backup && \
