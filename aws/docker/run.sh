@@ -1,9 +1,9 @@
 #!/bin/bash
 
-NAME="test-aws"
+NAME="aws-test"
 VOLUME="${PWD}/volume"
 
-function delete_docker(){
+function deleteAll(){
     docker stop ${NAME}
     docker rm ${NAME}
     docker rmi ${NAME}
@@ -11,7 +11,7 @@ function delete_docker(){
     rm -rf ${VOLUME}
 }
 
-function create_docker(){
+function createContainer(){
     mkdir ${VOLUME}
     docker build -t ${NAME} .
     docker run -itd --name ${NAME} \
@@ -21,67 +21,24 @@ function create_docker(){
                 ${NAME} /bin/bash
 }
 
+function commitImage(){
+    docker stop ${NAME}
+    docker commit ${NAME} ${NAME}
+    docker start ${NAME}
+}
+
 function main(){
-    [[ -z $1 ]] && { echo "Need argument which is 'create' or 'delete'."; exit 1; }
+    local message="Need argument which is 'create', 'commit' or 'delete'."
+    [[ -z $1 ]] && { echo $message; exit 1; }
     if [ $1 == "create" ]; then
-        create_docker
+        createContainer
     elif [ $1 == "delete" ]; then
-        delete_docker
+        deleteAll
+    elif [ $1 == "commit" ]; then
+        commitImage
     else
-        { echo "Need argument which is 'create' or 'delete'."; exit 1; }
+        { echo $message; exit 1; }
     fi
 }
 
 main $1
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
