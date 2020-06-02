@@ -1,0 +1,5 @@
+{
+    "body": $input.json("$.body"),
+    "headers": $input.json("$.headers"),
+    "statusCode": $input.json("$.statusCode")
+}

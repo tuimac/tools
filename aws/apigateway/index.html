@@ -1,0 +1,45 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>pingping</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  </head>
+  <body>
+    <h1>Say Hello!</h1>
+    <label id="label">Greeting:</label>
+    <input type="text" id="greeting" size="15" /><br>
+    <button id="button">Send</button><br>
+    <br>
+    <script type="text/javascript">
+      function print(data, starttag, endtag){
+        var button = document.getElementById("button");
+        output = starttag + data + endtag
+        button.insertAdjacentHTML('afterend', output);
+        button.insertAdjacentHTML("afterend", "<h3>Result</h3>")
+      }
+      $(function(){
+        $("#button").click(function(){
+          var params = {
+            "greeting": $("#greeting").val(),
+          };
+          $.ajax({
+            url: "https://r4w38dznd2.execute-api.ap-northeast-1.amazonaws.com/test",
+            type: "POST",
+            data: JSON.stringify(params),
+            dataType: "json",
+            contentType: "application/json",
+            scriptCharset: "utf-8",
+            success: function(data){
+              data = JSON.stringify(data, null, 2);
+              data = data.replace(/\\/g, "");
+              print(data, "<pre>", "</pre>");
+            },
+            error: function(data){
+              print(data, "<p>", "</p>");
+            }
+          });
+        });
+      });
+    </script>
+  </body>
+</html>
