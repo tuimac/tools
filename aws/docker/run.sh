@@ -2,6 +2,7 @@
 
 NAME="aws-test"
 VOLUME="${PWD}/volume"
+DOCKERHUBUSER="tuimac"
 
 function deleteAll(){
     docker stop ${NAME}
@@ -24,6 +25,14 @@ function createContainer(){
 function commitImage(){
     docker stop ${NAME}
     docker commit ${NAME} ${NAME}
+    cat password.txt | docker login --username ${DOCKERHUBUSER} --password-stdin
+    if [ $? -ne 0 ]; then
+        echo -ne "Password: "
+        read -s password
+        echo
+        docker login --username ${DOCKERHUBUSER} --password $password
+    fi
+    docker push ${DOCKERHUBUSER}/${NAME}
     docker start ${NAME}
 }
 
