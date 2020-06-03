@@ -74,6 +74,8 @@ function main(){
         commitImage
     elif [ $1 == "help" ]; then
         userguide
+    elif [ $1 == "register-secret" ]; then
+        registerSecret
     else
         { userguide; exit 1; }
     fi
