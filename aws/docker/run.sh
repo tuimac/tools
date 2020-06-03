@@ -56,11 +56,11 @@ function registerSecret(){
 function userguide(){
     echo -e "usage: ./run.sh [help | create | delete | commit | register-secret]"
     echo -e "
-        optional arguments:
-        create              Create image and container after that run the container.
-        delete              Delete image and container.
-        commit              Create image from target container and push the image to remote repository.
-        register-secret     Create password.txt for make it login process within 'commit' operation.
+    optional arguments:
+    create              Create image and container after that run the container.
+    delete              Delete image and container.
+    commit              Create image from target container and push the image to remote repository.
+    register-secret     Create password.txt for make it login process within 'commit' operation.
     "
 }
 
