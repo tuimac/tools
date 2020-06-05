@@ -3,6 +3,7 @@
 These are small projects like PoC on docker. Each folder have Dockerfile to build for each projects.
 And to prepare docker environment, I launched docker image development tool "run.sh".
 This script can build a docker image from a Dockerfile, delete containers and images, commit and push images with consistency.
+The situation to use this scipt is developing DinD environment or do some small PoC of docker image.
 
 ## How to use
 
