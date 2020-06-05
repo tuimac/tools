@@ -1,9 +1,12 @@
 #!/bin/bash
 
-NAME="aws-test"
+# Change variables below if you need
+##############################
+NAME="dockercontainername"
 VOLUME="${PWD}/volume"
-DOCKERHUBUSER="tuimac"
+DOCKERHUBUSER="yourusernameofdockerhub"
 IMAGE=${DOCKERHUBUSER}/${NAME}
+##############################
 
 function cleanup(){
     docker image prune -f
@@ -14,9 +17,11 @@ function createContainer(){
     mkdir ${VOLUME}
     docker build -t ${IMAGE} .
     docker run -itd --name ${NAME} \
-                -v "/var/run/docker.sock:/var/run/docker.sock" \
-                -v "/usr/bin/docker:/usr/bin/docker" \
+                -h ${NAME} \
                 -v "${VOLUME}:/tmp" \
+                -v "/etc/localtime:/etc/localtime:ro" \
+                -p "8080:80" \
+                --network="br0" \
                 ${IMAGE} /bin/bash
     cleanup
 }
@@ -32,17 +37,20 @@ function deleteAll(){
 function commitImage(){
     docker stop ${NAME}
     docker commit ${NAME} ${IMAGE}
-    cat password.txt | base64 -d | docker login --username ${DOCKERHUBUSER} --password-stdin
+    docker start ${NAME}
+}
+
+function pushImage(){
+    cat .password.txt | base64 -d | docker login --username ${DOCKERHUBUSER} --password-stdin
     if [ $? -ne 0 ]; then
         docker login --username ${DOCKERHUBUSER}
     fi
     docker push ${IMAGE}
-    docker start ${NAME}
 }
 
 function registerSecret(){
-        if [ -e password.txt ]; then
-        echo -en "There is 'password.txt' file in your current directory."
+        if [ -e .password.txt ]; then
+        echo -en "There is '.password.txt' file in your current directory."
         echo -en "Continue this? [y/n]: "
         read answer
         if [ $answer == "n" ]; then
@@ -56,8 +64,7 @@ function registerSecret(){
         echo -en "Password: "
         read -s password
         echo
-        echo $password | base64 > password.txt
-        cat password.txt | base64 -d
+        echo $password | base64 > .password.txt
 }
 
 function userguide(){
@@ -67,6 +74,7 @@ optional arguments:
 create              Create image and container after that run the container.
 delete              Delete image and container.
 commit              Create image from target container and push the image to remote repository.
+push                Push image you create to Docker Hub.
 register-secret     Create password.txt for make it login process within 'commit' operation.
     "
 }
@@ -79,6 +87,8 @@ function main(){
         deleteAll
     elif [ $1 == "commit" ]; then
         commitImage
+    elif [ $1 == "push" ]; then
+        pushImage
     elif [ $1 == "help" ]; then
         userguide
     elif [ $1 == "register-secret" ]; then

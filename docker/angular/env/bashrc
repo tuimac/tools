@@ -28,7 +28,7 @@ if [ -n "$force_color_prompt" ]; then
     fi
 fi
 
-PS1="\[$(tput bold)\]\[$(tput setaf 6)\]NODE5\[$(tput setaf 1)\]{\[$(tput setaf 1)\]\u\[$(tput setaf 3)\]@\[$(tput setaf 4)\]\h\[$(tput setaf 1)\]}->\[$(tput setaf 6)\][\[$(tput setaf 7)\]\w\[$(tput setaf 6)\]]->\[$(tput setaf 2)\]\t\n\[$(tput setaf 1)\]~>\[$(tput sgr0)\]"
+PS1="\[$(tput bold)\]\[$(tput setaf 6)\]ANGULAR\[$(tput setaf 1)\]{\[$(tput setaf 1)\]\u\[$(tput setaf 3)\]@\[$(tput setaf 4)\]\h\[$(tput setaf 1)\]}->\[$(tput setaf 6)\][\[$(tput setaf 7)\]\w\[$(tput setaf 6)\]]->\[$(tput setaf 2)\]\t\n\[$(tput setaf 1)\]~>\[$(tput sgr0)\]"
 
 if [ -x /usr/bin/dircolors ]; then
     test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
@@ -52,5 +52,7 @@ fi
 if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
     . /etc/bash_completion
 fi
+
 alias vi="vim"
+cat /root/.login_screen
 uptime

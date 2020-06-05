@@ -2,7 +2,7 @@
 
 # Change variables below if you need
 ##############################
-NAME="angular"
+NAME="aws-test"
 VOLUME="${PWD}/volume"
 DOCKERHUBUSER="tuimac"
 IMAGE=${DOCKERHUBUSER}/${NAME}
