@@ -1,35 +1,42 @@
 #!/bin/bash
 
-NAME="awstest"
+NAME="aws-test"
 VOLUME="${PWD}/volume"
 DOCKERHUBUSER="tuimac"
+IMAGE=${DOCKERHUBUSER}/${NAME}
 
-function deleteAll(){
-    docker stop ${NAME}
-    docker rm ${NAME}
-    docker rmi ${NAME}
+function cleanup(){
     docker image prune -f
-    rm -rf ${VOLUME}
+    docker container prune -f
 }
 
 function createContainer(){
     mkdir ${VOLUME}
-    docker build -t ${DOCKERHUBUSER}/${NAME} .
+    docker build -t ${IMAGE} .
     docker run -itd --name ${NAME} \
                 -v "/var/run/docker.sock:/var/run/docker.sock" \
                 -v "/usr/bin/docker:/usr/bin/docker" \
                 -v "${VOLUME}:/tmp" \
-                ${NAME} /bin/bash
+                ${IMAGE} /bin/bash
+    cleanup
+}
+
+function deleteAll(){
+    docker stop ${NAME}
+    docker rm ${NAME}
+    docker rmi ${IMAGE}
+    cleanup
+    rm -rf ${VOLUME}
 }
 
 function commitImage(){
     docker stop ${NAME}
-    docker commit ${NAME} ${DOCKERHUBUSER}/${NAME}
+    docker commit ${NAME} ${IMAGE}
     cat password.txt | base64 -d | docker login --username ${DOCKERHUBUSER} --password-stdin
     if [ $? -ne 0 ]; then
         docker login --username ${DOCKERHUBUSER}
     fi
-    docker push ${DOCKERHUBUSER}/${NAME}
+    docker push ${IMAGE}
     docker start ${NAME}
 }
 
