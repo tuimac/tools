@@ -1,6 +1,6 @@
 #!/bin/bash
 
-NAME="awstest"
+NAME="angular"
 VOLUME="${PWD}/volume"
 DOCKERHUBUSER="tuimac"
 
