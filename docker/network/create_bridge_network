@@ -1,0 +1,7 @@
+#!/bin/bash
+
+docker network create \
+    --driver=bridge \
+    --subnet=10.0.240.0/24 \
+    --gateway=10.0.240.1 \
+    br0
