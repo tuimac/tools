@@ -5,7 +5,19 @@ And to prepare docker environment, I launched docker image development tool "run
 This script can build a docker image from a Dockerfile, delete containers and images, commit and push images with consistency.
 The situation to use this scipt is developing DinD environment or do some small PoC of docker image.
 
+## Supoort
+
+Support  most Linux Distributions. `Redhat`, `CentOS`, `Ubuntu`, `Debian`, `Amazon Linux`
+
 ## How to use
+
+### Install
+Command below.
+
+```
+curl -0 https://raw.githubusercontent.com/tuimac/tools/master/docker/run.sh > run.sh
+chmod +x run.sh
+```
 
 ### Command
 Easy. When you build a docker image from a Dockerfile, put a Dockerfile on current directory have "runs.sh"
