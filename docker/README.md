@@ -37,8 +37,10 @@ $ ./run.sh help
 
 usage: ./run.sh [help | create | delete | commit | register-secret]
 
+
 optional arguments:
 create              Create image and container after that run the container.
+rerun               Delete only container and rerun container with new settings.
 delete              Delete image and container.
 commit              Create image from target container and push the image to remote repository.
 push                Push image you create to Docker Hub.

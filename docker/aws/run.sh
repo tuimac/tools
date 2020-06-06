@@ -2,11 +2,20 @@
 
 # Change variables below if you need
 ##############################
-NAME="aws-test"
+NAME="awstest"
 VOLUME="${PWD}/volume"
 DOCKERHUBUSER="tuimac"
 IMAGE=${DOCKERHUBUSER}/${NAME}
 ##############################
+
+function runContainer(){
+    docker run -itd --name ${NAME} \
+                -h ${NAME} \
+                -v "${VOLUME}:/tmp" \
+                -v "/etc/localtime:/etc/localtime:ro" \
+                --network="br0" \
+                ${IMAGE} /bin/bash
+}
 
 function cleanup(){
     docker image prune -f
@@ -16,13 +25,14 @@ function cleanup(){
 function createContainer(){
     mkdir ${VOLUME}
     docker build -t ${IMAGE} .
-    docker run -itd --name ${NAME} \
-                -h ${NAME} \
-                -v "${VOLUME}:/tmp" \
-                -v "/etc/localtime:/etc/localtime:ro" \
-                -p "8080:80" \
-                --network="br0" \
-                ${IMAGE} /bin/bash
+    runContainer
+    cleanup
+}
+
+function rerunContainer(){
+    docker stop ${NAME}
+    docker rm ${NAME}
+    runContainer
     cleanup
 }
 
@@ -41,11 +51,14 @@ function commitImage(){
 }
 
 function pushImage(){
-    cat .password.txt | base64 -d | docker login --username ${DOCKERHUBUSER} --password-stdin
+    docker push ${NAME}
     if [ $? -ne 0 ]; then
-        docker login --username ${DOCKERHUBUSER}
+        cat .password.txt | base64 -d | docker login --username ${DOCKERHUBUSER} --password-stdin
+        if [ $? -ne 0 ]; then
+            docker login --username ${DOCKERHUBUSER}
+        fi
+        docker push ${IMAGE}
     fi
-    docker push ${IMAGE}
 }
 
 function registerSecret(){
@@ -72,6 +85,7 @@ function userguide(){
     echo -e "
 optional arguments:
 create              Create image and container after that run the container.
+rerun               Delete only container and rerun container with new settings.
 delete              Delete image and container.
 commit              Create image from target container and push the image to remote repository.
 push                Push image you create to Docker Hub.
@@ -83,6 +97,8 @@ function main(){
     [[ -z $1 ]] && { userguide; exit 1; }
     if [ $1 == "create" ]; then
         createContainer
+    elif [ $1 == "rerun" ]; then
+        rerunContainer
     elif [ $1 == "delete" ]; then
         deleteAll
     elif [ $1 == "commit" ]; then
