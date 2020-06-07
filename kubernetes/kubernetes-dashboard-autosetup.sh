@@ -16,6 +16,9 @@
 #
 # OS requirements is below:
 # OS : CentOS7.6
+#
+# You need greter than two virtual cpu cores. If you run this script on sigle core machine,
+# you got failure...
 
 # The premise of run this script is exec this script by except root user.
 [[ $USER == "root" ]] && { echo "Don't run this script by root user."; exit 1; }
@@ -98,9 +101,9 @@ sudo kubeadm init \
     --node-name ${masterNodeName}
 
 # To make kubectl work for your non-root user.
-sudo mkdir -p ${DIR}/.kube
-sudo cp -i /etc/kubernetes/admin.conf ${DIR}/.kube/config
-sudo chown $(id -u):$(id -g) ${DIR}/.kube/config
+sudo mkdir -p ${HOME}/.kube
+sudo cp -i /etc/kubernetes/admin.conf ${HOME}/.kube/config
+sudo chown $(id -u):$(id -g) ${HOME}/.kube/config
 
 # Tell root where admin.conf is.
 sudo sh -c "export KUBECONFIG=/etc/kubernetes/admin.conf"
