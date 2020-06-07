@@ -78,7 +78,6 @@ sudo firewall-cmd --permanent --add-port=6443/tcp
 sudo firewall-cmd --permanent --add-port=2379-2380/tcp
 sudo firewall-cmd --permanent --add-port=10250-10252/tcp
 sudo firewall-cmd --permanent --add-port=10255/tcp
-[[ $? -ne 0 ]] && { echo "There is no firewalld. Maybe modify security group..."; exit 1; }
 
 ## This section for Kubernetes Dashboard you can change if you want.(Default range is 30000 - 32767.)
 sudo firewall-cmd --permanent --add-port=30000/tcp
