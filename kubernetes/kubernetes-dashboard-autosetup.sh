@@ -16,14 +16,20 @@
 #
 # OS requirements is below:
 # OS : CentOS7.6
+#
+# You need greter than two virtual cpu cores. If you run this script on sigle core machine,
+# you got failure...
 
 # The premise of run this script is exec this script by except root user.
 [[ $USER == "root" ]] && { echo "Don't run this script by root user."; exit 1; }
 
 # Create work directory.
-mkdir kubernetes-cluster
+cd ${HOME}
+DIRNAME="kubernetes-cluster"
+DIR=${HOME}/${DIRNAME}
+mkdir ${DIR}
 [[ $? -ne 0 ]] && { echo "Create work directory is failed."; exit 1; }
-cd kubernetes-cluster
+cd ${DIR}
 
 # Initialized variables.
 ipaddress=`hostname -i`
@@ -78,7 +84,6 @@ sudo firewall-cmd --permanent --add-port=6443/tcp
 sudo firewall-cmd --permanent --add-port=2379-2380/tcp
 sudo firewall-cmd --permanent --add-port=10250-10252/tcp
 sudo firewall-cmd --permanent --add-port=10255/tcp
-[[ $? -ne 0 ]] && { echo "There is no firewalld. Maybe modify security group..."; exit 1; }
 
 ## This section for Kubernetes Dashboard you can change if you want.(Default range is 30000 - 32767.)
 sudo firewall-cmd --permanent --add-port=30000/tcp
@@ -96,9 +101,9 @@ sudo kubeadm init \
     --node-name ${masterNodeName}
 
 # To make kubectl work for your non-root user.
-sudo mkdir -p $HOME/.kube
-sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
-sudo chown $(id -u):$(id -g) $HOME/.kube/config
+sudo mkdir -p ${HOME}/.kube
+sudo cp -i /etc/kubernetes/admin.conf ${HOME}/.kube/config
+sudo chown $(id -u):$(id -g) ${HOME}/.kube/config
 
 # Tell root where admin.conf is.
 sudo sh -c "export KUBECONFIG=/etc/kubernetes/admin.conf"
@@ -113,7 +118,7 @@ kubectl taint nodes ${masterNodeName} node-role.kubernetes.io/master:NoSchedule-
 # Now I don't know how to deploy Metrics Server master branch version so
 # I choose older one.
 ## Define file path to edit.
-MANIFEST=$HOME/metrics-server/deploy/1.8+/metrics-server-deployment.yaml
+MANIFEST=${DIR}/metrics-server/deploy/1.8+/metrics-server-deployment.yaml
 
 ## Edit metrics-server deployment manifest to run metrics server pod properly.
 ## https://github.com/kubernetes-sigs/metrics-server/issues/131
@@ -154,7 +159,7 @@ DUMPFILE="secret.yaml"
 ## Finally that information insert into Kubernetes Dashboard's manifest then reflect to environment.
 ## https://github.com/kubernetes/dashboard/issues/3804
 kubectl -n kubernetes-dashboard delete secret kubernetes-dashboard-certs
-kubectl -n kubernetes-dashboard create secret generic kubernetes-dashboard-certs --from-file=$HOME/certs
+kubectl -n kubernetes-dashboard create secret generic kubernetes-dashboard-certs --from-file=${DIR}/certs
 kubectl -n kubernetes-dashboard get secret kubernetes-dashboard-certs -oyaml > $DUMPFILE
 sleep 1
 sed -n '2,5p' $DUMPFILE << 'EOS' | sed -i '50r /dev/stdin' recommended.yaml
@@ -168,7 +173,7 @@ ROLEFILE="kubernetes-dashboard-role.yaml"
 
 ## Create manifest to attach "cluster-admin" authorization to default service account
 ## on Kubernetes Dashboard.
-sh -c "cat <<EOF > $HOME/$ROLEFILE
+sh -c "cat <<EOF > ${DIR}/$ROLEFILE
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
