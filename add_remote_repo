@@ -38,6 +38,7 @@ function checkEnv(){
     if [ ! $result == "-rwxr-xr-x" ]; then
         [[ ! $USER == "root" ]] && { echo -en "\nDo chmod so need sudo privillege\n";}
         sudo chmod +x ${target}
+        git config --global credential.helper ${target}
     fi
 }
 
