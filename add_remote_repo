@@ -1,23 +1,46 @@
 #!/bin/bash
 
+GITUSERNAME="tuimac"
+GITEMAIL="tuimac.devadm01@gmail.com"
+REPOURL="https://github.com/tuimac/tools.git"
+
 function checkArg(){
     [[ "$1" = "" ]] && { echo -e "Select files.\nExit."; exit 1; }
 }
 
 function checkEnv(){
     local target="/usr/share/doc/git/contrib/credential/netrc/git-credential-netrc"
-    local result=`ls -al ${target} | awk '{print $1}'`
+    local netrc=~/.netrc
+
+    if [ ! -f ~/.netrc.gpg ]; then
+        echo -en "GitHub Password: "
+        read -s password
+        echo ""
+        echo -en "machine github.com\nlogin ${GITUSERNAME}\npassword ${password}\n" > $netrc
+        yum install -y pinentry
+        gpg -e -r ${GITEMAIL} ${netrc}
+        if [ $? -ne 0 ]; then
+            gpg --gen-key
+            gpg -e -r ${GITEMAIL} ${netrc}
+        fi
+        rm ${netrc}
+    fi
+    local result=`ls -al ${target} 2> /dev/null | awk '{print $1}' 2> /dev/null`
+    if [ -z $result ]; then
+        target=`find / | grep git-credential-netrc`
+        result=`ls -al ${target} 2> /dev/null | awk '{print $1}' 2> /dev/null`
+    fi
     if [ ! $result == "-rwxr-xr-x" ]; then
-        [[ ! $USER == "root" ]] && { echo -en "\nMust be root!\n"; exit 1; }
-        chmod +x ${target}
+        [[ ! $USER == "root" ]] && { echo -en "\nDo chmod so need sudo privillege\n";}
+        sudo chmod +x ${target}
     fi
 }
 
 function checkGitSetting(){
 	local email=`git config --global --get user.email`
 	local username=`git config --global --get user.name`
-	[[ $email = "" ]] && git config --global user.email 'tuimac.devadm01@gmail.com'
-	[[ $username = "" ]] && git config --global user.name 'tuimac'
+	[[ $email = "" ]] && git config --global user.email ${GITEMAIL}
+	[[ $username = "" ]] && git config --global user.name ${GITUSERNAME}
 	return 0
 }
 
@@ -27,8 +50,6 @@ function readComment(){
 }
 
 function main(){
-    URL="https://github.com/tuimac/tools.git"   
-    
     checkArg $1
 	checkEnv
 	checkGitSetting
@@ -40,7 +61,7 @@ function main(){
 	#git rm -r --cached .
 	git add $1
 	git commit -m "${COMMENT}"
-	git remote add origin "${URL}"
+	git remote add origin "${REPOURL}"
 	git pull origin master
 	git push -u origin master
 }
