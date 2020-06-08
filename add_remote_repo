@@ -28,7 +28,7 @@ function checkEnv(){
     local result=`ls -al ${target} 2> /dev/null | awk '{print $1}' 2> /dev/null`
     if [ -z $result ]; then
         sudo ls / > /dev/null 2>&1
-        if [ $? -e 0 ]; then
+        if [ $? -eq 0 ]; then
             target=`sudo find / | grep git-credential-netrc`
         else
             target=`find / | grep git-credential-netrc`
