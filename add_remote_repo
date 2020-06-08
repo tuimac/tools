@@ -37,33 +37,33 @@ function checkEnv(){
 }
 
 function checkGitSetting(){
-	local email=`git config --global --get user.email`
-	local username=`git config --global --get user.name`
-	[[ $email = "" ]] && git config --global user.email ${GITEMAIL}
-	[[ $username = "" ]] && git config --global user.name ${GITUSERNAME}
-	return 0
+    local email=`git config --global --get user.email`
+    local username=`git config --global --get user.name`
+    [[ $email = "" ]] && git config --global user.email ${GITEMAIL}
+    [[ $username = "" ]] && git config --global user.name ${GITUSERNAME}
+    return 0
 }
 
 function readComment(){
-	echo -en "Comment below\n> "
-	read COMMENT
+    echo -en "Comment below\n> "
+    read COMMENT
 }
 
 function main(){
     checkArg $1
-	checkEnv
-	checkGitSetting
-	readComment
+    checkEnv
+    checkGitSetting
+    readComment
 
-	[[ ! -e .git ]] && git init
-	#git remote rm origin
-	#git reset --hard "{URL}" master
-	#git rm -r --cached .
-	git add $1
-	git commit -m "${COMMENT}"
-	git remote add origin "${REPOURL}"
-	git pull origin master
-	git push -u origin master
+    [[ ! -e .git ]] && git init
+    #git remote rm origin
+    #git reset --hard "{URL}" master
+    #git rm -r --cached .
+    git add $1
+    git commit -m "${COMMENT}"
+    git remote add origin "${REPOURL}"
+    git pull origin master
+    git push -u origin master
 }
 
 main $1
