@@ -65,22 +65,22 @@ function pushImage(){
 }
 
 function registerSecret(){
-        if [ -e .password.txt ]; then
-        echo -en "There is '.password.txt' file in your current directory."
-        echo -en "Continue this? [y/n]: "
-        read answer
-        if [ $answer == "n" ]; then
-            echo "Registering password is skipped."
-            exit 0
-        else
-            echo "Only type in 'y' or 'n'."
-            exit 1
-        fi
-        fi
-        echo -en "Password: "
-        read -s password
-        echo
-        echo $password | base64 > .password.txt
+    if [ -e .password.txt ]; then
+    echo -en "There is '.password.txt' file in your current directory."
+    echo -en "Continue this? [y/n]: "
+    read answer
+    if [ $answer == "n" ]; then
+        echo "Registering password is skipped."
+        exit 0
+    else
+        echo "Only type in 'y' or 'n'."
+        exit 1
+    fi
+    fi
+    echo -en "Password: "
+    read -s password
+    echo
+    echo $password | base64 > .password.txt
 }
 
 function userguide(){
