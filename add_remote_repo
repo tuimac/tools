@@ -36,10 +36,10 @@ function checkEnv(){
         result=`ls -al ${target} 2> /dev/null | awk '{print $1}' 2> /dev/null`
     fi
     if [ ! $result == "-rwxr-xr-x" ]; then
-        [[ ! $USER == "root" ]] && { echo -en "\nDo chmod so need sudo privillege\n";}
+        [[ ! $USER == "root" ]] && { echo -en "\nchmod need sudo privillege\n";}
         sudo chmod +x ${target}
-        git config --global credential.helper ${target}
     fi
+    git config --global credential.helper ${target}
 }
 
 function checkGitSetting(){
