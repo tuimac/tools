@@ -33,9 +33,9 @@ function createContainer(){
 }
 
 function rerunContainer(){
-    echo -en "Do you want to commit image? [y/n]: "
+    echo -en "Do you want to commit image? [y(default)/n]: "
     read answer
-    if [ $answer != "n" ]; then
+    if [ "$answer" != "n" ]; then
         commitImage
     fi
     docker stop ${NAME}
