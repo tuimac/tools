@@ -17,7 +17,7 @@ function runContainer(){
                 -p "3000:3000" \
                 -p "3001:3001" \
                 --network="br0" \
-                ${IMAGE} /bin/bash
+                ${NAME}
 }
 
 function cleanup(){
@@ -27,12 +27,17 @@ function cleanup(){
 
 function createContainer(){
     mkdir ${VOLUME}
-    docker build -t ${IMAGE} .
+    docker build -t ${NAME} .
     runContainer
     cleanup
 }
 
 function rerunContainer(){
+    echo -en "Do you want to commit image? [y/n]: "
+    read answer
+    if [ $answer != "n" ]; then
+        commitImage
+    fi
     docker stop ${NAME}
     docker rm ${NAME}
     runContainer
@@ -42,14 +47,14 @@ function rerunContainer(){
 function deleteAll(){
     docker stop ${NAME}
     docker rm ${NAME}
-    docker rmi ${IMAGE}
+    docker rmi ${NAME}
     cleanup
     rm -rf ${VOLUME}
 }
 
 function commitImage(){
     docker stop ${NAME}
-    docker commit ${NAME} ${IMAGE}
+    docker commit ${NAME} ${NAME}
     docker start ${NAME}
 }
 
@@ -60,7 +65,7 @@ function pushImage(){
         if [ $? -ne 0 ]; then
             docker login --username ${DOCKERHUBUSER}
         fi
-        docker push ${IMAGE}
+        docker push ${NAME}
     fi
 }
 
