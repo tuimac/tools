@@ -66,6 +66,7 @@ function pushImage(){
         docker push ${IMAGE}
     fi
     docker rmi ${IMAGE}
+    cleanup
 }
 
 function registerSecret(){
