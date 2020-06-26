@@ -18,8 +18,7 @@ RUN yum update -y && \
     mkdir -p /etc/vim/undo && \
     mkdir -p /etc/vim/backup && \
     rm -rf anaconda-ks.cfg anaconda-post.log original-ks.cfg requirements.txt && \
-    git clone https://github.com/tuimac/httptracker.git
+    pip3 install git+https://github.com/tuimac/httptracker.git
 
 ADD env/add_remote_repo /root/$pjtname/add_remote_repo
 WORKDIR /root/$pjtname
-#CMD ["python3", "httptracker/manage.py", "runserver", "0.0.0.0:8000"]
