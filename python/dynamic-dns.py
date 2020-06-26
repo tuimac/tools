@@ -8,6 +8,7 @@ from datetime import date, datetime
 import re
 import shutil
 import subprocess
+import traceback
 
 def check_auth():
     if os.geteuid() != 0:
@@ -36,8 +37,18 @@ def create_record_data(ec2info):
         for tag in find_value(instance, "Tags"):
             if not (status == "running" or status == "stopped"): continue
             if tag["Key"] == "Name":
-                records_new.setdefault(instance["Instances"][0]["PrivateIpAddress"], tag["Value"])
-
+                index = 0
+                try:
+                    for eni in instance["Instances"][0]["NetworkInterfaces"]:
+                        if index > 0:
+                            records_new.setdefault(eni["PrivateIpAddress"], tag["Value"] + str(index))
+                        else:
+                            records_new.setdefault(eni["PrivateIpAddress"], tag["Value"])
+                        records_new.setdefault(eni["Association"]["PublicIp"], tag["Value"] + "-public")
+                        index += 1
+                except:
+                    pass
+                    #traceback.print_exc()
     return records_new
 
 def read_record(path):
@@ -84,7 +95,7 @@ def renew_bind_records(path, records_new):
 if __name__ == '__main__':
     check_auth()
     os.environ['AWS_DEFAULT_REGION'] = "ap-northeast-1"
-    NAMEDCONF = "/etc/named/xxxxxx.private"
+    NAMEDCONF = "/etc/named/tuimac.private"
     TMPFILE = NAMEDCONF + "_old"
     shutil.copyfile(NAMEDCONF, TMPFILE)
 
