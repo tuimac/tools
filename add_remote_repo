@@ -16,10 +16,10 @@ function checkEnv(){
         echo -en "GitHub Password: "
         read -s password
         echo ""
-        echo -en "machine github.com\nlogin ${GITUSERNAME}\npassword ${password}\n" > $netrc
+        echo -en "machine github.com\nlogin ${GITUSERNAME}\npassword ${password}\nprotocol https" > $netrc
         yum install -y pinentry 2> /dev/null
         if [ $? -ne 0 ]; then
-            apt install gnupg-agent pinentry-curses
+            apt install gnupg-agent pinentry-curses -y
         fi
         gpg -e -r ${GITEMAIL} ${netrc}
         if [ $? -ne 0 ]; then
@@ -38,11 +38,15 @@ function checkEnv(){
         fi
         result=`ls -al ${target} 2> /dev/null | awk '{print $1}' 2> /dev/null`
     fi
-    if [ ! $result == "-rwxr-xr-x" ]; then
-        [[ ! $USER == "root" ]] && { echo -en "\nchmod need sudo privillege\n";}
-        sudo chmod +x ${target}
+    if [ -z $result ]; then
+        git config --global credential.helper "netrc -d -v"
+    else
+        if [ ! $result == "-rwxr-xr-x" ]; then
+            [[ ! $USER == "root" ]] && { echo -en "\nchmod need sudo privillege\n";}
+            sudo chmod +x ${target}
+        fi
+        git config --global credential.helper ${target}
     fi
-    git config --global credential.helper ${target}
 }
 
 function checkGitSetting(){
