@@ -36,7 +36,11 @@ function checkEnv(){
         else
             target=`find /usr | grep git-credential-netrc`
         fi
-        result=`ls -al ${target} 2> /dev/null | awk '{print $1}' 2> /dev/null`
+        if [ -z $target ]; then
+            result=''
+        else
+            result=`ls -al ${target} | awk '{print $1}' 2> /dev/null`
+        fi
     fi
     if [ -z $result ]; then
         git config --global credential.helper "netrc -d -v"
