@@ -1,6 +1,7 @@
 #!/bin/bash
 
 GITUSERNAME="tuimac"
+BRANCH="master"
 GITEMAIL="tuimac.devadm01@gmail.com"
 REPOURL="https://github.com/tuimac/tools.git"
 
@@ -74,13 +75,14 @@ function main(){
 
     [[ ! -e .git ]] && git init
     #git remote rm origin
-    #git reset --hard "{URL}" master
+    #git reset --hard "{URL}" v2.0.0-beta
     #git rm -r --cached .
+    git checkout ${BRANCH}
     git add $1
     git commit -m "${COMMENT}"
     git remote add origin "${REPOURL}"
-    git pull origin master
-    git push -u origin master
+    git pull origin ${BRANCH}
+    git push -u origin ${BRANCH}
 }
 
 main $1
