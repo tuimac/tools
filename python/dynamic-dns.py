@@ -37,15 +37,17 @@ def create_record_data(ec2info):
         for tag in find_value(instance, "Tags"):
             if not (status == "running" or status == "stopped"): continue
             if tag["Key"] == "Name":
-                index = 0
                 try:
                     for eni in instance["Instances"][0]["NetworkInterfaces"]:
-                        if index > 0:
-                            records_new.setdefault(eni["PrivateIpAddress"], tag["Value"] + str(index))
+                        deviceIndex = eni["Attachment"]["DeviceIndex"]
+                        if deviceIndex > 0:
+                            records_new.setdefault(eni["PrivateIpAddress"], tag["Value"] + str(deviceIndex))
                         else:
                             records_new.setdefault(eni["PrivateIpAddress"], tag["Value"])
-                        records_new.setdefault(eni["Association"]["PublicIp"], tag["Value"] + "-public")
-                        index += 1
+                        try:
+                            records_new.setdefault(eni["Association"]["PublicIp"], tag["Value"] + "-public")
+                        except KeyError:
+                            pass
                 except:
                     pass
                     #traceback.print_exc()
@@ -69,7 +71,6 @@ def read_record(path):
     with open(path, 'w') as file:
         for i in range(index):
             file.write(dumped_dnsconf[i])
-
     return records_old
 
 def compare_records(new, old):
@@ -89,7 +90,6 @@ def renew_bind_records(path, records_new):
             file.write(record)
     with open(path, 'a') as file:
         file.write("\n")
-
     return
 
 if __name__ == '__main__':
