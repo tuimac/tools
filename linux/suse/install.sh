@@ -25,11 +25,10 @@ function check_hostname(){
         echo 'Hostname is wrong.'
         exit 1
     fi
-    local line=${IPADDR}' '${FQDN}' ' ${HOSTNAME}
-    if [[ $line != $(tail -n 1 /etc/hosts) ]]; then
-        echo 'Hosts is wrong.'
-        exit 1
-    fi
+    ping -c 3 $HOSTNAME
+    [[ $? -ne 0 ]] && { echo -e 'Hosts setting is wrong.'; exit 1; }
+    ping -c 3 $FQDN
+    [[ $? -ne 0 ]] && { echo -e 'Hosts setting is wrong.'; exit 1; }
     echo 3 > $LOG
 }
 
