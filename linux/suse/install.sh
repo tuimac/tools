@@ -1,13 +1,12 @@
 #!/bin/bash
 
-
 INSTALL_PACKAGE='test.zip'
 HOSTNAME='test'
 FQDN=${HOSTNAME}'.local'
 IPADDR='10.3.0.222'
 
 function install_by_zypper(){
-    echo '###### '${FUNCNAME[0]}' ######'
+    echo '################## '${FUNCNAME[0]}' ##################'
     rm /etc/SUSEConnect
     rm -f /etc/zypp/{repos,services,credentials}.d/*
     rm -f /usr/lib/zypp/plugins/services/*
@@ -21,7 +20,7 @@ function install_by_zypper(){
 }
 
 function check_hostname(){
-    echo '###### '${FUNCNAME[0]}' ######'
+    echo '################## '${FUNCNAME[0]}' ##################'
     if [ $FQDN != $(cat /etc/hostname) ]; then
         echo 'Hostname is wrong.'
         exit 1
@@ -35,7 +34,7 @@ function check_hostname(){
 }
 
 function set_hostname(){
-    echo '###### '${FUNCNAME[0]}' ######'
+    echo '################## '${FUNCNAME[0]}' ##################'
     sed -i 's/preserve_hostname: false/preserve_hostname: true/' /etc/cloud/cloud.cfg
     echo ${FQDN} > /etc/hostname
     echo ${IPADDR} ${FQDN} ${HOSTNAME} >> /etc/hosts
@@ -46,7 +45,7 @@ function set_hostname(){
 }
 
 function unzip_installer(){
-    echo '###### '${FUNCNAME[0]}' ######'
+    echo '################## '${FUNCNAME[0]}' ##################'
     #unzip $INSTALL_PACKAGE
     echo 1 > $LOG
 }
