@@ -3,7 +3,7 @@
 INSTALL_PACKAGE='test.zip'
 HOSTNAME='test'
 FQDN=${HOSTNAME}'.local'
-IPADDR='10.3.0.222'
+IPADDR='10.3.0.245'
 
 function install_by_zypper(){
     echo '################## '${FUNCNAME[0]}' ##################'
@@ -70,6 +70,7 @@ function main(){
                 install_by_zypper
                 ;;
             *)
+				echo 'Finish installation process. Well done.'
                 rm ${LOG}
                 exit 0;;
         esac
