@@ -12,7 +12,7 @@ function loginRemoteServer($remoteInfo){
 function rsync($remoteInfo){
     $arg = '/COPY:DAT /MIR /R:0 /W:' + [string]$remoteInfo['interval']
     while($true){
-        robocopy $remoteInfo['src'] $remoteInfo['dest']
+        robocopy $remoteInfo['src'] $remoteInfo['dest'] 2>&1 | Out-Null
         if($?){
             sleep $remoteInfo['interval']
         }else{
