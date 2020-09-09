@@ -28,8 +28,10 @@ sudo setenforce 0
 sudo yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes
 sudo systemctl enable --now kubelet
 sudo systemctl start kubelet
+sleep 10
+sudo systemctl restart kubelet
 
-sudo kubeadm init --config=init-config.yaml
+sudo kubeadm init --config=init-config.yaml --upload-certs --ignore-preflight-errors
 
 sudo mkdir -p ${HOME}/.kube
 sudo cp -i /etc/kubernetes/admin.conf ${HOME}/.kube/config
