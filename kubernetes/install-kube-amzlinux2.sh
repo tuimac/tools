@@ -30,8 +30,12 @@ sudo systemctl enable --now kubelet
 sudo systemctl start kubelet
 sleep 10
 sudo systemctl restart kubelet
+sleep 10
 
-sudo kubeadm init --config=init-config.yaml --upload-certs --ignore-preflight-errors
+sudo kubeadm init \
+	--config=init-config.yaml \
+	--upload-certs \
+       	--ignore-preflight-errors all
 
 sudo mkdir -p ${HOME}/.kube
 sudo cp -i /etc/kubernetes/admin.conf ${HOME}/.kube/config
