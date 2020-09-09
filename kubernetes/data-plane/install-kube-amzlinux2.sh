@@ -32,12 +32,13 @@ sleep 10
 sudo systemctl restart kubelet
 sleep 10
 
-sudo kubeadm init \
-	--config=init-config.yaml \
-	--upload-certs \
-       	--ignore-preflight-errors all
+sudo kubeadm join control-plane.tuimac.private:6443 \
+	--token xxxxxx \
+	--discovery-token-ca-cert-hash sha256:xxxxxx \
+	--ignore-preflight-errors all \
+	--node-name data-plane1
 
-sudo mkdir -p ${HOME}/.kube
-sudo cp -i /etc/kubernetes/admin.conf ${HOME}/.kube/config
-sudo chown $(id -u):$(id -g) ${HOME}/.kube/config
-sudo sh -c "export KUBECONFIG=/etc/kubernetes/admin.conf"
+#sudo mkdir -p ${HOME}/.kube
+#sudo cp -i /etc/kubernetes/admin.conf ${HOME}/.kube/config
+#sudo chown $(id -u):$(id -g) ${HOME}/.kube/config
+#sudo sh -c "export KUBECONFIG=/etc/kubernetes/admin.conf"
