@@ -42,6 +42,8 @@ sudo cp -i /etc/kubernetes/admin.conf ${HOME}/.kube/config
 sudo chown $(id -u):$(id -g) ${HOME}/.kube/config
 sudo sh -c "export KUBECONFIG=/etc/kubernetes/admin.conf"
 
+sleep 1
+
 kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
 
-kubectl label node data-plane1 node-role.kubernetes.io/worker=worker
+#kubectl label node data-plane1 node-role.kubernetes.io/worker=worker

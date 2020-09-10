@@ -8,7 +8,7 @@ nodeRegistration:
     value: master
     effect: NoSchedule
 localAPIEndpoint:
-  advertiseAddress: 10.3.0.213
+  advertiseAddress: 10.3.0.237
   bindPort: 6443
 
 ---
@@ -17,11 +17,16 @@ apiVersion: kubeadm.k8s.io/v1beta2
 kind: ClusterConfiguration
 clusterName: production
 controlPlaneEndpoint: control-plane.tuimac.private:6443
+apiServer:
+  extraArgs:
+    enable-admission-plugins: DefaultTolerationSeconds
+    default-not-ready-toleration-seconds: "10"
+    default-unreachable-toleration-seconds: "10"
 networking:
   podSubnet: 10.230.0.0/16
   serviceSubnet: 10.231.0.0/16
   dnsDomain: prod.local
 scheduler:
   extraArgs:
-    address: 10.3.0.213
+    address: 10.3.0.237
 certificatesDir: /etc/kubernetes/pki
