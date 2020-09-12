@@ -10,10 +10,8 @@ IMAGE=${DOCKERHUBUSER}/${NAME}
 
 function runContainer(){
     docker run -itd --name ${NAME} \
+                -v ${VOLUME}:/tmp \
                 -h ${NAME} \
-                -v "${VOLUME}:/tmp" \
-                -v "/etc/localtime:/etc/localtime:ro" \
-                -p "8080:8080" \
                 --network="bridge" \
                 ${NAME}
 }
