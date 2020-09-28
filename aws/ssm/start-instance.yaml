@@ -1,0 +1,48 @@
+description: StartEC2Instances
+schemaVersion: '0.3'
+mainSteps:
+  - name: MyCheckCalendarStateStep
+    action: 'aws:assertAwsResourceProperty'
+    inputs:
+      Service: ssm
+      Api: GetCalendarState
+      CalendarNames: 'arn:aws:ssm:ap-northeast-1:500415866962:document/test'
+      PropertySelector: '$.State'
+      DesiredValues:
+      - OPEN
+    nextStep: StopHANAEC2Instances
+  - name: StopHANAEC2Instances
+    action: 'aws:executeAwsApi'
+    inputs:
+      Service: ssm
+      Api: StartAutomationExecution
+      TargetParameterName: InstanceId
+      DocumentName: AWS-StartEC2Instance
+      Targets:
+        - Key: 'tag:SAP'
+          Values:
+            - HANA
+    nextStep: StopASCSEC2Instances
+  - name: StopASCSEC2Instances
+    action: 'aws:executeAwsApi'
+    inputs:
+      Service: ssm
+      Api: StartAutomationExecution
+      TargetParameterName: InstanceId
+      DocumentName: AWS-StartEC2Instance
+      Targets:
+        - Key: 'tag:SAP'
+          Values:
+            - ASCS
+    nextStep: StopPASEC2Instances
+  - name: StopPASEC2Instances
+    action: 'aws:executeAwsApi'
+    inputs:
+      Service: ssm
+      Api: StartAutomationExecution
+      TargetParameterName: InstanceId
+      DocumentName: AWS-StartEC2Instance
+      Targets:
+        - Key: 'tag:SAP'
+          Values:
+            - PAS
