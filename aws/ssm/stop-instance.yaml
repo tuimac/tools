@@ -1,4 +1,4 @@
-description: StartEC2Instances
+description: StopEC2Instances
 schemaVersion: '0.3'
 mainSteps:
   - name: MyCheckCalendarStateStep
@@ -18,7 +18,7 @@ mainSteps:
       Service: ssm
       Api: StartAutomationExecution
       TargetParameterName: InstanceId
-      DocumentName: AWS-StartEC2Instance
+      DocumentName: AWS-StopEC2Instance
       Targets:
         - Key: 'tag:SAP'
           Values:
@@ -30,7 +30,7 @@ mainSteps:
       Service: ssm
       Api: StartAutomationExecution
       TargetParameterName: InstanceId
-      DocumentName: AWS-StartEC2Instance
+      DocumentName: AWS-StopEC2Instance
       Targets:
         - Key: 'tag:SAP'
           Values:
