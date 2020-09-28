@@ -1,0 +1,17 @@
+[Unit]
+Description=for test
+After=network.target
+
+[Service]
+Type=simple
+User=ec2-user
+TimeoutSec=120
+ExecStart=/home/ec2-user/script.sh start
+ExecStop=/home/ec2-user/script.sh stop
+KillMode=none
+SendSIGKILL=no
+RemainAfterExit=true
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
