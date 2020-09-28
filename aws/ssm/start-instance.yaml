@@ -7,7 +7,7 @@ mainSteps:
       Service: ssm
       Api: GetCalendarState
       CalendarNames:
-        - 'arn:aws:ssm:ap-northeast-1:500415866962:document/test'
+        - 'arn:aws:ssm:ap-northeast-1:000000000000:document/test'
       PropertySelector: $.State
       DesiredValues:
         - OPEN
