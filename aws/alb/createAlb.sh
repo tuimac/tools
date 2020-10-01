@@ -37,13 +37,14 @@ function createTargetGroup(){
         --unhealthy-threshold-count 2 \
         --matcher HttpCode=200 \
         --target-type instance`
+    
+    TGARN=`echo $result | jq -r '.TargetGroups[] | .TargetGroupArn'`
 
     if [ $? -ne 0 ]; then
         echo 'Create target group is failed.'
         exit 1
     else
         echo 'Create target group is successed!'
-        TGARN=`echo $result | jq -r '.TargetGroups[] | .TargetGroupArn'`
     fi
 }
 
@@ -56,13 +57,14 @@ function createAlb(){
         --type application \
         --ip-address-type ipv4 \
         --tags Key=Name,Value=$ALBNAME`
+    
+    ALBARN=`echo $result | jq -r '.LoadBalancers[] | .LoadBalancerArn'`
 
     if [ $? -ne 0 ]; then
         echo 'Create ALB is failed.'
         exit 1
     else
         echo 'Create ALB is successed!'
-        ALBARN=`echo $result | jq -r '.LoadBalancers[] | .LoadBalancerArn'`
     fi
 }
 
@@ -82,7 +84,10 @@ function createListener(){
 }
 
 function registerTarget(){
-    for instanceid in ${TARGETSEC2[@]}; do
+    local targets=`aws ec2 describe-instances --filter 'Name=tag:Environment,Values=prod' | \
+                    jq -r '.Reservations[].Instances[].InstanceId'`
+
+    for instanceid in ${targets[@]}; do
         local result=`aws elbv2 register-targets \
             --target-group-arn $TGARN \
             --targets Id=$instanceid`
