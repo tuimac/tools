@@ -5,7 +5,6 @@ echo 'interface eth0
 static ip_address=10.0.222.3/24
 static routers=10.0.222.1
 static domain_name_servers=10.0.222.5 8.8.8.8
-static domain_name=tuimac.private
 static domain_search=tuimac.private' >> /etc/dhcpcd.conf
 
 echo ' cgroup_enable=cpuset cgroup_enable=memory cgroup_memory=1' >> /boot/cmdline.txt
