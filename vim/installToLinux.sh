@@ -1,7 +1,7 @@
 #!/bin/bash
 
-sudo mkdir -p /etc/vim/undo
-sudo mkdir -p /etc/vim/backup
-sudo rm /etc/vimrc
-sudo curl -L https://raw.githubusercontent.com/tuimac/tools/master/vim/vimrc -o /etc/vimrc
-sudo chmod -R 777 /etc/vim
+mkdir -p /etc/vim/undo
+mkdir -p /etc/vim/backup
+rm /etc/vimrc
+curl -L https://raw.githubusercontent.com/tuimac/tools/master/vim/vimrc -o /etc/vimrc
+chmod -R 777 /etc/vim
