@@ -1,0 +1,13 @@
+#!/bin/bash
+
+MASTER_REPO_URL='https://github.com/Shinichi1125/pictionary_v2.1'
+FORKED_REPO_URL='https://github.com/tuimac/pictionary_v2.1'
+LOCAL_REPO='kashiwagi'
+FORKED_BRANCH='kashiwagi'
+
+git remote add $FORKED_BRANCE $MASTER_REPO_URL
+git pull origin master
+git remote rm $FORKED_BRANCH
+
+git remote add $FORKED_BRANCE $FORKED_REPO_URL
+git push origin master
