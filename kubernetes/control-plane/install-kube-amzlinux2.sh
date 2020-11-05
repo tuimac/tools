@@ -47,7 +47,7 @@ sleep 1
 kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
 
 #kubectl label node data-plane1 node-role.kubernetes.io/worker=worker
-
+#kubectl taint nodes NODE_NAME node-role.kubernetes.io/master:NoSchedule-
 
 
 # Installation of Kubernetes Dashboard without HTTPS certification!!
