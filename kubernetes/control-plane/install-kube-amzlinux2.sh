@@ -1,5 +1,7 @@
 #!/bin/bash
 
+PODNETWORK='10.230.0.0/16'
+
 sudo yum update -y
 sudo swapoff -a
 sudo yum install -y yum-utils device-mapper-persistent-data lvm2 docker git
@@ -33,6 +35,7 @@ sudo systemctl restart kubelet
 sleep 10
 
 sudo kubeadm init \
+        --pod-network-cidr=${PODNETWORK} \
         --config=init-config.yaml \
         --upload-certs \
         --ignore-preflight-errors all
@@ -50,6 +53,11 @@ kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documen
 #kubectl label node data-plane1 node-role.kubernetes.io/worker=worker
 #kubectl taint nodes NODE_NAME node-role.kubernetes.io/master:NoSchedule-
 
+sudo yum install iptables-services -y
+sudo systemctl enable iptables
+sudo systemctl start iptables
+sudo iptables -t nat -A POSTROUTING -s ${PODNETWORK} -o eth0 -j MASQUERADE
+sudo service iptables save
 
 # Installation of Kubernetes Dashboard without HTTPS certification!!
 
