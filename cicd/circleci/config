@@ -1,0 +1,106 @@
+version: 2.1
+executors:
+  awscli:
+    environment:
+      AWS_DEFAULT_REGION: ap-northeast-1
+      AWS_PAGER: ''
+    docker:
+      - image: amazon/aws-cli
+jobs:
+  build_images:
+    machine: true
+    steps:
+      - checkout
+      - restore_cache:
+          name: Restore image cache
+          key: docker-{{ checksum ".circleci/config.yml" }}
+          paths: ~/caches/images.tar
+      - run:
+          name: Build images
+          command: |
+            sudo curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+            sudo chmod +x /usr/local/bin/docker-compose
+            git clone https://github.com/tuimac/pictionary_v2.1.git
+            cd pictionary_v2.1
+            set -x
+            docker-compose build
+            mkdir -p ~/caches
+            docker save $(docker images --format '{{.Repository}}' | grep ${DOCKER_USER}) -o ~/caches/images.tar
+      - save_cache:
+          name: Save image cache
+          key: docker-{{ checksum ".circleci/config.yml" }}
+          paths: ~/caches/images.tar
+  test_service:
+    machine: true
+    steps:
+      - checkout
+      - restore_cache:
+          name: Restore image cache
+          key: docker-{{ checksum ".circleci/config.yml" }}
+          paths: ~/caches/images.tar
+      - run:
+          name: Load images
+          command: docker load -i ~/caches/images.tar
+      - run:
+          name: Start containers
+          command: |
+            sudo curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+            sudo chmod +x /usr/local/bin/docker-compose
+            git clone https://github.com/tuimac/pictionary_v2.1.git
+            cd pictionary_v2.1
+            set -x
+            docker-compose up -d
+      - run:
+          name: Integration test - Access landing page
+          command: |
+            conunt=1
+            for i in {0..10}; do
+              curl http://localhost
+              [[ $? -eq 0 ]] && exit 0
+              sleep 3
+            done
+            exit 1
+  push_images:
+    machine: true
+    steps:
+      - checkout
+      - restore_cache:
+          name: Restore image cache
+          key: docker-{{ checksum ".circleci/config.yml" }}
+          paths: ~/caches/images.tar
+      - run:
+          name: Load images
+          command: docker load -i ~/caches/images.tar
+      - run:
+          name: Push images
+          command: |
+            echo ${DOCKER_PASS} | docker login -u ${DOCKER_USER} --password-stdin
+            docker images --format '{{.Repository}}' | while read imagename; do
+              docker push $imagename
+            done
+  deploy_containers:
+    executor: awscli
+    steps:
+      - checkout
+      - run:
+          name: Run deploy command
+          command: |
+            aws ssm send-command \
+              --targets 'Key=tag:Deploy,Values=production' \
+              --document-name 'AWS-RunShellScript' \
+              --parameters commands=['/deploy/deploy.sh']
+workflows:
+  version: 2.1
+  build-test-push-deploy:
+    jobs:
+      - build_images
+      - test_service:
+         requires:
+          - build_images
+      - push_images:
+          requires:
+            - test_service
+            - build_images
+      - deploy_containers:
+          requires:
+            - push_images
