@@ -14,11 +14,11 @@ clusterName: production
 controlPlaneEndpoint: docker.tuimac.private:6443
 apiServer:
   extraArgs:
-    podSubnet: 10.230.0.0/16
     enable-admission-plugins: DefaultTolerationSeconds
     default-not-ready-toleration-seconds: "10"
     default-unreachable-toleration-seconds: "10"
 networking:
+  podSubnet: 10.230.0.0/16
   serviceSubnet: 10.231.0.0/16
   dnsDomain: prod.local
 certificatesDir: /etc/kubernetes/pki

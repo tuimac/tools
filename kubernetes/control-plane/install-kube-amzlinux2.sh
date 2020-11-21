@@ -39,7 +39,7 @@ sudo kubeadm init \
         --upload-certs \
         --ignore-preflight-errors all
 
-[[ $? -ne 0 ]] && {echo -ne 'Initialization of kubernetes are failed!'; exit 1; }
+[[ $? -ne 0 ]] && { echo -ne 'Initialization of kubernetes are failed!'; exit 1; }
 
 sudo mkdir -p ${HOME}/.kube
 sudo cp -i /etc/kubernetes/admin.conf ${HOME}/.kube/config
