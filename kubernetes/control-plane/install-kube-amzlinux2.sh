@@ -35,7 +35,6 @@ sudo systemctl restart kubelet
 sleep 10
 
 sudo kubeadm init \
-        --pod-network-cidr=${PODNETWORK} \
         --config=init-config.yaml \
         --upload-certs \
         --ignore-preflight-errors all

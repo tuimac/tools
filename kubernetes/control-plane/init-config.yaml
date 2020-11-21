@@ -14,6 +14,7 @@ clusterName: production
 controlPlaneEndpoint: docker.tuimac.private:6443
 apiServer:
   extraArgs:
+    podSubnet: 10.230.0.0/16
     enable-admission-plugins: DefaultTolerationSeconds
     default-not-ready-toleration-seconds: "10"
     default-unreachable-toleration-seconds: "10"
