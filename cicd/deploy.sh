@@ -25,10 +25,10 @@ function getProject(){
 }
 
 function pullImages(){
-    docker pull ${DOCKER_USER}/mysql
-    docker pull ${DOCKER_USER}/springboot
-    docker pull ${DOCKER_USER}/react
-    docker pull ${DOCKER_USER}/nginx
+    docker pull ${DOCKER_USER}/mysql:${IMAGE_TAG}
+    docker pull ${DOCKER_USER}/springboot:${IMAGE_TAG}
+    docker pull ${DOCKER_USER}/react:${IMAGE_TAG}
+    docker pull ${DOCKER_USER}/nginx:${IMAGE_TAG}
 }
 
 function startContainers(){
@@ -54,12 +54,13 @@ function checkEnvironment(){
 function main(){
     [[ ! -f $LOG ]] && { touch $LOG; }
     date > $LOG
-    if [ -z $1 ] || [ -z $2 ]; then
+    if [ -z $1 ] || [ -z $2 ] || [ -z $3 ]; then
         usage
         exit 1
     fi
     export DOCKER_USER=$1
     SNS_ARN=$2
+    export IMAGE_TAG=$3
 
     cleanupProject | tee -a $LOG 2>&1
     getProject | tee -a $LOG 2>&1
@@ -68,4 +69,4 @@ function main(){
     checkEnvironment | tee -a $LOG 2>&1
 }
 
-main $1 $2
+main $1 $2 $3
