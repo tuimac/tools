@@ -1,0 +1,61 @@
+version: 2.1
+executors:
+  awscli:
+    docker:
+      - image: amazon/aws-cli
+jobs:
+  create_images:
+    machine: true
+    steps:
+      - checkout
+      - run:
+          name: Install docker compose
+          command: |
+            sudo curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+            sudo chmod +x /usr/local/bin/docker-compose
+      - run:
+          name: Build images
+          command: |
+            git clone https://github.com/tuimac/pictionary_v2.1.git
+            cd pictionary_v2.1
+            set -x
+            docker-compose build
+      - run:
+          name: Start containers
+          command: |
+            set -x
+            docker-compose up -d
+      - run:
+          name: Integration test - Access landing page
+          command: |
+            conunt=1
+            for i in {0..10}; do
+              curl http://localhost
+              [[ $? -eq 0 ]] && exit 0
+              sleep 3
+            done
+            exit 1
+      - run:
+          name: Push images
+          command: |
+            echo ${DOCKER_PASS} | docker login -u ${DOCKER_USER} --password-stdin
+            set -x
+            docker-compose push
+  deploy:
+    executor: awscli
+    steps:
+      - run:
+          name: Deploy containers
+          command: |
+            aws ssm send-command \
+              --targets Key=tag:Deploy,Values=production \
+              --document-name 'AWS-RunShellScript' \
+              --parameters 'commands=/home/ec2-user/test/deploy.sh '${DOCKER_USER}' '${AWS_SNS_TOPIC_ARN}' '${CIRCLE_SHA1}
+workflows:
+  version: 2.1
+  pictionarizer-pipeline:
+    jobs:
+      - create_images
+      - deploy:
+          requires:
+            - create_images
