@@ -1,11 +1,11 @@
 #!/bin/bash
 
-GITREPOURL='https://github.com/tuimac/pictionary_v2.1.git'
+GITREPOURL='https://github.com/Shinichi1125/pictionary_v2.1.git'
 GITREPONAME='pictionary_v2.1'
 SCRIPTDIR=$(cd $(dirname "${BASH_SOURCE[0]}") > /dev/null 2>&1 && pwd)
 PJTDIR=${SCRIPTDIR}/${GITREPONAME}
 LOG=${SCRIPTDIR}/deploy.log
-APPURL='http://test.com'
+APPURL='http://pictionarizer.com'
 SNSTOPIC='test'
 export AWS_DEFAULT_REGION='ap-northeast-1'
 
