@@ -1,9 +1,6 @@
 version: 2.1
 executors:
   awscli:
-    environment:
-      AWS_DEFAULT_REGION: ap-northeast-1
-      AWS_PAGER: ''
     docker:
       - image: amazon/aws-cli
 jobs:
@@ -16,11 +13,14 @@ jobs:
           key: docker-{{ checksum ".circleci/config.yml" }}
           paths: ~/caches/images.tar
       - run:
-          name: Build images
+          name: Install docker compose
           command: |
             sudo curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
             sudo chmod +x /usr/local/bin/docker-compose
-            git clone https://github.com/tuimac/pictionary_v2.1.git
+      - run:
+          name: Build images
+          command: |
+            git clone https://github.com/Shinichi1125/pictionary_v2.1.git
             cd pictionary_v2.1
             set -x
             docker-compose build
@@ -42,11 +42,14 @@ jobs:
           name: Load images
           command: docker load -i ~/caches/images.tar
       - run:
-          name: Start containers
+          name: Install docker compose
           command: |
             sudo curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
             sudo chmod +x /usr/local/bin/docker-compose
-            git clone https://github.com/tuimac/pictionary_v2.1.git
+      - run:
+          name: Start containers
+          command: |
+            git clone https://github.com/Shinichi1125/pictionary_v2.1.git
             cd pictionary_v2.1
             set -x
             docker-compose up -d
@@ -72,35 +75,36 @@ jobs:
           name: Load images
           command: docker load -i ~/caches/images.tar
       - run:
+          name: Install docker compose
+          command: |
+            sudo curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+            sudo chmod +x /usr/local/bin/docker-compose
+      - run:
           name: Push images
           command: |
             echo ${DOCKER_PASS} | docker login -u ${DOCKER_USER} --password-stdin
-            docker images --format '{{.Repository}}' | while read imagename; do
-              docker push $imagename
-            done
-  deploy_containers:
+            git clone https://github.com/Shinichi1125/pictionary_v2.1.git
+            cd pictionary_v2.1
+            set -x
+            docker-compose push
+  deploy:
     executor: awscli
     steps:
-      - checkout
       - run:
-          name: Run deploy command
+          name: Deploy containers
           command: |
             aws ssm send-command \
-              --targets 'Key=tag:Deploy,Values=production' \
+              --targets Key=tag:Deploy,Values=production \
               --document-name 'AWS-RunShellScript' \
-              --parameters commands=['/deploy/deploy.sh']
+              --parameters 'commands=/home/ec2-user/test/deploy.sh '${DOCKER_USER}' '${AWS_SNS_TOPIC_ARN}
 workflows:
   version: 2.1
   build-test-push-deploy:
     jobs:
       - build_images
       - test_service:
-         requires:
-          - build_images
+          requires:
+            - build_images
       - push_images:
           requires:
             - test_service
-            - build_images
-      - deploy_containers:
-          requires:
-            - push_images
