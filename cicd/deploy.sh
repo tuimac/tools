@@ -25,10 +25,10 @@ function getProject(){
 }
 
 function pullImages(){
-    docker pull ${DOCKER_USER}/mysql:${IMAGE_TAG}
-    docker pull ${DOCKER_USER}/springboot:${IMAGE_TAG}
-    docker pull ${DOCKER_USER}/react:${IMAGE_TAG}
-    docker pull ${DOCKER_USER}/nginx:${IMAGE_TAG}
+    docker pull ${DOCKER_USER}/mysql:${CIRCLE_SHA1}
+    docker pull ${DOCKER_USER}/springboot:${CIRCLE_SHA1}
+    docker pull ${DOCKER_USER}/react:${CIRCLE_SHA1}
+    docker pull ${DOCKER_USER}/nginx:${CIRCLE_SHA1}
 }
 
 function startContainers(){
@@ -60,7 +60,7 @@ function main(){
     fi
     export DOCKER_USER=$1
     SNS_ARN=$2
-    export IMAGE_TAG=$3
+    export CIRCLE_SHA1=$3
 
     cleanupProject | tee -a $LOG 2>&1
     getProject | tee -a $LOG 2>&1
