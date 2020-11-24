@@ -3,6 +3,9 @@ executors:
   awscli:
     docker:
       - image: amazon/aws-cli
+    environment:
+      AWS_DEFAULT_REGION: ap-northeast-1
+      AWS_PAGER: ""
 jobs:
   create_images:
     machine: true
@@ -24,14 +27,14 @@ jobs:
           name: Start containers
           command: |
             set -x
+            cd pictionary_v2.1
             docker-compose up -d
       - run:
           name: Integration test - Access landing page
           command: |
-            conunt=1
             for i in {0..10}; do
-              curl http://localhost
-              [[ $? -eq 0 ]] && exit 0
+              STATUS_CODE=$(curl -LI http://localhost -o /dev/null -w '%{http_code}\n' -s)
+              [[ $STATUS_CODE == '200' ]] && exit 0 
               sleep 3
             done
             exit 1
@@ -39,6 +42,7 @@ jobs:
           name: Push images
           command: |
             echo ${DOCKER_PASS} | docker login -u ${DOCKER_USER} --password-stdin
+            cd pictionary_v2.1
             set -x
             docker-compose push
   deploy:
