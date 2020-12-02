@@ -2,7 +2,7 @@
 
 # Change variables below if you need
 ##############################
-NAME="test"
+NAME="dev"
 VOLUME="${PWD}/volume"
 DOCKERHUBUSER="tuimac"
 IMAGE=${DOCKERHUBUSER}/${NAME}
@@ -10,6 +10,7 @@ IMAGE=${DOCKERHUBUSER}/${NAME}
 
 function runContainer(){
     docker run -itd --name ${NAME} \
+                -p 4000:80 \
                 -v ${VOLUME}:/tmp \
                 -h ${NAME} \
                 --network="bridge" \
