@@ -4,7 +4,7 @@ WORKDIR /root
 
 RUN apk update && \
     apk upgrade && \
-    apk add --no-cache git bash vim curl && \
+    apk add --no-cache git bash vim curl ncurses && \
     mkdir /etc/vim/backup && \
     mkdir /etc/vim/undo && \
     rm /etc/vim/vimrc && \
