@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: test-service
+spec:
+  selector:
+    app: test
+  ports:
+    - protocol: TCP
+      port: 53
+      targetPort: 5353
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test
+  namespace: default
+  labels:
+    app: test
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: test
+  template:
+    metadata:
+      labels:
+        app: test
+    spec:
+      containers:
+        - name: test
+          imagePullPolicy: IfNotPresent
+          image: test
+          ports:
+            - containerPort: 5353
