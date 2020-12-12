@@ -4,7 +4,9 @@ WORKDIR /root
 
 RUN apk update && \
     apk upgrade && \
-    apk add --no-cache git bash vim curl ncurses && \
+    apk add --no-cache git bash tzdata vim curl ncurses && \
+    cp /usr/share/zoneinfo/Asia/Tokyo /etc/localtime && \
+    apk del tzdata && \
     mkdir /etc/vim/backup && \
     mkdir /etc/vim/undo && \
     rm /etc/vim/vimrc && \
