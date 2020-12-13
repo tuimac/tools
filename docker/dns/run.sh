@@ -12,7 +12,8 @@ function runContainer(){
     docker run -itd --name ${NAME} \
                 -h ${NAME} \
                 -v ${VOLUME}:/tmp \
-                -p 53:53 \
+                -p 53:53/tcp \
+                -p 53:53/udp \
                 --network="bridge" \
                 ${NAME}
 }
@@ -26,7 +27,7 @@ function createContainer(){
     mkdir ${VOLUME}
     docker build -t ${NAME} .
     runContainer
-    docker logs ${NAME}
+    #docker logs ${NAME}
     cleanup
 }
 
