@@ -1,9 +1,0 @@
-$TTL    30
-@                   IN      SOA node3.tuimac.private. root.tuimac.private. (
-                        0       ; serial
-                        1D      ; refresh
-                        1H      ; retry
-                        1W      ; expire
-                        3H )    ; minimum
-                    IN      NS      node3.tuimac.private.
-node3 IN A 10.3.0.227
