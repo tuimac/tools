@@ -9,11 +9,14 @@ docker build --platform=local -o . git://github.com/docker/buildx
 mkdir -p ~/.docker/cli-plugins
 mv buildx ~/.docker/cli-plugins/docker-buildx
 export DOCKER_CLI_EXPERIMENTAL=enabled
-docker run --rm --privileged docker/binfmt
+docker run --rm --privileged docker/binfmt:820fdd95a9972a5308930a2bdfb8573dd4447ad3
 cat /proc/sys/fs/binfmt_misc/qemu-aarch64
 docker buildx create --use tuimac
 
-docker login
+while true; do
+    docker login
+    [[ $? -eq 0 ]] && break
+done
 
 echo -en 'Enter Image Name: '
 read IMAGENAME
