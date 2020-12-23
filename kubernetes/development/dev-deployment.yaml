@@ -36,6 +36,6 @@ spec:
       containers:
         - name: dev
           imagePullPolicy: IfNotPresent
-          image: alpine
+          image: tuimac/development
           ports:
             - containerPort: 80
