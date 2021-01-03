@@ -3,7 +3,7 @@
 PODNETWORK='10.230.0.0/16'
 
 sudo apt update
-suod apt upgrade -y
+sudo apt upgrade -y
 sudo swapoff -a
 sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
 sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
