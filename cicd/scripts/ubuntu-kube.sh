@@ -31,8 +31,8 @@ certificatesDir: /etc/kubernetes/pki
 EOF"
 
 
-sudo apt update
-sudo apt upgrade -y
+#sudo apt update
+#sudo apt upgrade -y
 sudo swapoff -a
 sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
 sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
@@ -80,3 +80,4 @@ sleep 1
 
 #kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
 kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+kubectl taint nodes docker node-role.kubernetes.io/master:NoSchedule-
