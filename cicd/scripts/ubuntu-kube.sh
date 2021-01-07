@@ -31,7 +31,7 @@ certificatesDir: /etc/kubernetes/pki
 EOF"
 
 
-#sudo apt update
+sudo apt update
 #sudo apt upgrade -y
 sudo swapoff -a
 sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
