@@ -1,0 +1,70 @@
+language: bash
+dist: focal
+sudo: required
+env:
+  global:
+    - NAME=openvpn
+    - PORT=30000
+    - IMAGE=tuimac/openvpn
+    - CLIENTCERT=tuimac.ovpn
+jobs:
+  include:
+    - stage: 'Build docker image'
+      name: 'Build docker image'
+      before_script: cd builds
+      script: 
+        - curl https://raw.githubusercontent.com/tuimac/tools/master/cicd/scripts/install-docker.sh | bash
+        - docker build -t ${IMAGE} . || travis_terminate 1;
+        - docker volume create ${NAME} || travis_terminate 1;
+        - docker run -itd --name ${NAME} -v ${NAME}:/etc/openvpn -p ${PORT}:1194/udp -p ${PORT}:1194/tcp --cap-add NET_ADMIN --env-file env.list --network=bridge ${IMAGE} || travis_terminate 1;
+        - |
+          ../test
+          for i in {0..100}; do
+            curl http://localhost:${PORT} -o ${CLIENTCERT};
+            [[ $? -eq 0 ]] && break;
+            sleep 3;
+          done || travis_terminate 1;
+        - mv ${CLIENTCERT} test.ovpn || travis_terminate 1;
+        - docker build -t test . || travis_terminate 1;
+        - docker run -itd --name test --network bridge test || travis_terminate 1;
+        - sleep 3
+        - docker stop ${NAME} && docker start ${NAME} || travis_terminate 1;
+        - docker ps -a
+        - sleep 3
+        - docker logs test
+    - stage: 'Push docker image'
+      name: 'Push docker image'
+      if: branch = master
+      before_install:
+        - sudo rm -rf /var/lib/apt/lists/*
+      before_script: cd builds
+      script:
+        - curl https://raw.githubusercontent.com/tuimac/tools/master/cicd/scripts/install_docker.sh | bash
+        - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin || travis_terminate 1;
+        - curl https://raw.githubusercontent.com/tuimac/tools/master/cicd/scripts/install-buildx.sh | bash || travis_terminate 1;
+        - docker buildx build --platform linux/amd64,linux/arm64 -t ${IMAGE} --push . || travis_terminate 1;
+    - stage: 'Deploy on Kubernetes'
+      name: 'Deploy on Kubernetes'
+      before_script: cd kubernetes
+      script:
+        - curl https://raw.githubusercontent.com/tuimac/tools/master/cicd/scripts/ubuntu-kube.sh | bash || travis_terminate 1;
+        - |
+          ALL=`kubectl get pods -A | wc -l`
+          for i in {0..100}; do
+            PENDING=`kubectl get pods --all-namespaces --field-selector status.phase=Pending | wc -l`
+            [[ $All -eq $PENDING ]] && { echo 'All OK'; break; }
+            sleep 3
+          done || travis_terminate 1;
+        - mkdir -p /kubernetes/openvpn || travis_terminate 1;
+        - kubectl apply -f . || travis_terminate 1;
+        - |
+          ../test
+          for i in {0..100}; do
+            curl http://localhost:${PORT} -o ${CLIENTCERT};
+            [[ $? -eq 0 ]] && break;
+            sleep 3;
+          done || travis_terminate 1;
+        - mv ${CLIENTCERT} test.ovpn || travis_terminate 1;
+        - docker build -t test . || travis_terminate 1;
+        - docker run -itd --name test --network bridge test || travis_terminate 1;
+        - sleep 3
