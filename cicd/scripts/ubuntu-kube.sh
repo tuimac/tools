@@ -3,36 +3,8 @@
 PODNETWORK='10.230.0.0/16'
 CONFIG='init-config.yaml'
 
-sh -c "cat <<EOF > ${CONFIG}
-# https://godoc.org/k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/v1beta2
-apiVersion: kubeadm.k8s.io/v1beta2
-kind: InitConfiguration
-nodeRegistration:
-  name: docker
-localAPIEndpoint:
-  bindPort: 6443
-
----
-
-apiVersion: kubeadm.k8s.io/v1beta2
-kind: ClusterConfiguration
-clusterName: production
-controlPlaneEndpoint: docker.tuimac.private:6443
-apiServer:
-  extraArgs:
-    enable-admission-plugins: DefaultTolerationSeconds
-    default-not-ready-toleration-seconds: "10"
-    default-unreachable-toleration-seconds: "10"
-networking:
-  podSubnet: ${PODNETWORK}
-  serviceSubnet: 10.231.0.0/16
-  dnsDomain: prod.local
-certificatesDir: /etc/kubernetes/pki
-EOF"
-
-
 sudo apt update
-#sudo apt upgrade -y
+sudo apt upgrade -y
 sudo swapoff -a
 sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
 sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
@@ -64,8 +36,14 @@ sleep 5
 sudo systemctl restart kubelet
 sleep 5
 
+IP=`hostname -i`
+NODENAME=`hostname -s`
+
 sudo kubeadm init \
-        --config=${CONFIG} \
+        --apiserver-advertise-address ${IP} \
+        --pod-network-cidr 10.240.0.0/24 \
+        --service-cidr 10.241.0.0/24 \
+        --node-name ${NODENAME} \
         --upload-certs \
         --ignore-preflight-errors all
 
