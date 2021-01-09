@@ -22,3 +22,6 @@ cat /proc/sys/fs/binfmt_misc/qemu-aarch64
 # Create and use builder
 docker buildx create --name travis
 docker buildx use travis
+
+# Build and Push docker images
+docker buildx build --platform linux/amd64,linux/arm64 -t ${IMAGE} --push .
