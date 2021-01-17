@@ -34,9 +34,10 @@ public class Real4 {
         float fraction = 0;
         int index = 1;
 
-        while(tmp > 0){
+        for(int i = 22; i >= 0; i--){
+            tmp = (tmp & (1 << i)) >> i;
             if(tmp % 2 == 1){
-                fraction = 1 * (float) Math.pow(2, index * -1);
+                fraction += (float) Math.pow(2, index * -1);
             }
             tmp = tmp / 2;
             index++;
