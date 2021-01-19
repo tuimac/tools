@@ -1,15 +1,13 @@
 #!/bin/bash
 LOG=/var/log/user-data.log
-HOSTNAME=dns
+HOSTNAME=docker
 DOMAIN=tuimac.private
 touch $LOG
 exec >> $LOG 2>&1
-    apt update -y
+    apt update
     apt upgrade -y
-    mkdir /etc/vim/undo
-    mkdir /etc/vim/backup
-    rm /etc/vim/vimrc
-    curl -L https://raw.githubusercontent.com/tuimac/tools/master/vim/vimrc -o /etc/vim/vimrc
+    mkdir -p /etc/vim/undo
+    mkdir -p /etc/vim/backup
     chmod -R 777 /etc/vim
     apt install -y apt-transport-https ca-certificates curl gnupg-agent software-properties-common git
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
@@ -24,4 +22,7 @@ exec >> $LOG 2>&1
 $IP $HOSTNAME ${HOSTNAME}.${DOMAIN}
 EOF
     echo ${HOSTNAME}.${DOMAIN} > /etc/hostname
+    cd /home/ubuntu
+    su ubuntu -c 'git clone https://github.com/tuimac/tools.git'
+    curl https://raw.githubusercontent.com/tuimac/tools/master/vim/installer/ubuntu.sh | sudo bash 
     reboot
