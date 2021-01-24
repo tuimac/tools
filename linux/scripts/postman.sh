@@ -4,4 +4,4 @@
 
 curl -X POST -H "Content-Type: application/json" \
     -d '{"Name": "test", "test": "test"}' \
-    $1
+    $1 | jq
