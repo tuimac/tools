@@ -28,7 +28,7 @@ if [ -n "$force_color_prompt" ]; then
     fi
 fi
 
-PS1="\[$(tput setaf 6)\][\#]\[$(tput setaf 2)\]\u\[$(tput setaf 3)\]@\[$(tput setaf 4)\]\h\[$(tput setaf 2)\]|\t|\[$(tput setaf 6)\]\W\n\[$(tput setaf 1)\]($)\[$(tput sgr0)\]"
+PS1="\[$(tput setaf 6)\][\#]\[$(tput setaf 2)\]\u\[$(tput setaf 3)\]@\[$(tput setaf 4)\]\h\[$(tput setaf 2)\]|\t|\[$(tput setaf 6)\]\w\n\[$(tput setaf 1)\]($)\[$(tput sgr0)\]"
 
 if [ -x /usr/bin/dircolors ]; then
     test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
