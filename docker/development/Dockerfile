@@ -6,7 +6,7 @@ ADD entrypoint.sh /root/entrypoint.sh
 
 RUN apk update && \
     apk upgrade && \
-    apk add --no-cache git bash tzdata vim curl ncurses && \
+    apk add --no-cache git bash tzdata vim curl ncurses tree && \
     cp /usr/share/zoneinfo/Asia/Tokyo /etc/localtime && \
     apk del tzdata && \
     mkdir /etc/vim/backup && \

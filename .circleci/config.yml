@@ -1,0 +1,56 @@
+version: 2.1
+jobs:
+  run-development-image:
+    machine: true
+    environment:
+      - IMAGE: tuimac/development
+    steps:
+      - checkout
+      - run:
+          name: Build images
+          working_directory: docker/development
+          command: docker build -t ${IMAGE} .
+      - run:
+          name: Start containers
+          command: docker run -itd --name development --network bridge ${IMAGE}
+  push-development-image:
+    machine:
+      image: ubuntu-2004:202010-01
+    environment:
+      - BUILDX: https://github.com/docker/buildx/releases/download/v0.5.1/buildx-v0.5.1.linux-amd64
+      - IMAGE: tuimac/development
+    steps:
+      - checkout
+      - run:
+          name: Create directory for Docker Buildx plugin binary
+          command: mkdir -vp ~/.docker/cli-plugins/
+      - run:
+          name: Login Docker Hub
+          command: echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+      - run:
+          name: Download Buildx
+          command: curl --silent -L --output ~/.docker/cli-plugins/docker-buildx ${BUILDX}
+      - run:
+          name: Add permission to execute buildx
+          command: chmod a+x ~/.docker/cli-plugins/docker-buildx
+      - run:
+          name: Create docker driver
+          command: |
+            docker run --rm --privileged docker/binfmt:820fdd95a9972a5308930a2bdfb8573dd4447ad3
+            docker buildx create --name circleci
+            docker buildx use circleci
+      - run:
+          name: Build and Push docker image to Docker Hub
+          working_directory: docker/development
+          command: docker buildx build --platform linux/amd64,linux/arm64 -t ${IMAGE} --push .
+workflows:
+  version: 2.1
+  tools-pipeline:
+    jobs:
+      - run-development-image
+      - push-development-image:
+          requires:
+            - run-development-image
+          filters:
+            branches:
+              only: master
