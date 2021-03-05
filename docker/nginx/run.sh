@@ -2,7 +2,7 @@
 
 # Change variables below if you need
 ##############################
-NAME="dev"
+NAME="nginx-test"
 VOLUME="${PWD}/volume"
 DOCKERHUBUSER="tuimac"
 IMAGE=${DOCKERHUBUSER}/${NAME}
@@ -10,8 +10,8 @@ IMAGE=${DOCKERHUBUSER}/${NAME}
 
 function runContainer(){
     docker run -itd --name ${NAME} \
-                -p 8000:80 \
-                -v ${VOLUME}:/tmp \
+                -p 80:80 \
+                -v ${VOLUME}:/var/log/nginx \
                 -h ${NAME} \
                 --network="bridge" \
                 ${NAME}
