@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql
+    container_name: mysql-zabbix
+    restart: always
+    environment:
+      MYSQL_USER: zabbix
+      MYSQL_PASSWORD: zabbix
+      MYSQL_DATABASE: zabbix
+      MYSQL_RANDOM_ROOT_PASSWORD: 'true'
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8 --collation-server=utf8_bin
+    expose:
+      - 3306
+    tty: true
+    stdin_open: true
+    networks:
+      - zabbix
+  zabbix:
+    image: zabbix/zabbix-server-mysql
+    container_name: zabbix
+    restart: always
+    ports:
+      - 10051:10051
+      - 10050:10050
+    environment:
+      DB_SERVER_HOST: mysql
+      DB_SERVER_PORT: 3306
+      MYSQL_USER: zabbix
+      MYSQL_PASSWORD: zabbix
+      MYSQL_DATABASE: zabbix
+    tty: true
+    stdin_open: true
+    networks:
+      - zabbix
+  web-zabbix:
+    image: zabbix/zabbix-web-apache-mysql
+    container_name: web-zabbix
+    restart: always
+    ports:
+      - 80:8080
+    environment:
+      ZBX_SERVER_HOST: zabbix
+      ZBX_SERVER_PORT: 10051
+      DB_SERVER_HOST: mysql
+      DB_SERVER_PORT: 3306
+      MYSQL_USER: zabbix
+      MYSQL_PASSWORD: zabbix
+      MYSQL_DATABASE: zabbix
+    tty: true
+    stdin_open: true
+    networks:
+      - zabbix
+networks:
+  zabbix:
+    name: zabbix
