@@ -10,9 +10,9 @@ sudo systemctl enable iptables
 sudo systemctl start iptables
 sudo iptables -t nat -A PREROUTING -p tcp -d 169.254.170.2 --dport 80 -j DNAT --to-destination 127.0.0.1:51679
 sudo iptables -t nat -A OUTPUT -d 169.254.170.2 -p tcp -m tcp --dport 80 -j REDIRECT --to-ports 51679
-sudo chmod 777 /etc/sysconfig/iptables
+sudo chmod 755 /etc/sysconfig/iptables
 sudo sh -c 'iptables-save > /etc/sysconfig/iptables'
-mkdir -p /etc/ecs /var/log/ecs /var/lib/ecs/data
+sudo mkdir -p /etc/ecs /var/log/ecs /var/lib/ecs/data
 sudo touch /etc/ecs/ecs.config
 sudo sh -c "cat <<EOF > /etc/ecs/ecs.config
 ECS_DATADIR=/data
