@@ -1,3 +1,4 @@
 .aws
 volume
 *.class
+ecs-agent.tar
