@@ -5,16 +5,15 @@ curl -o ecs-agent.tar https://s3.ap-northeast-1.amazonaws.com/amazon-ecs-agent-a
 sudo sh -c "echo 'net.ipv4.conf.all.route_localnet = 1' >> /etc/sysctl.conf"
 sudo sysctl -p /etc/sysctl.conf
 
+yum module remove container-tools
 sudo yum install -y yum-utils
-sudo yum-config-manager --add-repo https://download.docker.com/linux/rhel/docker-ce.repo
-sudo yum makecache
+sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+sudo sed -i s/7/8/g /etc/yum.repos.d/docker-ce.repo
 sudo yum install -y docker-ce
 sudo systemctl enable --now docker
-
+sudo systemctl start docker
 
 sudo dnf install -y iptables-services
-sudo systemctl start docker
-sudo systemctl enable docker
 sudo systemctl enable iptables
 sudo systemctl start iptables
 sudo iptables -t nat -A PREROUTING -p tcp -d 169.254.170.2 --dport 80 -j DNAT --to-destination 127.0.0.1:51679
