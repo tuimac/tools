@@ -1,5 +1,16 @@
 #!/bin/bash
 
+REGION='ap-northeast-1'
+CLUSTER='test'
+
+sudo dnf install python3-pip
+pip3 install awscli --upgrade --user
+mkdir ~/.aws
+sh -c "cat <<EOF > ~/.aws/config
+[default]
+region = $REGION
+EOF"
+
 sudo sed -i -e "s/SELINUX=enforcing/SELINUX=disabled/g" /etc/selinux/config
 curl -o ecs-agent.tar https://s3.ap-northeast-1.amazonaws.com/amazon-ecs-agent-ap-northeast-1/ecs-agent-latest.tar
 sudo sh -c "echo 'net.ipv4.conf.all.route_localnet = 1' >> /etc/sysctl.conf"
@@ -29,7 +40,7 @@ ECS_ENABLE_TASK_IAM_ROLE_NETWORK_HOST=true
 ECS_LOGFILE=/log/ecs-agent.log
 ECS_AVAILABLE_LOGGING_DRIVERS=["json-file","awslogs"]
 ECS_LOGLEVEL=info
-ECS_CLUSTER=default
+ECS_CLUSTER=$CLUSTER
 EOF"
 sudo docker load --input ./ecs-agent.tar
 sudo docker run --name ecs-agent \
