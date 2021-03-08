@@ -1,9 +1,18 @@
 #!/bin/bash
 
+sudo sed -i -e "s/SELINUX=enforcing/SELINUX=disabled/g" /etc/selinux/config
 curl -o ecs-agent.tar https://s3.ap-northeast-1.amazonaws.com/amazon-ecs-agent-ap-northeast-1/ecs-agent-latest.tar
 sudo sh -c "echo 'net.ipv4.conf.all.route_localnet = 1' >> /etc/sysctl.conf"
 sudo sysctl -p /etc/sysctl.conf
-sudo dnf install -y iptables-services docker
+
+sudo yum install -y yum-utils
+sudo yum-config-manager --add-repo https://download.docker.com/linux/rhel/docker-ce.repo
+sudo yum makecache
+sudo yum install -y docker-ce
+sudo systemctl enable --now docker
+
+
+sudo dnf install -y iptables-services
 sudo systemctl start docker
 sudo systemctl enable docker
 sudo systemctl enable iptables
@@ -23,9 +32,10 @@ ECS_AVAILABLE_LOGGING_DRIVERS=["json-file","awslogs"]
 ECS_LOGLEVEL=info
 ECS_CLUSTER=default
 EOF"
-docker load --input ./ecs-agent.tar
-docker run --name ecs-agent \
+sudo docker load --input ./ecs-agent.tar
+sudo docker run --name ecs-agent \
 	--detach=true \
+	--privileged \
 	--restart=on-failure:10 \
 	--volume=/var/run:/var/run \
 	--volume=/var/log/ecs/:/log \
