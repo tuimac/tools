@@ -3,7 +3,7 @@
 REGION='ap-northeast-1'
 CLUSTER='test'
 
-sudo dnf install python3-pip
+sudo dnf install python3-pip -y
 pip3 install awscli --upgrade --user
 mkdir ~/.aws
 sh -c "cat <<EOF > ~/.aws/config
@@ -23,6 +23,7 @@ sudo sed -i s/7/8/g /etc/yum.repos.d/docker-ce.repo
 sudo yum install -y docker-ce
 sudo systemctl enable --now docker
 sudo systemctl start docker
+sudo usermod -aG docker ec2-user
 
 sudo dnf install -y iptables-services
 sudo systemctl enable iptables
