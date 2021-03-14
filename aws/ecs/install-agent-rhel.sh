@@ -3,6 +3,7 @@
 REGION='ap-northeast-1'
 CLUSTER='test'
 
+sudo dnf update -y
 sudo dnf install python3-pip -y
 pip3 install awscli --upgrade --user
 mkdir ~/.aws
@@ -22,6 +23,7 @@ sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/dock
 sudo sed -i s/7/8/g /etc/yum.repos.d/docker-ce.repo
 sudo yum install -y docker-ce
 sudo systemctl enable --now docker
+sleep 5
 sudo systemctl start docker
 sudo usermod -aG docker ec2-user
 
