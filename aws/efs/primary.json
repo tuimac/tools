@@ -1,0 +1,18 @@
+{
+    "Comment": "UPSERT a record ",
+    "Changes": [
+        {
+            "Action": "UPSERT",
+            "ResourceRecordSet": {
+                "Name": "efs.tuimac.me",
+                "Type": "CNAME",
+                "TTL": 10,
+                "ResourceRecords": [
+                    {
+                        "Value": "fs-b551fd95.efs.ap-northeast-1.amazonaws.com"
+                    }
+                ]
+            }
+        }
+    ]
+}
