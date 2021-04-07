@@ -1,11 +1,13 @@
 #!/bin/bash
 
 BASEDIR='/home/ubuntu/test'
-VPNVPCID=''
-VPNSECURITYGROUPID=''
-CLIENTCIDR=''
+VPNVPCID='vpc-xxxxxxxxxxxxx'
+SUBNETID='subnet-xxxxxxxxxxxxxxx'
+VPNSECURITYGROUPID='sg-xxxxxxxxxx'
+CLIENTCIDR='10.0.0.0/16'
 CERTDIR=${BASEDIR}/ca/certs
-VPNREGION=''
+VPNREGION='ap-northeast-1'
+VPNDNS='10.0.0.2'
 
 function installTools(){
     sudo apt install -y easy-rsa openvpn
@@ -58,16 +60,19 @@ function importServerCerts(){
 }
 
 function createVPNEndpoint(){
-    aws ec2 create-client-vpn-endpoint \
+    VPNEndpointID=$(aws ec2 create-client-vpn-endpoint \
         --client-cidr-block ${CLIENTCIDR} \
         --server-certificate-arn ${SERVER_ACM_ARN} \
         --authentication-options Type=certificate-authentication,MutualAuthentication={ClientRootCertificateChainArn=${CLIENT_ACM_ARN}} \
         --connection-log-options Enabled=false \
-        --dns-servers "10.3.0.2" \
+        --dns-servers ${VPNDNS} \
         --vpn-port 443 \
         --transport-protocol udp \
         --security-group-ids ${VPNSECURITYGROUPID} \
-        --vpc-id ${VPNVPCID}
+        --vpc-id ${VPNVPCID} | jq -r .ClientVpnEndpointId)
+    aws ec2 associate-client-vpn-target-network \
+        --client-vpn-endpoint-id $VPNEndpointID \
+        --subnet-id $SUBNETID
 }
 
 function main(){
