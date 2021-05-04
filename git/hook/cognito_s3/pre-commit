@@ -1,0 +1,9 @@
+#!/bin/bash
+
+sed -i "s/\'.*\'/\'\'/g" environment.js
+
+if [ $? -ne 0 ]; then
+    echo 'pre-commit was failed.'
+else
+    echo 'pre-commit has done.'
+fi

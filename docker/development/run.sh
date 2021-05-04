@@ -10,7 +10,6 @@ IMAGE=${DOCKERHUBUSER}/${NAME}
 
 function runContainer(){
     docker run -itd --name ${NAME} \
-                -p 8000:80 \
                 -v ${VOLUME}:/tmp \
                 -h ${NAME} \
                 --network="bridge" \
