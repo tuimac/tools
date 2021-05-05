@@ -20,7 +20,7 @@ function deletePrivateInfoAndGitAdd(){
 function restoreFileContent(){
     rm $FILENAME
     for((i=0; i < ${#FILE_CONTENT[@]}; i++)); do
-        echo ${result[i]} >> $FILENAME
+        echo ${FILE_CONTENT[i]} >> $FILENAME
     done
 }
 
