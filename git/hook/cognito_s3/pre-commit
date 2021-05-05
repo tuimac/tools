@@ -1,9 +1,33 @@
 #!/bin/bash
 
-sed -i "s/\'.*\'/\'\'/g" environment.js
+FILENAME='environment.js'
 
-if [ $? -ne 0 ]; then
-    echo 'pre-commit was failed.'
-else
-    echo 'pre-commit has done.'
-fi
+function bkupFileContent(){
+    FILE_CONTENT=()
+    IFS_BKUP=$IFS
+    IFS=$'\n'
+    for line in `cat ${FILENAME}`; do
+        FILE_CONTENT+=("$line")
+    done
+    IFS=$IFS_BKUP
+}
+
+function deletePrivateInfoAndGitAdd(){
+    sed -i "s/\'.*\'/\'\'/g" $FILENAME
+    git add .
+}
+
+function restoreFileContent(){
+    rm $FILENAME
+    for((i=0; i < ${#FILE_CONTENT[@]}; i++)); do
+        echo ${result[i]} >> $FILENAME
+    done
+}
+
+function main(){
+    bkupFileContent
+    deletePrivateInfoAndGitAdd
+    restoreFileContent
+}
+
+main
