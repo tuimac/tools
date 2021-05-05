@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FILENAME='environment.js'
+FILENAME='src/src/environment.js'
 
 function bkupFileContent(){
     FILE_CONTENT=()
