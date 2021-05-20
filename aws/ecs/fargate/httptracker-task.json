@@ -1,0 +1,47 @@
+{
+  "executionRoleArn": "arn:aws:iam::xxxxxxxxxxxx:role/ecsTaskExecutionRole",
+  "containerDefinitions": [
+    {
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/httptracker",
+          "awslogs-region": "ap-northeast-3",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "portMappings": [
+        {
+          "hostPort": 8000,
+          "protocol": "tcp",
+          "containerPort": 8000
+        }
+      ],
+      "image": "tuimac/httptracker",
+      "essential": true,
+      "name": "httptracker"
+    }
+  ],
+  "placementConstraints": [],
+  "memory": "1024",
+  "taskRoleArn": "arn:aws:iam::xxxxxxxxxxx:role/ecsTaskExecutionRole",
+  "family": "httptracker",
+  "requiresCompatibilities": [
+    "FARGATE"
+  ],
+  "networkMode": "awsvpc",
+  "cpu": "512",
+  "volumes": [
+    {
+      "efsVolumeConfiguration": {
+        "fileSystemId": "fs-xxxxxxxxx",
+        "authorizationConfig": {
+          "iam": "DISABLED"
+        },
+        "transitEncryption": "DISABLED",
+        "rootDirectory": "/"
+      },
+      "name": "fargate"
+    }
+  ]
+}
