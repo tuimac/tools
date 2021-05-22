@@ -6,7 +6,7 @@ function cleanUpLogs(){
     touch $logpath
 }
 
-function cleanUpTemplate(){
+function cleanUpTemplates(){
     local dirpath='src/backend/templates'
     rm -rf $dirpath/*
     touch $dirpath/.gitkeep
@@ -14,6 +14,7 @@ function cleanUpTemplate(){
 
 function main(){
     cleanUpLogs
+    cleanUpTemplates
     git add .
 }
 
