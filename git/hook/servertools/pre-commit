@@ -1,0 +1,13 @@
+#!/bin/bash
+
+function cleanUpLogs(){
+    local logpath='src/backend/logs/info_django.log'
+    rm $logpath
+    touch $logpath
+}
+
+function main(){
+    cleanUpLogs
+}
+
+main
