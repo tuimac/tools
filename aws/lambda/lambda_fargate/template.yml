@@ -50,12 +50,23 @@ Resources:
       VpcId: !Ref Vpc
 
   # Subnet
-  Subnet:
+  Subnet1:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref Vpc
       CidrBlock: !Ref SubnetCidr
-      AvailabilityZone: !Ref AvailabilityZone
+      AvailabilityZone: ap-northeast-1a
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: !Ref NameTagKey
+          Value: !Ref NameTagValue
+
+  Subnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      CidrBlock: !Ref SubnetCidr
+      AvailabilityZone: ap-northeast-1c
       MapPublicIpOnLaunch: false
       Tags:
         - Key: !Ref NameTagKey
@@ -77,45 +88,49 @@ Resources:
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref InternetGateway
 
-  RouteTableAccociation:
+  RouteTableAccociation1:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       RouteTableId: !Ref RouteTable
-      SubnetId: !Ref Subnet
+      SubnetId: !Ref Subnet1
+
+  RouteTableAccociation2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref RouteTable
+      SubnetId: !Ref Subnet2
 
   # Security Group
-  EfsSecurityGroup:
+  SecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: EfsSG
+      GroupName: !Ref NameTagValue
       GroupDescription: Allow All traffic
       VpcId: !Ref Vpc
       SecurityGroupIngress:
-        - IpProtocol: -1
-          CidrIp: 0.0.0.0/0
-      SecurityGroupEgress:
-        - IpProtocol: -1
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
           CidrIp: 0.0.0.0/0
       Tags:
         - Key: !Ref NameTagKey
-          Value: EfsSG
+          Value: !Ref NameTagValue
 
-  LambdaSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
+  SecurityGroupIngress:
+    Type: AWS::EC2::SecurityGroupIngress
     Properties:
-      GroupName: LambdaSG
-      GroupDescription: Allow All traffic
-      VpcId: !Ref Vpc
-      SecurityGroupIngress:
-        - IpProtocol: -1
-          CidrIp: 0.0.0.0/0
-      SecurityGroupEgress:
-        - IpProtocol: -1
-          CidrIp: 0.0.0.0/0
-      Tags:
-        - Key: !Ref NameTagKey
-          Value: LambdaSG
+      IpProtocol: -1
+      SourceSecurityGroupId: !GetAtt SecurityGroup.GroupId
+      GroupId: !GetAtt SecurityGroup.GroupId
 
+  SecurityGroupEgress:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      IpProtocol: -1
+      SourceSecurityGroupId: !GetAtt SecurityGroup.GroupId
+      GroupId: !GetAtt SecurityGroup.GroupId
+
+  # Endpoint
   S3Endpoint:
     Type: AWS::EC2::VPCEndpoint
     Properties:
@@ -137,7 +152,7 @@ Resources:
   Efs:
     Type: AWS::EFS::FileSystem
     Properties:
-      AvailabilityZoneName: !Ref AvailabilityZone
+      AvailabilityZoneName: ap-northeast-1a
       BackupPolicy:
         Status: DISABLED
       Encrypted: false
@@ -150,5 +165,105 @@ Resources:
     Properties:
       FileSystemId: !Ref Efs
       SecurityGroups:
-        - !Ref EfsSecurityGroup
-      SubnetId: !Ref Subnet
+        - !Ref SecurityGroup
+      SubnetId: !Ref Subnet1
+
+  # Application Load Balancer
+  ApplicationLoadBalancer: 
+    Type: "AWS::ElasticLoadBalancingV2::LoadBalancer"
+    Properties: 
+      Name: !Sub NameTagValue
+      Scheme: internet-facing
+      LoadBalancerAttributes: 
+        - Key: deletion_protection.enabled
+          Value: false
+        - Key: idle_timeout.timeout_seconds
+          Value: 60
+      SecurityGroups:
+        - !Ref SecurityGroup
+      Subnets: 
+        - !Ref Subnet1
+        - !Ref Subnet2
+      Tags:
+        - Key: !Ref NameTagKey
+          Value: !Ref NameTagValue
+
+  # Fargate
+  ECSCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: !Ref NameTagValue
+
+  ECSTaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub NameTagValue
+      Path: /
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+
+  ECSTaskDefinition:
+    Type: "AWS::ECS::TaskDefinition"
+    Properties:
+      Cpu: 512
+      Memory: 512
+      ContainerDefinition:
+        Image: tuimac/httptracker
+        LogConfiguration:
+          LogDriver: awslogs
+          Options:
+            awslogs-group: !Join
+              - ''
+              - - '/ecs/'
+                - !Ref NameTagValue
+            awslogs-region: !Ref 'AWS::Region'
+            awslogs-stream-prefix: ecs
+        Name: !Ref NameTagValue
+        PortMappings:
+          - HostPort: 8000
+            Protocol: tcp
+            ContainerPort: 8000
+      ExecutionRoleArn: !GetAtt ECSTaskExecutionRole.Arn
+      Family: !Ref NameTagValue
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      TaskRoleArn: !GetAtt ECSTaskExecutionRole.Arn
+      Volume:
+        EFSVolumeConfiguration:
+          AuthorizationConfig:
+            IAM: DISABLED
+          FilesystemId: !Ref Efs.FileSystemId
+          RootDirectory: /
+          TransitEncryption: DISABLED
+      Tags:
+        - Key: !Ref NameTagKey
+          Value: !Ref NameTagValue
+
+  ECSService:
+    Type: AWS::ECS::Service
+    Properties:
+      Cluster: !Ref ECSCluster
+      DesiredCount: 
+      LaunchType: FARGATE
+      LoadBalancers:
+        -	TargetGroupArn: !Ref TargetGroup
+          ContainerPort: 8000
+          ContainerName: !Sub NameTagValue
+      NetworkConfiguration:
+       AwsvpcConfiguration:
+           AssignPublicIp: DISABLED
+           SecurityGroups:
+             - !Ref SecurityGroupId
+           Subnets:
+             - !Ref Subnet1
+             - !Ref Subnet2
+      ServiceName: !Sub NameTagValue
+      TaskDefinition: !Ref ECSTaskDefinition
