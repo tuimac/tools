@@ -112,6 +112,19 @@ Resources:
       GroupDescription: Allow All traffic
       VpcId: !Ref Vpc
       SecurityGroupIngress:
+        - IpProtocol: -1
+          CidrIp: !Ref VpcCidr
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: -1
+          CidrIp: !Ref VpcCidr
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
           FromPort: 80
           ToPort: 80
@@ -119,20 +132,6 @@ Resources:
       Tags:
         - Key: !Ref NameTagKey
           Value: !Ref NameTagValue
-
-  SecurityGroupIngress:
-    Type: AWS::EC2::SecurityGroupIngress
-    Properties:
-      IpProtocol: -1
-      SourceSecurityGroupId: !GetAtt SecurityGroup.GroupId
-      GroupId: !GetAtt SecurityGroup.GroupId
-
-  SecurityGroupEgress:
-    Type: AWS::EC2::SecurityGroupEgress
-    Properties:
-      IpProtocol: -1
-      SourceSecurityGroupId: !GetAtt SecurityGroup.GroupId
-      GroupId: !GetAtt SecurityGroup.GroupId
 
   # Endpoint
   S3Endpoint:
@@ -239,15 +238,6 @@ Resources:
       Memory: 512
       ContainerDefinitions:
         - Image: tuimac/httptracker
-          LogConfiguration:
-            LogDriver: awslogs
-            Options:
-              awslogs-group: !Join
-                - ''
-                - - '/ecs/'
-                  - !Ref NameTagValue
-              awslogs-region: !Ref AWS::Region
-              awslogs-stream-prefix: ecs
           Name: !Ref NameTagValue
           PortMappings:
             - HostPort: 8000
@@ -290,7 +280,7 @@ Resources:
           ContainerName: !Ref NameTagValue
       NetworkConfiguration:
        AwsvpcConfiguration:
-           AssignPublicIp: DISABLED
+           AssignPublicIp: ENABLED
            SecurityGroups:
              - !Ref SecurityGroup
            Subnets:
