@@ -13,10 +13,12 @@ echo -en "machine git-codecommit.ap-northeast-1.amazonaws.com\nlogin ${usernaem}
 sudo apt install gnupg-agent pinentry-curses -y
 gpg -e -r ${EMAIL} ${NETRC}
 gpg --gen-key
-gpg -e -r ${EMAIL} ${netrc}
+gpg -e -r ${EMAIL} ${NETRC}
 rm ${NETRC}
 
-local result=`ls -al ${target} 2> /dev/null | awk '{print $1}' 2> /dev/null`
+result=`ls -al ${target} 2> /dev/null | awk '{print $1}' 2> /dev/null`
+target="/usr/share/doc/git/contrib/credential/netrc/git-credential-netrc"
+
 if [ -z $result ]; then
     sudo ls / > /dev/null 2>&1
     if [ $? -eq 0 ]; then
