@@ -113,6 +113,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupName: !Ref TagValue
+      GroupDescription: !Ref TagValue
       VpcId: !Ref Vpc
       SecurityGroupIngress:
         - IpProtocol: tcp
