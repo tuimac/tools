@@ -3,6 +3,15 @@
 BUCKET_NAME='docker-registry-00'
 STORAGE_PATH='/'`hostname`
 
+function disableSELinux(){
+    local result=`sudo getenforce`
+    [[ $result == 'Enforcing' ]] && { sudo setenforce 0; }
+}
+
+function genCert(){
+    mkdir -p certs
+}
+
 function create_registry(){
     cat <<EOF> config.yml
 version: 0.1
@@ -15,7 +24,7 @@ storage:
   s3:
     region: ap-northeast-1
     bucket: $BUCKET_NAME
-    encrypt: true
+    encrypt: false
     secure: true
     v4auth: true
     chunksize: 5242880
@@ -24,7 +33,7 @@ storage:
     multipartcopythresholdsize: 33554432
     rootdirectory: $STORAGE_PATH
 http:
-  addr: registry.tuimac.me:5000
+  addr: :5000
   headers:
     X-Content-Type-Options: [nosniff]
 health:
@@ -36,15 +45,16 @@ EOF
     podman run -itd \
         --name registry \
         --restart=always \
-        -p 5000:5000 \
+        -p 443:443 \
         -v $(pwd)/config.yml:/etc/docker/registry/config.yml \
         registry
-    #[[ $? -eq 0 ]] && { rm config.yml; }
+    [[ $? -eq 0 ]] && { rm config.yml; }
 }
 
 function delete_registry(){
     podman stop registry
     podman rm registry
+    rm -rf cert/
 }
 
 function userguide(){
@@ -58,6 +68,7 @@ delete		Delete registry container.
 
 function main(){
     [[ -z $1 ]] && { userguide; exit 1; }
+    disableSELinux
     if [ $1 == 'create' ]; then
         create_registry
     elif [ $1 == 'delete' ]; then
