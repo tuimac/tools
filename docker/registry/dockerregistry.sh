@@ -14,6 +14,7 @@ function genCert(){
     openssl req \
         -newkey rsa:4096 -nodes -sha256 -keyout certs/domain.key \
         -addext "subjectAltName = DNS:"${DOMAIN} \
+        -subj "/C=JP/ST=Osaka/L=Osaka/O=tuimac/OU=tuimac/CN="${DOMAIN} \
         -x509 -days 3650 -out certs/domain.crt
 }
 
@@ -38,7 +39,7 @@ storage:
     multipartcopythresholdsize: 33554432
     rootdirectory: $STORAGE_PATH
 http:
-  addr: :443
+  addr: 0.0.0.0:5000
   headers:
     X-Content-Type-Options: [nosniff]
   tls:
@@ -53,11 +54,15 @@ EOF
     docker run -itd \
         --name registry \
         --restart=always \
-        -p 443:443 \
+        -p 443:5000 \
         -v $(pwd)/certs:/certs \
         -v $(pwd)/config.yml:/etc/docker/registry/config.yml \
         registry
-    [[ $? -eq 0 ]] && { rm config.yml; }
+    if [ -d '/etc/docker/certs.d' ]; then
+        sudo mkdir -p /etc/docker/certs.d/$DOMAIN
+    fi
+    sudo cp certs/domain.crt /etc/docker/certs.d/$DOMAIN/ca.crt
+    sudo systemctl restart docker
 }
 
 function delete_registry(){
