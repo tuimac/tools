@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BUCKET_NAME='podman-registry-00'
+BUCKET_NAME='docker-registry-00'
 STORAGE_PATH='/'`hostname`
 DOMAIN='registry.tuimac.me'
 
