@@ -1,7 +1,8 @@
 #!/bin/bash
 
-BUCKET_NAME='docker-registry-00'
+BUCKET_NAME='podman-registry-00'
 STORAGE_PATH='/'`hostname`
+DOMAIN='registry.tuimac.me'
 
 function disableSELinux(){
     local result=`sudo getenforce`
@@ -10,6 +11,11 @@ function disableSELinux(){
 
 function genCert(){
     mkdir -p certs
+    openssl req \
+        -newkey rsa:4096 -nodes -sha256 -keyout certs/domain.key \
+        -addext "subjectAltName = DNS:"${DOMAIN} \
+        -subj "/C=JP/ST=Osaka/L=Osaka/O=tuimac/OU=tuimac/CN="${DOMAIN} \
+        -x509 -days 3650 -out certs/domain.crt
 }
 
 function create_registry(){
@@ -33,9 +39,12 @@ storage:
     multipartcopythresholdsize: 33554432
     rootdirectory: $STORAGE_PATH
 http:
-  addr: :5000
+  addr: 0.0.0.0:5000
   headers:
     X-Content-Type-Options: [nosniff]
+  tls:
+    certificate: /certs/domain.crt
+    key: /certs/domain.key
 health:
   storagedriver:
     enabled: true
@@ -45,16 +54,20 @@ EOF
     podman run -itd \
         --name registry \
         --restart=always \
-        -p 443:443 \
+        -p 443:5000 \
+        -v $(pwd)/certs:/certs \
         -v $(pwd)/config.yml:/etc/docker/registry/config.yml \
         registry
-    [[ $? -eq 0 ]] && { rm config.yml; }
+    sudo mkdir -p /etc/containers/certs.d/$DOMAIN
+    sudo cp certs/domain.crt /etc/containers/certs.d/$DOMAIN/ca.crt
+    sudo systemctl restart podman
 }
 
 function delete_registry(){
     podman stop registry
     podman rm registry
-    rm -rf cert/
+    rm -rf certs/
+    rm -f  config.yml
 }
 
 function userguide(){
@@ -70,6 +83,7 @@ function main(){
     [[ -z $1 ]] && { userguide; exit 1; }
     disableSELinux
     if [ $1 == 'create' ]; then
+        genCert
         create_registry
     elif [ $1 == 'delete' ]; then
         delete_registry

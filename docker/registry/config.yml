@@ -1,0 +1,30 @@
+version: 0.1
+log:
+  accesslog:
+    disabled: false
+  level: info
+  formatter: json
+storage:
+  s3:
+    region: ap-northeast-1
+    bucket: podman-registry-00
+    encrypt: false
+    secure: true
+    v4auth: true
+    chunksize: 5242880
+    multipartcopychunksize: 33554432
+    multipartcopymaxconcurrency: 100
+    multipartcopythresholdsize: 33554432
+    rootdirectory: /ip-10-3-0-224.tuimac.private
+http:
+  addr: 0.0.0.0:5000
+  headers:
+    X-Content-Type-Options: [nosniff]
+  tls:
+    certificate: /certs/domain.crt
+    key: /certs/domain.key
+health:
+  storagedriver:
+    enabled: true
+    interval: 10s
+    threshold: 3
