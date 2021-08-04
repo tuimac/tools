@@ -1,8 +1,9 @@
 #!/bin/bash
 
-BUCKET_NAME='docker-registry-00'
+BUCKET_NAME='docker-registry-000'
 STORAGE_PATH='/'`hostname`
 DOMAIN='registry.tuimac.me'
+S3_REGION='ap-northeast-3'
 
 function disableSELinux(){
     local result=`sudo getenforce`
@@ -28,7 +29,7 @@ log:
   formatter: json
 storage:
   s3:
-    region: ap-northeast-1
+    region: $S3_REGION
     bucket: $BUCKET_NAME
     encrypt: false
     secure: true
@@ -51,12 +52,14 @@ health:
     interval: 10s
     threshold: 3
 EOF
+
     podman run -itd \
         --name registry \
         --restart=always \
         -p 443:5000 \
         -v $(pwd)/certs:/certs \
         -v $(pwd)/config.yml:/etc/docker/registry/config.yml \
+        -e REGISTRY_STORAGE_S3_REGIONENDPOINT=s3.${S3_REGION}.amazonaws.com \
         registry
     sudo mkdir -p /etc/containers/certs.d/$DOMAIN
     sudo cp certs/domain.crt /etc/containers/certs.d/$DOMAIN/ca.crt
