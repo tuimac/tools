@@ -6,7 +6,7 @@
         "logDriver": "awslogs",
         "options": {
           "awslogs-group": "/ecs/httptracker",
-          "awslogs-region": "ap-northeast-3",
+          "awslogs-region": "ap-northeast-1",
           "awslogs-stream-prefix": "ecs"
         }
       },

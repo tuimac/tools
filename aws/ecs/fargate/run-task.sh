@@ -11,9 +11,9 @@ function runTask(){
     aws ecs run-task \
         --cluster 'test' \
         --count 1 \
-        --launch-type FARGATE \
+        --launch-type EC2 \
         --network-configuration "awsvpcConfiguration={subnets=['subnet-xxxxxxxx'],securityGroups=['sg-xxxxxx'],assignPublicIp='ENABLED'}" \
-        --task-definition httptracker:2
+        --task-definition test:6
 }
 
 function main(){

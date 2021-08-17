@@ -3,6 +3,8 @@
 sed -i 's/^num_logs =.*/num_logs = 2/' /etc/audit/auditd.conf
 sed -i 's/^max_log_file =.*/max_log_file = 1000/' /etc/audit/auditd.conf
 
+cat /etc/audit/auditd.conf
+
 cat <<EOF>> /etc/cron.daily/auditd.cron
 #!/bin/sh
 
@@ -21,5 +23,7 @@ cp /var/log/audit/audit.log.1 /var/log/audit/audit.log.$(date '+%Y%m%d')
 EOF
 
 chmod +x /etc/cron.daily/auditd.cron
+
+cat /etc/cron.daily/auditd.cron
 
 /sbin/service auditd restart
