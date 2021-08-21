@@ -26,10 +26,15 @@ sudo cat <<EOF> ${CONF}
 </match>
 EOF
 
+sudo cat ${CONF}
+
 sudo sed -i 's/User=td-agent/User=root/' ${SYSTEMD}
 sudo sed -i 's/Group=td-agent/Group=root/' ${SYSTEMD}
 
+sudo cat ${SYSTEMD}
+
 sudo systemctl daemon-reload
 sudo systemctl start td-agent.service
+sudo systemctl status td-agent.service
 
-suod cat /var/log/td-agent/td-agent.log
+sudo cat /var/log/td-agent/td-agent.log
