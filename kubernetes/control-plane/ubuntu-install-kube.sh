@@ -9,6 +9,18 @@ sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add 
 sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
 sudo apt install docker-ce docker-ce-cli containerd.io -y
 
+sudo sh -c 'cat <<EOF > /etc/docker/daemon.json
+{
+  "exec-opts": ["native.cgroupdriver=systemd"],
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "100m"
+  },
+  "storage-driver": "overlay2"
+}
+EOF'
+
+
 sudo usermod -aG docker ec2-user
 sudo systemctl enable docker
 sudo systemctl start docker
