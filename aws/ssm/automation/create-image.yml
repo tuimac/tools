@@ -1,0 +1,30 @@
+description: Create Image
+schemaVersion: '0.3'
+parameters:
+  Tag:
+    type: String
+    description: (Required) 
+mainSteps:
+  - name: StopPASEC2Instance
+    action: 'aws:executeAwsApi'
+    inputs:
+      Service: ssm
+      Api: StartAutomationExecution
+      TargetParameterName: InstanceId
+      DocumentName: AWS-StartEC2Instance
+      Targets:
+        - Key: 'tag:SAP'
+          Values:
+            - PAS
+    nextStep: StopASCSEC2Instance
+  - name: StopASCSEC2Instance
+    action: 'aws:executeAwsApi'
+    inputs:
+      Service: ssm
+      Api: StartAutomationExecution
+      TargetParameterName: InstanceId
+      DocumentName: AWS-StartEC2Instance
+      Targets:
+        - Key: 'tag:SAP'
+          Values:
+            - ASCS
