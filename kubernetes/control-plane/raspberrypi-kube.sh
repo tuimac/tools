@@ -67,3 +67,7 @@ ufw allow to 0.0.0.0/0 port 10248
 ufw allow to 0.0.0.0/0 port 443
 ufw allow to 0.0.0.0/0 port 8472
 ufw enable
+
+kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+
+#kubectl taint nodes NODE_NAME node-role.kubernetes.io/master:NoSchedule-
