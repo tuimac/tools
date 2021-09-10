@@ -13,7 +13,7 @@ BASE_URL = 'https://xxxxxx.awsapps.com'
 # Don't change these parameters
 ZOCALO_FQDN = 'zocalo.ap-northeast-1.amazonaws.com'
 TARGET_URL = 'https://' + ZOCALO_FQDN + '/gb/api/v1/document/'
-DOCUMENT_ID
+DOCUMENT_ID_LIST = []
 
 # Disable download permission for a sigle document
 def disable_download_permission(document_id):
@@ -37,9 +37,9 @@ def disable_download_permission(document_id):
             }
         }
         payload['DocumentId'] = document_id
-        req = urllib.request.Request(url, json.dumps(payload).encode(), header, method='PUT')
-        with urllib.request.urlopen(req) as res:
-            print(res.read().decode())
+        request = urllib.request.Request(url, json.dumps(payload).encode(), header, method='PUT')
+        with urllib.request.urlopen(request) as response:
+            print(response.read().decode())
         print('Disabling download permisson was successed for ' + document_id)
     except:
         print('Get some error for ' + document_id, file=sys.stderr)
@@ -47,7 +47,9 @@ def disable_download_permission(document_id):
 
 # Get all document ID and return the list
 def get_document_id(workdocs):
-
+    root_folders = workdocs.describe_root_folders(AuthenticationToken=TOKEN)['Folders']
+    for folder in root_folders:
+        if folder['Name'] != 'recycle-bin': folderID
 
 # Main
 if __name__ == '__main__':
