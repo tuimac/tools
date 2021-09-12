@@ -20,6 +20,9 @@ sudo sh -c 'cat <<EOF > /etc/docker/daemon.json
 }
 EOF'
 
+sudo systemctl enable docker
+sudo systemctl daemon-reload
+sudo systemctl restart docker
 
 sudo usermod -aG docker ec2-user
 sudo systemctl enable docker
@@ -61,8 +64,8 @@ sudo sh -c "export KUBECONFIG=/etc/kubernetes/admin.conf"
 
 sleep 1
 
-#kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
-kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
+#kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
 
 #kubectl label node data-plane1 node-role.kubernetes.io/worker=worker
 #kubectl taint nodes NODE_NAME node-role.kubernetes.io/master:NoSchedule-
