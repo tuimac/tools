@@ -46,6 +46,7 @@ EOF
       "storage-driver": "overlay2"
     }
 EOF
+    usermod -aG docker ubuntu
     systemctl enable docker
     systemctl daemon-reload
     systemctl restart docker
