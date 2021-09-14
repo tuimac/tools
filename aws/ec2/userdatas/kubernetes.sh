@@ -95,7 +95,7 @@ EOF
 
     sleep 1
     kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
-    kubectl taint nodes NODE_NAME node-role.kubernetes.io/master:NoSchedule-
+    kubectl taint nodes kubernetes node-role.kubernetes.io/master:NoSchedule-
     iptables -P FORWARD ACCEPT
 
     mkdir -p /etc/vim/undo
