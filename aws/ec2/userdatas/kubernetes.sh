@@ -93,11 +93,37 @@ EOF
     cp -i /etc/kubernetes/admin.conf /home/ubuntu/.kube/config
     chown ubuntu:ubuntu /home/ubuntu/.kube/config
     sh -c "export KUBECONFIG=/etc/kubernetes/admin.conf"
+    
+    cat <<EOF > /root/iptables.sh
+#!/bin/bash
+sudo iptables -t nat -A POSTROUTING -s 10.230.0.0/16 -o ens5 -j MASQUERADE
+sudo iptables -P FORWARD ACCEPT
+EOF
+    cat <<EOF > /usr/lib/systemd/system/addroute.service
+[Unit]
+Description=Add iptables route
+After=network.target
 
+[Service]
+Type=simple
+TimeoutSec=120
+ExecStart=/root/iptables.sh
+KillMode=none
+SendSIGKILL=no
+RemainAfterExit=true
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF
+    systemctl daemon-reload
+    systemctl enable addroute
+    systemctl start addroute
     sleep 1
-    kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+    curl https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml -o kube-flannel.yml
+    sed -i '/"Network": "10.244.0.0\/16",/a \      "ipMasq": false,' kube-flannel.yml
+    kubectl apply -f kube-flannel.yml
     kubectl taint nodes kubernetes node-role.kubernetes.io/master:NoSchedule-
-    iptables -P FORWARD ACCEPT
 
     mkdir -p /etc/vim/undo
     mkdir -p /etc/vim/backup
