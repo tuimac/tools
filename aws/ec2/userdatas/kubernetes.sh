@@ -116,6 +116,7 @@ Restart=always
 [Install]
 WantedBy=multi-user.target
 EOF
+    chmod +x /root/iptables.sh
     systemctl daemon-reload
     systemctl enable addroute
     systemctl start addroute
