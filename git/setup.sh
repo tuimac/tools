@@ -1,7 +1,7 @@
 #!/bin/bash
 
 GITUSERNAME='tuimac'
-NETRC='~/.netrc'
+NETRC=~/.netrc
 
 echo -en "GitHub Password: "
 read -s PASSWORD
