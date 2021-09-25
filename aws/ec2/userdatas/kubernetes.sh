@@ -131,4 +131,6 @@ EOF
     chmod -R 777 /etc/vim
     curl https://raw.githubusercontent.com/tuimac/tools/master/vim/installer/ubuntu.sh | sudo bash
     su ubuntu -c 'git clone https://github.com/tuimac/tools.git'
+    curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+    chmod +x /usr/local/bin/docker-compose
     reboot
