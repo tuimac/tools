@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import boto3
+import json
 import sys
 import os
 import shutil
@@ -21,24 +22,30 @@ def roll_back(new, old):
 
 def create_new_records(ec2):
     # List ec2 information only from only running instances
+    records_list = []
+
     ec2_list = ec2.describe_instances(
-        Filters = [
-            {
-                'Name': 'instance-state-name',
-                'Values': ['running']
-            }
-        ]
+        Filters = [{
+            'Name': 'instance-state-name',
+            'Values': ['running']
+        }]
     )
-    print(ec2_list)
+    for instance in ec2_list['Reservations']:
+        try:
+            name_tag = [tag['Value'] for tag in instance['Instances'][0]['Tags'] if tag['Key'] == 'Name'][0]
+            records_list.append(name_tag)
+        except KeyError:
+            pass
+        
 
 def rewrite_records(dns_records):
     pass
 
 def is_same_file(new_file_path, old_file_path):
     new_file = open(new_file_path, 'r')
-    new_file_hash = hashlib.md5(new_file.read()).hexdigest()
+    new_file_hash = hashlib.md5(new_file.read().encode()).hexdigest()
     old_file = open(old_file_path, 'r')
-    old_file_hash = hashlib.md5(old_file.read()).hexdigest()
+    old_file_hash = hashlib.md5(old_file.read().encode()).hexdigest()
     print(new_file_hash)
     print(old_file_hash)
     if new_file_hash == old_file_hash:
