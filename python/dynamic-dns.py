@@ -46,7 +46,6 @@ def create_new_records(ec2):
             name_tag = [tag['Value'] for tag in instance['Instances'][0]['Tags'] if tag['Key'] == 'Name'][0]
 
             # Validate name tag
-            print(name_tag)
             name_tag =  validate_name_tag(name_tag)
 
             for eni in instance['Instances'][0]['NetworkInterfaces']:
@@ -98,8 +97,6 @@ def is_same_file(new_file_path, old_file_path):
 
     new_file.close()
     old_file.close()
-    print(new_file_hash)
-    print(old_file_hash)
     # Compare each hashes
     if new_file_hash == old_file_hash:
         return True
@@ -129,8 +126,7 @@ if __name__ == '__main__':
 
         # If there is some renewable records, reload named
         if is_same_file(CONF_PATH, CONF_PATH + '.old') is True:
-            print('True')
-            #subprocess.call(['systemctl', 'restart', 'named'])
+            subprocess.call(['systemctl', 'restart', 'named'])
 
         # Delete old file
         os.remove(CONF_PATH + '.old')
