@@ -1,0 +1,71 @@
+#!/bin/sh
+
+#Initialize
+: ${OCF_FUNCTIONS_DIR=${OCF_ROOT}/resource.d/test}
+. ${OCF_FUNCTIONS_DIR}/.ocf-shellfuncs
+
+RUNNING_FILE=/tmp/.running
+
+sample_meta_data() {
+    cat << EOF
+<?xml version="1.0"?>
+<!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
+<resource-agent name="sample-resource" version="0.1">
+    <version>0.1</version>
+    <longdesc lang="en">sample resource</longdesc>
+    <shortdesc lang="en">sample resource</shortdesc>
+    <parameters>
+    </parameters>
+    <actions>
+        <action name="meta-data" timeout="5" />
+        <action name="start" timeout="5" />
+        <action name="stop" timeout="5" />
+        <action name="monitor" timeout="5" />
+        <action name="validate-all" timeout="5" />
+    </actions>
+</resource-agent>
+EOF
+    return $OCF_SUCCESS
+}
+
+sample_validate(){
+    return $OCF_SUCCESS
+}
+
+sample_start(){
+    INSTANCE_ID=`curl http://169.254.169.254/latest/meta-data/instance-id`
+    aws ec2 replace-route --route-table-id rtb-0d7b4313634232df8 --destination-cidr-block 192.168.0.100/32 --instance-id $INSTANCE_ID
+    return $OCF_SUCCESS
+}
+
+sample_stop(){
+    rm -f ${RUNNING_FILE}
+    return $OCF_SUCCESS
+}
+
+sample_monitor(){
+    if [ -f ${RUNNING_FILE} ];
+    then
+        return $OCF_SUCCESS
+    fi
+    return $OCF_NOT_RUNNING
+}
+
+sample_usage(){
+    echo "Test Resource."
+    return $OCF_SUCCESS
+}
+
+# Translate each action into the appropriate function call
+case $__OCF_ACTION in
+meta-data)      sample_meta_data
+                exit $OCF_SUCCESS
+                ;;
+start)          sample_start;;
+stop)           sample_stop;;
+monitor)        sample_monitor;;
+validate-all)   sample_validate;;
+*)              sample_usage
+                exit $OCF_ERR_UNIMPLEMENTED
+                ;;
+esac
