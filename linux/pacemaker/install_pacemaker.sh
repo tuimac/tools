@@ -25,3 +25,5 @@ sudo pcs cluster start --all
 sudo pcs cluster enable --all
 
 sudo ip address add 192.168.0.100/32 dev eth0
+
+sudo pcs resource create vip ocf:heartbeat:IPaddr2 ip=192.168.0.100 cidr_netmask=32 nic="eth0" op monitor interval=5s
