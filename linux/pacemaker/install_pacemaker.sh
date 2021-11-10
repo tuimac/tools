@@ -38,3 +38,7 @@ sudo mkdir /usr/lib/ocf/resource.d/test
 sudo cp changeRoute /usr/lib/ocf/resource.d/test
 
 sudo pcs resource create test ocf:test:changeRoute
+
+# Add two lines to IPaddr2's ip_start
+INSTANCE_ID=`curl http://169.254.169.254/latest/meta-data/instance-id`
+aws ec2 replace-route --route-table-id rtb-0d7b4313634232df8 --destination-cidr-block 192.168.0.100/32 --instance-id $INSTANCE_ID
