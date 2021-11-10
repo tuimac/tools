@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #Initialize
-: ${OCF_FUNCTIONS_DIR=${OCF_ROOT}/resource.d/test}
+: ${OCF_FUNCTIONS_DIR=${OCF_ROOT}/resource.d/heartbeat}
 . ${OCF_FUNCTIONS_DIR}/.ocf-shellfuncs
 
 RUNNING_FILE=/tmp/.running
@@ -10,7 +10,7 @@ sample_meta_data() {
     cat << EOF
 <?xml version="1.0"?>
 <!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
-<resource-agent name="sample-resource" version="0.1">
+<resource-agent name="changeRoute" version="0.1">
     <version>0.1</version>
     <longdesc lang="en">sample resource</longdesc>
     <shortdesc lang="en">sample resource</shortdesc>
