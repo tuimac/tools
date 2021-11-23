@@ -1,0 +1,21 @@
+#!/bin/bash
+
+function cleanUpLogs(){
+    local logpath='src/backend/logs/info_django.log'
+    rm $logpath
+    touch $logpath
+}
+
+function cleanUpTemplates(){
+    local dirpath='src/backend/templates'
+    rm -rf $dirpath/*
+    touch $dirpath/.gitkeep
+}
+
+function main(){
+    cleanUpLogs
+    cleanUpTemplates
+    git add .
+}
+
+main
