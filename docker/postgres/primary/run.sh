@@ -12,9 +12,8 @@ function runContainer(){
     DATA='/var/lib/postgresql/data'
     docker run -itd --name ${NAME} \
                 -v ${VOLUME}:${DATA} \
-                -v ./postgresql.conf:${DATA} \
-                -v ./pg_hba.conf:${DATA} \
-                -e POSTGRES_PASSWORD=password \
+                -v $(pwd)/postgresql.conf:/etc/postgres/postgresql.conf \
+                -v $(pwd)/pg_hba.conf:/etc/postgres/pg_hba.conf \
                 -e POSTGRES_PASSWORD=password \
                 -e POSTGRES_USER=test \
                 -h ${NAME} \
@@ -31,7 +30,6 @@ function createContainer(){
     mkdir ${VOLUME}
     docker build -t ${NAME} .
     runContainer
-    cleanup
 }
 
 function rerunContainer(){
