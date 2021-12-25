@@ -12,13 +12,15 @@ function runContainer(){
     DATA='/var/lib/postgresql/data'
     docker run -itd --name ${NAME} \
                 -v ${VOLUME}:${DATA} \
-                -v $(pwd)/postgresql.conf:/etc/postgres/postgresql.conf \
-                -v $(pwd)/pg_hba.conf:/etc/postgres/pg_hba.conf \
+                -v $(pwd)/postgresql.conf:/etc/postgresql/postgresql.conf \
+                -v $(pwd)/pg_hba.conf:/etc/postgresql/pg_hba.conf \
                 -e POSTGRES_PASSWORD=password \
                 -e POSTGRES_USER=test \
                 -h ${NAME} \
                 -p 5432:5432 \
-                ${NAME}
+                ${NAME} \
+                postgres -c config_file=/etc/postgresql/postgresql.conf \
+                -c hba_file=/etc/postgresql/pg_hba.conf
 }
 
 function cleanup(){
