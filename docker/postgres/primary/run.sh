@@ -16,6 +16,7 @@ function runContainer(){
                 -v $(pwd)/pg_hba.conf:/etc/postgresql/pg_hba.conf \
                 -e POSTGRES_PASSWORD=password \
                 -e POSTGRES_USER=test \
+                -e POSTGRES_DB=test \
                 -h ${NAME} \
                 -p 5432:5432 \
                 ${NAME} \

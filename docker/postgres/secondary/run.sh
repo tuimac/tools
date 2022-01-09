@@ -16,6 +16,7 @@ function runContainer(){
 		-v $(pwd)/recovery.conf:/usr/share/postgresql/10/recovery.conf \
                 -e POSTGRES_PASSWORD=password \
                 -e POSTGRES_USER=test \
+                -e POSTGRES_DB=test \
                 -h ${NAME} \
                 -p 5432:5432 \
                 ${NAME} \
