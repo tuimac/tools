@@ -12,15 +12,14 @@ function runContainer(){
     DATA='/var/lib/postgresql/data'
     docker run -itd --name ${NAME} \
                 -v ${VOLUME}:${DATA} \
-                -v $(pwd)/postgresql.conf:/etc/postgresql/postgresql.conf \
-		-v $(pwd)/recovery.conf:/usr/share/postgresql/10/recovery.conf \
+		-v $(pwd)/postgresql.conf:/etc/postgresql/postgresql.conf \
                 -e POSTGRES_PASSWORD=password \
                 -e POSTGRES_USER=test \
                 -e POSTGRES_DB=test \
                 -h ${NAME} \
                 -p 5432:5432 \
                 ${NAME} \
-                postgres -c config_file=/etc/postgresql/postgresql.conf
+		postgres -c config_file=/etc/postgresql/postgresql.conf
 }
 
 function cleanup(){

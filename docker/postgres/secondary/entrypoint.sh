@@ -1,8 +1,6 @@
 #!/bin/bash
 
-$LOG='/root/development.log'
+DATA='/var/lib/postgresql/data'
 
-while true; do
-    cat /sys/class/net >> $LOG 2>&1
-    sleep 10
-done
+echo 'standby_mode = on' >> ${DATA}/recovery.conf
+echo "primary_conninfo = 'host=10.3.0.212 port=5432 user=test password=password'" >> ${DATA}/recovery.conf
