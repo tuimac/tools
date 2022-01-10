@@ -28,7 +28,7 @@ function cleanup(){
 }
 
 function createContainer(){
-    mkdir ${VOLUME}
+    #mkdir ${VOLUME}
     docker build -t ${NAME} .
     runContainer
 }
