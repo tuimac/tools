@@ -1,8 +1,8 @@
-#!/bin/bash
+#!/b:in/bash
 
 # Change variables below if you need
 ##############################
-NAME="postgres"
+NAME="postgresql"
 VOLUME="${PWD}/volume"
 DOCKERHUBUSER="tuimac"
 IMAGE=${DOCKERHUBUSER}/${NAME}
@@ -22,6 +22,8 @@ function runContainer(){
                 ${NAME} \
                 postgres -c config_file=/etc/postgresql/postgresql.conf \
                 -c hba_file=/etc/postgresql/pg_hba.conf
+    docker stop ${NAME}
+    docker start ${NAME}
 }
 
 function cleanup(){

@@ -1,4 +1,0 @@
-listen_addresses = '*'		# what IP address(es) to listen on;
-logging_collector = on			# Enable capturing of stderr and csvlog
-log_rotation_age = 1d			# Automatic rotation of logfiles will
-log_rotation_size = 0			# Automatic rotation of logfiles will
