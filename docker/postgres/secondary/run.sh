@@ -2,7 +2,7 @@
 
 # Change variables below if you need
 ##############################
-NAME="postgres"
+NAME="postgresql"
 VOLUME="${PWD}/volume"
 DOCKERHUBUSER="tuimac"
 IMAGE=${DOCKERHUBUSER}/${NAME}
