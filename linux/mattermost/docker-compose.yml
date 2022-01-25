@@ -1,0 +1,25 @@
+version: '3.9'
+services:
+  mysql:
+    image: mysql:latest
+    container_name: database
+    environment:
+      MYSQL_USER: mmuser
+      MYSQL_PASSWORD: mmuser-password
+      MYSQL_DATABASE: mattermost
+      MYSQL_ROOT_PASSWORD: password
+    ports:
+      - 3306:3306
+    command: --default-authentication-plugin=mysql_native_password
+    networks:
+      - mattermost
+  mattermost-webrtc:
+    container_name: mattermost-webrtc
+    image: mattermost/webrtc:latest
+    restart: always
+    ports:
+      - "7088:7088"
+      - "8188:8188"
+networks:
+  mattermost:
+    name: mattermost
