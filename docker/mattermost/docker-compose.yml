@@ -21,7 +21,6 @@ services:
         - edition=team
         - PUID=1000
         - PGID=1000
-        - MM_VERSION=5.31
     restart: unless-stopped
     volumes:
       - ./volumes/app/mattermost/config:/mattermost/config:rw
@@ -54,3 +53,11 @@ services:
       - /etc/localtime:/etc/localtime:ro
     cap_drop:
       - ALL
+
+  mattermost-webrtc:
+    container_name: mattermost-webrtc
+    image: mattermost/webrtc:latest
+    restart: always
+    ports:
+      - "7088:7088"
+      - "8188:8188"
