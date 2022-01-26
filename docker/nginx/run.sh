@@ -12,6 +12,7 @@ function runContainer(){
     docker run -itd --name ${NAME} \
                 -p 80:80 \
                 -v ${VOLUME}:/var/log/nginx \
+                -v $(pwd)/index.html:/tmp/index.html \
                 -h ${NAME} \
                 --network="bridge" \
                 ${NAME}
