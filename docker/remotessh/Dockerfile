@@ -1,26 +1,14 @@
-FROM alpine:latest
+FROM public.ecr.aws/lambda/python:3.8
 
-WORKDIR /root
+# Copy function code
+COPY app.py ${LAMBDA_TASK_ROOT}
+COPY tuimac.pem ${LAMBDA_TASK_ROOT}
 
-ADD entrypoint.sh /root/entrypoint.sh
-ADD remotessh.sh /root/remotessh.sh
+# Install the function's dependencies using file requirements.txt
+# from your project folder.
 
-RUN apk update && \
-    apk upgrade && \
-    apk add --no-cache git bash tzdata vim curl ncurses tree aws-cli openssh && \
-    cp /usr/share/zoneinfo/Asia/Tokyo /etc/localtime && \
-    apk del tzdata && \
-    mkdir /etc/vim/backup && \
-    mkdir /etc/vim/undo && \
-    rm /etc/vim/vimrc && \
-    curl -L https://raw.githubusercontent.com/tuimac/tools/master/vim/vimrc -o /etc/vim/vimrc && \
-    curl -L https://raw.githubusercontent.com/tuimac/tools/master/linux/bashrc/.bashrc_node_docker -o /root/.bashrc && \
-    mkdir /root/.aws && \
-    echo ' \
-[default] \
-region = ap-northeast-1 \
-' >> /root/.aws/config && \
-    aws s3 cp s3://01-cfn-repository/tuimac.pem . && \
-    chmod 600 /root/tuimac.pem
+COPY requirements.txt  .
+RUN  pip3 install -r requirements.txt --target "${LAMBDA_TASK_ROOT}"
 
-ENTRYPOINT ["bash", "remotessh.sh"]
+# Set the CMD to your handler (could also be done as a parameter override outside of the Dockerfile)
+CMD [ "app.handler" ]
