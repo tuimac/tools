@@ -7,6 +7,7 @@ function runContainer(){
     mkdir -p ~/.jitsi-meet-cfg/{web/letsencrypt,transcripts,prosody,jicofo,jvb}
     cp -r ../letsencrypt/* ~/.jitsi-meet-cfg/web/letsencrypt/ 
     ./gen-passwords.sh
+    sed -i 13i'\            - ${CONFIG}/web/letsencrypt:/etc/letsencrypt' docker-compose.yml
     docker-compose up -d
     cd ..
 }
