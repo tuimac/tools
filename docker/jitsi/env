@@ -253,7 +253,7 @@ JVB_BREWERY_MUC=jvbbrewery
 JVB_AUTH_USER=jvb
 
 # STUN servers used to discover the server's public IP
-JVB_STUN_SERVERS=jitsi.tuimac.me:443
+JVB_STUN_SERVERS=meet-jit-si-turnrelay.jitsi.net:443
 
 # Media port for the Jitsi Videobridge
 JVB_PORT=10000

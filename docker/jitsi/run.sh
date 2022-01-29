@@ -4,10 +4,9 @@ function runContainer(){
     git clone https://github.com/jitsi/docker-jitsi-meet
     cd docker-jitsi-meet
     cp ../env .env
-    mkdir -p ~/.jitsi-meet-cfg/{web/letsencrypt,transcripts,prosody,jicofo,jvb}
-    cp -r ../letsencrypt/* ~/.jitsi-meet-cfg/web/letsencrypt/ 
+    mkdir -p ~/.jitsi-meet-cfg/{web/crontabs,web/acme-certs/jitsi.tuimac.me,transcripts,prosody/config,prosody/prosody-plugins-custom,jicofo,jvb,jigasi,jibri}
+    cp -r ../letsencrypt/* ~/.jitsi-meet-cfg/web/acme-certs/jitsi.tuimac.me/
     ./gen-passwords.sh
-    sed -i 13i'\            - ${CONFIG}/web/letsencrypt:/etc/letsencrypt' docker-compose.yml
     docker-compose up -d
     cd ..
 }
