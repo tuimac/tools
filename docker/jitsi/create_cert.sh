@@ -4,6 +4,7 @@ DOMAIN='jitsi.tuimac.me'
 
 mkdir letsencrypt
 cd letsencrypt
+sudo apt update
 sudo apt install -y certbot
 sudo certbot certonly --standalone -d ${DOMAIN}
 sudo cp /etc/letsencrypt/archive/jitsi.tuimac.me/cert1.pem cert.pem

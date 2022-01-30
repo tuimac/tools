@@ -1,14 +1,22 @@
 #!/bin/bash
 
+RELEASE='stable-6826'
+
 function runContainer(){
-    git clone https://github.com/jitsi/docker-jitsi-meet
-    cd docker-jitsi-meet
+    curl -L https://github.com/jitsi/docker-jitsi-meet/archive/refs/tags/stable-6826.tar.gz -o ${RELEASE}.tar.gz
+    tar xvzf ${RELEASE}.tar.gz
+    cd docker-jitsi-meet-${RELEASE}
     cp ../env .env
-    mkdir -p ~/.jitsi-meet-cfg/{web/crontabs,web/acme-certs/jitsi.tuimac.me,transcripts,prosody/config,prosody/prosody-plugins-custom,jicofo,jvb,jigasi,jibri}
-    cp -r ../letsencrypt/* ~/.jitsi-meet-cfg/web/acme-certs/jitsi.tuimac.me/
+    mkdir -p ~/.jitsi-meet-cfg/{web/crontabs,web/letsencrypt,transcripts,prosody/config,prosody/prosody-plugins-custom,jicofo,jvb,jigasi,jibri}
     ./gen-passwords.sh
     docker-compose up -d
     cd ..
+    docker build -t tuimac/jitsi-ssl .
+    docker run -itd \
+        -p 443:443 \
+        --name jitsi-ssl \
+        -v $(pwd)/letsencrypt:/etc/letsencrypt \
+        tuimac/jitsi-ssl
 }
 
 function cleanup(){
@@ -18,20 +26,26 @@ function cleanup(){
 
 function createContainer(){
     runContainer
-    cleanup
+    #cleanup
 }
 
 function deleteAll(){
-    cd docker-jitsi-meet
+    cd docker-jitsi-meet-${RELEASE}
     docker-compose down
-    docker rmi jitsi/jvb
-    docker rmi jitsi/jicofo
-    docker rmi jitsi/prosody
-    docker rmi jitsi/web
+    docker stop jitsi-ssl
+    docker rm jitsi-ssl
+    docker rmi tuimac/jitsi-ssl
+    docker rmi jitsi/jvb:${RELEASE}
+    docker rmi jitsi/jicofo:${RELEASE}
+    docker rmi jitsi/prosody:${RELEASE}
+    docker rmi jitsi/web:${RELEASE}
+    docker rmi jitsi/jibri:${RELEASE}
+    docker rmi jitsi/jigasi:${RELEASE}
     cleanup
     sudo rm -rf ~/.jitsi-meet-cfg
     cd ..
-    sudo rm -rf docker-jitsi-meet/
+    sudo rm -rf docker-jitsi-meet-${RELEASE}/
+    rm ${RELEASE}.tar.gz
 }
 
 function userguide(){
