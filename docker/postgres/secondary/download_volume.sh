@@ -1,6 +1,6 @@
 #!/bin/bash
 
-IP='10.3.0.212'
+IP='10.3.0.217'
 
 scp test@${IP}:~/volume.zip .
 unzip volume.zip
