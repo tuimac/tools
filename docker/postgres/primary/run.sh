@@ -1,4 +1,4 @@
-#!/b:in/bash
+#!/bin/bash
 
 # Change variables below if you need
 ##############################
