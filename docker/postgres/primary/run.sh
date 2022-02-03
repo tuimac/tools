@@ -12,8 +12,7 @@ function runContainer(){
     DATA='/var/lib/postgresql/data'
     docker run -itd --name ${NAME} \
                 -v ${VOLUME}:${DATA} \
-                -v $(pwd)/postgresql.conf:/etc/postgresql/postgresql.conf \
-                -v $(pwd)/pg_hba.conf:/etc/postgresql/pg_hba.conf \
+                -v $(pwd)/conf:/etc/postgresql \
                 -e POSTGRES_PASSWORD=password \
                 -e POSTGRES_USER=test \
                 -e POSTGRES_DB=test \
