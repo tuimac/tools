@@ -301,9 +301,11 @@ Resources:
                   yum update -y
                   dnf install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm
                   dnf -qy module disable postgresql
-                  dnf install postgresql13
+                  dnf install -y postgresql13
                   yum install -y git python3 python3-pip
+                  cd /home/ec2-user
                   git clone https://github.com/tuimac/tools
+                  chown ec2-user:ec2-user -R /home/ec2-user/tools
                   echo ${BASTION}' bastion' >> /etc/hosts 
                   echo ${PRIMARY}' primary' >> /etc/hosts 
                   echo ${SECONDARY}' secondary' >> /etc/hosts 
@@ -313,6 +315,8 @@ Resources:
                   aws s3 cp s3://01-cfn-repository/tuimac.pem /home/ec2-user/tuimac.pem
                   chown ec2-user:ec2-user /home/ec2-user/tuimac.pem
                   chmod 600 /home/ec2-user/tuimac.pem
+                  echo 'bastion' > /etc/hostname
+                  reboot
                 - {
                     BASTION: !Ref BastionIP,
                     PRIMARY: !Ref PrimaryIP,
@@ -362,12 +366,16 @@ Resources:
                   #!/bin/bash
                   yum update -y
                   yum install -y git
+                  cd /home/ec2-user
                   git clone https://github.com/tuimac/tools
+                  chown ec2-user:ec2-user -R /home/ec2-user/tools
                   yum install podman -y
                   echo ${BASTION}' bastion' >> /etc/hosts 
                   echo ${PRIMARY}' primary' >> /etc/hosts 
                   echo ${SECONDARY}' secondary' >> /etc/hosts 
-                  echo ${DR}' dr' >> /etc/hosts 
+                  echo ${DR}' dr' >> /etc/hosts
+                  echo 'primary' > /etc/hostname
+                  reboot
                 - {
                     BASTION: !Ref BastionIP,
                     PRIMARY: !Ref PrimaryIP,
@@ -417,12 +425,16 @@ Resources:
                   #!/bin/bash
                   yum update -y
                   yum install -y git
+                  cd /home/ec2-user
                   git clone https://github.com/tuimac/tools
+                  chown ec2-user:ec2-user -R /home/ec2-user/tools
                   yum install podman -y
                   echo ${BASTION}' bastion' >> /etc/hosts 
                   echo ${PRIMARY}' primary' >> /etc/hosts 
                   echo ${SECONDARY}' secondary' >> /etc/hosts 
-                  echo ${DR}' dr' >> /etc/hosts 
+                  echo ${DR}' dr' >> /etc/hosts
+                  echo 'secondary' > /etc/hostname
+                  reboot
                 - {
                     BASTION: !Ref BastionIP,
                     PRIMARY: !Ref PrimaryIP,
@@ -472,12 +484,16 @@ Resources:
                   #!/bin/bash
                   yum update -y
                   yum install -y git
+                  cd /home/ec2-user
                   git clone https://github.com/tuimac/tools
+                  chown ec2-user:ec2-user -R /home/ec2-user/tools
                   yum install podman -y
                   echo ${BASTION}' bastion' >> /etc/hosts 
                   echo ${PRIMARY}' primary' >> /etc/hosts 
                   echo ${SECONDARY}' secondary' >> /etc/hosts 
-                  echo ${DR}' dr' >> /etc/hosts 
+                  echo ${DR}' dr' >> /etc/hosts
+                  echo 'dr' > /etc/hostname
+                  reboot
                 - {
                     BASTION: !Ref BastionIP,
                     PRIMARY: !Ref PrimaryIP,
