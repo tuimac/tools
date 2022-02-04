@@ -198,10 +198,10 @@ Resources:
       VpcId: !Ref Vpc
 
   # IAM Role
-  SpotFleetInstanceRole:
+  SpotFleetInstancesRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: SpotFleetInstanceRole
+      RoleName: SpotFleetInstancesRole
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -241,7 +241,7 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  - ec2:DescribeInstances
+                  - "s3:*"
                 Resource:
                   - "*"
       Tags:
@@ -262,7 +262,7 @@ Resources:
     Type: AWS::EC2::SpotFleet
     Properties:
       SpotFleetRequestConfigData:
-        IamFleetRole: !Ref SpotFleetInstanceRoleArn
+        IamFleetRole: !GetAtt SpotFleetInstancesRole.Arn
         TerminateInstancesWithExpiration: false
         InstanceInterruptionBehavior: stop
         TargetCapacity: 1
@@ -272,6 +272,7 @@ Resources:
               Arn: !GetAtt EC2InstanceProfile.Arn
             ImageId: !Ref AMIID
             InstanceType: t3.micro
+            KeyName: !Ref SSHPemFilename
             Monitoring:
               Enabled: false
             NetworkInterfaces:
@@ -283,7 +284,7 @@ Resources:
                   - Primary: true
                     PrivateIpAddress: !Ref BastionIP
                 Groups:
-                  - !Ref SecurityGroupId
+                  - !Ref SecurityGroup
                 SubnetId: !Ref SubnetA
             SpotPrice: 1
             TagSpecifications:
@@ -294,15 +295,36 @@ Resources:
                   - Key: Name
                     Value: bastion
             UserData:
-              Fn::Base64: !Sub |
-                #!/bin/bash
-                yum update -y
+              Fn::Base64: !Sub 
+                - |
+                  #!/bin/bash
+                  yum update -y
+                  dnf install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+                  dnf -qy module disable postgresql
+                  dnf install postgresql13
+                  yum install -y git python3 python3-pip
+                  git clone https://github.com/tuimac/tools
+                  echo ${BASTION}' bastion' >> /etc/hosts 
+                  echo ${PRIMARY}' primary' >> /etc/hosts 
+                  echo ${SECONDARY}' secondary' >> /etc/hosts 
+                  echo ${DR}' dr' >> /etc/hosts
+                  pip3 install awscli
+                  export AWS_DEFAULT_REGION=ap-northeast-1
+                  aws s3 cp s3://01-cfn-repository/tuimac.pem /home/ec2-user/tuimac.pem
+                  chown ec2-user:ec2-user /home/ec2-user/tuimac.pem
+                  chmod 600 /home/ec2-user/tuimac.pem
+                - {
+                    BASTION: !Ref BastionIP,
+                    PRIMARY: !Ref PrimaryIP,
+                    SECONDARY: !Ref SecondaryIP,
+                    DR: !Ref DRIP
+                  }
 
   PrimaryDBInstance:
     Type: AWS::EC2::SpotFleet
     Properties:
       SpotFleetRequestConfigData:
-        IamFleetRole: !Ref SpotFleetInstanceRoleArn
+        IamFleetRole: !GetAtt SpotFleetInstancesRole.Arn
         TerminateInstancesWithExpiration: false
         InstanceInterruptionBehavior: stop
         TargetCapacity: 1
@@ -312,6 +334,7 @@ Resources:
               Arn: !GetAtt EC2InstanceProfile.Arn
             ImageId: !Ref AMIID
             InstanceType: t3.small
+            KeyName: !Ref SSHPemFilename
             Monitoring:
               Enabled: false
             NetworkInterfaces:
@@ -323,7 +346,7 @@ Resources:
                   - Primary: true
                     PrivateIpAddress: !Ref PrimaryIP
                 Groups:
-                  - !Ref SecurityGroupId
+                  - !Ref SecurityGroup
                 SubnetId: !Ref SubnetA
             SpotPrice: 1
             TagSpecifications:
@@ -334,15 +357,29 @@ Resources:
                   - Key: Name
                     Value: primary
             UserData:
-              Fn::Base64: !Sub |
-                #!/bin/bash
-                yum update -y
+              Fn::Base64: !Sub
+                - |
+                  #!/bin/bash
+                  yum update -y
+                  yum install -y git
+                  git clone https://github.com/tuimac/tools
+                  yum install podman -y
+                  echo ${BASTION}' bastion' >> /etc/hosts 
+                  echo ${PRIMARY}' primary' >> /etc/hosts 
+                  echo ${SECONDARY}' secondary' >> /etc/hosts 
+                  echo ${DR}' dr' >> /etc/hosts 
+                - {
+                    BASTION: !Ref BastionIP,
+                    PRIMARY: !Ref PrimaryIP,
+                    SECONDARY: !Ref SecondaryIP,
+                    DR: !Ref DRIP
+                  }
 
   SecondaryDBInstance:
     Type: AWS::EC2::SpotFleet
     Properties:
       SpotFleetRequestConfigData:
-        IamFleetRole: !Ref SpotFleetInstanceRoleArn
+        IamFleetRole: !GetAtt SpotFleetInstancesRole.Arn
         TerminateInstancesWithExpiration: false
         InstanceInterruptionBehavior: stop
         TargetCapacity: 1
@@ -352,6 +389,7 @@ Resources:
               Arn: !GetAtt EC2InstanceProfile.Arn
             ImageId: !Ref AMIID
             InstanceType: t3.small
+            KeyName: !Ref SSHPemFilename
             Monitoring:
               Enabled: false
             NetworkInterfaces:
@@ -363,7 +401,7 @@ Resources:
                   - Primary: true
                     PrivateIpAddress: !Ref SecondaryIP
                 Groups:
-                  - !Ref SecurityGroupId
+                  - !Ref SecurityGroup
                 SubnetId: !Ref SubnetC
             SpotPrice: 1
             TagSpecifications:
@@ -374,15 +412,29 @@ Resources:
                   - Key: Name
                     Value: secondary
             UserData:
-              Fn::Base64: !Sub |
-                #!/bin/bash
-                yum update -y
+              Fn::Base64: !Sub
+                - |
+                  #!/bin/bash
+                  yum update -y
+                  yum install -y git
+                  git clone https://github.com/tuimac/tools
+                  yum install podman -y
+                  echo ${BASTION}' bastion' >> /etc/hosts 
+                  echo ${PRIMARY}' primary' >> /etc/hosts 
+                  echo ${SECONDARY}' secondary' >> /etc/hosts 
+                  echo ${DR}' dr' >> /etc/hosts 
+                - {
+                    BASTION: !Ref BastionIP,
+                    PRIMARY: !Ref PrimaryIP,
+                    SECONDARY: !Ref SecondaryIP,
+                    DR: !Ref DRIP
+                  }
 
   DRDBInstance:
     Type: AWS::EC2::SpotFleet
     Properties:
       SpotFleetRequestConfigData:
-        IamFleetRole: !Ref SpotFleetInstanceRoleArn
+        IamFleetRole: !GetAtt SpotFleetInstancesRole.Arn
         TerminateInstancesWithExpiration: false
         InstanceInterruptionBehavior: stop
         TargetCapacity: 1
@@ -392,6 +444,7 @@ Resources:
               Arn: !GetAtt EC2InstanceProfile.Arn
             ImageId: !Ref AMIID
             InstanceType: t3.small
+            KeyName: !Ref SSHPemFilename
             Monitoring:
               Enabled: false
             NetworkInterfaces:
@@ -403,7 +456,7 @@ Resources:
                   - Primary: true
                     PrivateIpAddress: !Ref DRIP
                 Groups:
-                  - !Ref SecurityGroupId
+                  - !Ref SecurityGroup
                 SubnetId: !Ref SubnetD
             SpotPrice: 1
             TagSpecifications:
@@ -414,7 +467,20 @@ Resources:
                   - Key: Name
                     Value: dr
             UserData:
-              Fn::Base64: !Sub |
-                #!/bin/bash
-                yum update -y
-
+              Fn::Base64: !Sub
+                - |
+                  #!/bin/bash
+                  yum update -y
+                  yum install -y git
+                  git clone https://github.com/tuimac/tools
+                  yum install podman -y
+                  echo ${BASTION}' bastion' >> /etc/hosts 
+                  echo ${PRIMARY}' primary' >> /etc/hosts 
+                  echo ${SECONDARY}' secondary' >> /etc/hosts 
+                  echo ${DR}' dr' >> /etc/hosts 
+                - {
+                    BASTION: !Ref BastionIP,
+                    PRIMARY: !Ref PrimaryIP,
+                    SECONDARY: !Ref SecondaryIP,
+                    DR: !Ref DRIP
+                  }
