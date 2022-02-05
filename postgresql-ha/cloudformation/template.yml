@@ -321,6 +321,7 @@ Resources:
                   echo 'alias vi="vim"' >> /home/ec2-user/.bashrc
                   git config --global user.email 'tuimac.devadm01@gmail.com'
                   git config --global user.name 'tuimac'
+                  sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
                   reboot
                 - {
                     BASTION: !Ref BastionIP,
@@ -385,6 +386,7 @@ Resources:
                   echo 'alias vi="vim"' >> /home/ec2-user/.bashrc
                   git config --global user.email 'tuimac.devadm01@gmail.com'
                   git config --global user.name 'tuimac'
+                  sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
                   reboot
                 - {
                     BASTION: !Ref BastionIP,
@@ -449,6 +451,7 @@ Resources:
                   echo 'alias vi="vim"' >> /home/ec2-user/.bashrc
                   git config --global user.email 'tuimac.devadm01@gmail.com'
                   git config --global user.name 'tuimac'
+                  sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
                   reboot
                 - {
                     BASTION: !Ref BastionIP,
@@ -513,6 +516,7 @@ Resources:
                   echo 'alias vi="vim"' >> /home/ec2-user/.bashrc
                   git config --global user.email 'tuimac.devadm01@gmail.com'
                   git config --global user.name 'tuimac'
+                  sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
                   reboot
                 - {
                     BASTION: !Ref BastionIP,
