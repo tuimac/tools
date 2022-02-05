@@ -1,3 +1,1 @@
-FROM registry.access.redhat.com/ubi8/ubi-minimal:8.4-200
-
-
+FROM registry.redhat.io/rhel8/postgresql-13:1-31
