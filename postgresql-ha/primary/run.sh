@@ -9,7 +9,7 @@ IMAGE=${podmanHUBUSER}/${NAME}
 ##############################
 
 function runContainer(){
-    DATA='/var/lib/postgresql/data'
+    DATA='/var/lib/pgsql/data'
     podman run -itd --name ${NAME} \
                 -v ${VOLUME}:${DATA} \
                 -v $(pwd)/etc:/etc/postgresql \
