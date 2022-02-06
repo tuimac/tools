@@ -318,10 +318,8 @@ Resources:
                   cd /home/ec2-user/tools/vim/installer/
                   ./centos.sh
                   echo 'alias vi="vim"' >> /home/ec2-user/.bashrc
-                  su - ec2-user
-                  git config --global user.email 'tuimac.devadm01@gmail.com'
-                  git config --global user.name 'tuimac'
-                  exit
+                  runuser -l ec2-user -c "git config --global user.email 'tuimac.devadm01@gmail.com'"
+                  runuser -l ec2-user -c "git config --global user.name 'tuimac'"
                   sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
                   reboot
                 - {
@@ -385,10 +383,8 @@ Resources:
                   ./centos.sh
                   echo 'alias vi="vim"' >> /home/ec2-user/.bashrc
                   sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
-                  su - ec2-user
-                  git config --global user.email 'tuimac.devadm01@gmail.com'
-                  git config --global user.name 'tuimac'
-                  exit
+                  runuser -l ec2-user -c "git config --global user.email 'tuimac.devadm01@gmail.com'"
+                  runuser -l ec2-user -c "git config --global user.name 'tuimac'"
                   reboot
                 - {
                     BASTION: !Ref BastionIP,
@@ -450,10 +446,8 @@ Resources:
                   cd /home/ec2-user/tools/vim/installer/
                   ./centos.sh
                   echo 'alias vi="vim"' >> /home/ec2-user/.bashrc
-                  su - ec2-user
-                  git config --global user.email 'tuimac.devadm01@gmail.com'
-                  git config --global user.name 'tuimac'
-                  exit
+                  runuser -l ec2-user -c "git config --global user.email 'tuimac.devadm01@gmail.com'"
+                  runuser -l ec2-user -c "git config --global user.name 'tuimac'"
                   sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
                   reboot
                 - {
@@ -516,10 +510,8 @@ Resources:
                   cd /home/ec2-user/tools/vim/installer/
                   ./centos.sh
                   echo 'alias vi="vim"' >> /home/ec2-user/.bashrc
-                  su - ec2-user
-                  git config --global user.email 'tuimac.devadm01@gmail.com'
-                  git config --global user.name 'tuimac'
-                  exit
+                  runuser -l ec2-user -c "git config --global user.email 'tuimac.devadm01@gmail.com'"
+                  runuser -l ec2-user -c "git config --global user.name 'tuimac'"
                   sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
                   reboot
                 - {
