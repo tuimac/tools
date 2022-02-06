@@ -32,6 +32,7 @@ function cleanup(){
 
 function createContainer(){
     mkdir ${VOLUME}
+    podman login registry.redhat.io
     podman build -t ${NAME} .
     runContainer
 }
