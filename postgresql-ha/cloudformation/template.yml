@@ -298,7 +298,6 @@ Resources:
               Fn::Base64: !Sub 
                 - |
                   #!/bin/bash
-                  yum update -y
                   dnf install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm
                   dnf -qy module disable postgresql
                   dnf install -y postgresql13
@@ -372,7 +371,6 @@ Resources:
               Fn::Base64: !Sub
                 - |
                   #!/bin/bash
-                  yum update -y
                   yum install -y git
                   cd /home/ec2-user
                   git clone https://github.com/tuimac/tools
@@ -439,7 +437,6 @@ Resources:
               Fn::Base64: !Sub
                 - |
                   #!/bin/bash
-                  yum update -y
                   yum install -y git
                   cd /home/ec2-user
                   git clone https://github.com/tuimac/tools
@@ -506,7 +503,6 @@ Resources:
               Fn::Base64: !Sub
                 - |
                   #!/bin/bash
-                  yum update -y
                   yum install -y git
                   cd /home/ec2-user
                   git clone https://github.com/tuimac/tools
