@@ -4,23 +4,20 @@
 ##############################
 NAME="primary"
 VOLUME="${PWD}/volume"
-podmanHUBUSER="tuimac"
 IMAGE=${podmanHUBUSER}/${NAME}
+DATA='/var/lib/pgsql/data'
 ##############################
 
 function runContainer(){
-    DATA='/var/lib/pgsql/data'
     podman run -itd --name ${NAME} \
-                -v ${VOLUME}:${DATA} \
-                -v $(pwd)/etc:/etc/postgresql \
+                -v ${VOLUME}:${DATA}:Z \
                 -e POSTGRESQL_USER=test \
                 -e POSTGRESQL_PASSWORD=password \
                 -e POSTGRESQL_DATABASE=test \
                 -h ${NAME} \
                 -p 5432:5432 \
                 ${NAME} \
-                postgres -c config_file=/etc/postgresql/postgresql.conf \
-                -c hba_file=/etc/postgresql/pg_hba.conf
+                bash -c '/var/lib/pgsql/entrypoint.sh'
     #podman stop ${NAME}
     #podman start ${NAME}
 }
@@ -32,6 +29,7 @@ function cleanup(){
 
 function createContainer(){
     mkdir ${VOLUME}
+    podman unshare chown 26:26 ${VOLUME}
     podman login registry.redhat.io
     podman build -t ${NAME} .
     runContainer
