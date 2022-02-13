@@ -32,7 +32,7 @@ Parameters:
 
   TagKey:
     Type: String
-    Default: Name
+    Default: Environment
 
   TagValue:
     Type: String
@@ -50,7 +50,9 @@ Resources:
       Tags:
         - Key: !Ref TagKey
           Value: !Ref TagValue
- 
+        - Key: Name
+          Value: tuimac
+
   # Internet Gateway
   InternetGateway:
     Type: AWS::EC2::InternetGateway
@@ -58,6 +60,8 @@ Resources:
       Tags:
         - Key: !Ref TagKey
           Value: !Ref TagValue
+        - Key: Name
+          Value: tuimac
 
   InternetGatewayAttachment:
     Type: AWS::EC2::VPCGatewayAttachment
@@ -79,6 +83,8 @@ Resources:
       Tags:
         - Key: !Ref TagKey
           Value: !Ref TagValue
+        - Key: Name
+          Value: tuimac-public-a
 
   PublicSubnetB:
     Type: AWS::EC2::Subnet
@@ -93,22 +99,75 @@ Resources:
       Tags:
         - Key: !Ref TagKey
           Value: !Ref TagValue
+        - Key: Name
+          Value: tuimac-public-b
 
   PublicSubnetC:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref Vpc
       CidrBlock: !Ref PublicSubnetCCidr
-      AvailabilityZone: ap-northeast-1d
+      AvailabilityZone: !Join
+        - ''
+        - - !Ref 'AWS::Region'
+          - c
       MapPublicIpOnLaunch: true
       Tags:
         - Key: !Ref TagKey
           Value: !Ref TagValue
         - Key: Name
-          Value: DR-Subnet
+          Value: tuimac-public-c
+            
+  PrivateSubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      CidrBlock: !Ref PrivateSubnetACidr
+      AvailabilityZone: !Join
+        - ''
+        - - !Ref 'AWS::Region'
+          - a
+      MapPrivateIpOnLaunch: false
+      Tags:
+        - Key: !Ref TagKey
+          Value: !Ref TagValue
+        - Key: Name
+          Value: tuimac-private-a
+
+  PrivateSubnetB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      CidrBlock: !Ref PrivateSubnetBCidr
+      AvailabilityZone: !Join
+        - ''
+        - - !Ref 'AWS::Region'
+          - b
+      MapPrivateIpOnLaunch: false
+      Tags:
+        - Key: !Ref TagKey
+          Value: !Ref TagValue
+        - Key: Name
+          Value: tuimac-private-b
+
+  PrivateSubnetC:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      CidrBlock: !Ref PrivateSubnetCCidr
+      AvailabilityZone: !Join
+        - ''
+        - - !Ref 'AWS::Region'
+          - c
+      MapPrivateIpOnLaunch: false
+      Tags:
+        - Key: !Ref TagKey
+          Value: !Ref TagValue
+        - Key: Name
+          Value: tuimac-private-c
 
   # RouteTable
-  RouteTable:
+  PublicRouteTableA:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref Vpc
@@ -116,32 +175,115 @@ Resources:
         - Key: !Ref TagKey
           Value: !Ref TagValue
         - Key: Name
-          Value: RHEL_HA_DR
+          Value: tuimac-public-a
 
-  InternetRoute:
+  PublicRouteA:
     Type: AWS::EC2::Route
     Properties:
-      RouteTableId: !Ref RouteTable
+      RouteTableId: !Ref PublicRouteTableA
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref InternetGateway
 
-  RouteTableAccociationA:
+  PublicRouteTableAAccociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
-      RouteTableId: !Ref RouteTable
-      SubnetId: !Ref SubnetA
+      RouteTableId: !Ref PublicRouteTableA
+      SubnetId: !Ref PublicSubnetA
 
-  RouteTableAccociationC:
-    Type: AWS::EC2::SubnetRouteTableAssociation
+  PublicRouteTableB:
+    Type: AWS::EC2::RouteTable
     Properties:
-      RouteTableId: !Ref RouteTable
-      SubnetId: !Ref SubnetC
+      VpcId: !Ref Vpc
+      Tags:
+        - Key: !Ref TagKey
+          Value: !Ref TagValue
+        - Key: Name
+          Value: tuimac-public-b
 
-  RouteTableAccociationD:
+  PublicRouteB:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PublicRouteTableBA
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  PublicRouteTableBAccociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
-      RouteTableId: !Ref RouteTable
-      SubnetId: !Ref SubnetD
+      RouteTableId: !Ref PublicRouteTableB
+      SubnetId: !Ref PublicSubnetB
+
+  PublicRouteTableC:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref Vpc
+      Tags:
+        - Key: !Ref TagKey
+          Value: !Ref TagValue
+        - Key: Name
+          Value: tuimac-public-c
+
+  PublicRouteC:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PublicRouteTableC
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  PublicRouteTableAAccociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTableC
+      SubnetId: !Ref PublicSubnetC
+
+  PrivateRouteTableA:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref Vpc
+      Tags:
+        - Key: !Ref TagKey
+          Value: !Ref TagValue
+        - Key: Name
+          Value: tuimac-private-a
+
+  PrivateRouteTableAAccociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTableA
+      SubnetId: !Ref PrivateSubnetA
+
+  PrivateRouteTableB:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref Vpc
+      Tags:
+        - Key: !Ref TagKey
+          Value: !Ref TagValue
+        - Key: Name
+          Value: tuimac-private-b
+
+  PrivateRouteTableBAccociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTableB
+      SubnetId: !Ref PrivateSubnetB
+
+  PrivateRouteTableC:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref Vpc
+      Tags:
+        - Key: !Ref TagKey
+          Value: !Ref TagValue
+        - Key: Name
+          Value: tuimac-private-c
+
+  PrivateRouteTableAAccociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTableC
+      SubnetId: !Ref PrivateSubnetC
+
 
   # Endpoint
   S3Endpoint:
@@ -157,7 +299,33 @@ Resources:
         }]
       }'
       RouteTableIds:
-        - !Ref RouteTable
+        - !Ref PublicRouteTableA
+        - !Ref PublicRouteTableB
+        - !Ref PublicRouteTableB
+        - !Ref PrivateRouteTableA
+        - !Ref PrivateRouteTableB
+        - !Ref PrivateRouteTableC
       ServiceName: !Sub com.amazonaws.${AWS::Region}.s3
       VpcId: !Ref Vpc
 
+  DynamodbEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PolicyDocument: '{
+        "Version": "2012-10-17",
+        "Statement":[{
+          "Effect": "Allow",
+          "Principal": "*",
+          "Action": "*",
+          "Resource": "*"
+        }]
+      }'
+      RouteTableIds:
+        - !Ref PublicRouteTableA
+        - !Ref PublicRouteTableB
+        - !Ref PublicRouteTableB
+        - !Ref PrivateRouteTableA
+        - !Ref PrivateRouteTableB
+        - !Ref PrivateRouteTableC
+      ServiceName: !Sub com.amazonaws.${AWS::Region}.dynamodb
+      VpcId: !Ref Vpc
