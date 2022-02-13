@@ -4,8 +4,7 @@
 ##############################
 NAME="primary"
 VOLUME="${PWD}/volume"
-IMAGE=${podmanHUBUSER}/${NAME}
-DATA='/var/lib/pgsql/data'
+DATA='/var/lib/pgsql/data/userdata'
 ##############################
 
 function runContainer(){
@@ -16,10 +15,7 @@ function runContainer(){
                 -e POSTGRESQL_DATABASE=test \
                 -h ${NAME} \
                 -p 5432:5432 \
-                ${NAME} \
-                bash -c '/var/lib/pgsql/entrypoint.sh'
-    #podman stop ${NAME}
-    #podman start ${NAME}
+                ${NAME}
 }
 
 function cleanup(){

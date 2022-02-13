@@ -1,7 +1,9 @@
 FROM registry.redhat.io/rhel8/postgresql-13:1-31
 
-ENV PGDATA /var/lib/pgsql/data
+ENV PGDATA /var/lib/pgsql/data/userdata
 
-ADD entrypoint.sh /var/lib/pgsql/entrypoint.sh
-ADD etc/postgresql.conf /var/lib/pgsql/postgresql.conf
-ADD etc/pg_hba.conf /var/lib//var/lib/pgsqll/pg_hba.conf
+ADD etc/postgresql.conf /tmp/postgresql.conf
+ADD etc/pg_hba.conf /tmp/pg_hba.conf
+
+ENTRYPOINT ["container-entrypoint"]
+CMD ["run-postgresql"]
