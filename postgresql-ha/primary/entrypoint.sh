@@ -55,9 +55,4 @@ pg_ctl stop
 
 unset_env_vars
 echo "Starting server..."
-exec postgres "$@"
-
-# Customize
-mv /tmp/postgresql.conf ${PGDATA}
-mv /tmp/pg_hba.conf ${PGDATA}
-pg_ctl reload
+exec postgres "$@" -c config_file=/etc/postgresql/postgresql.conf -c hba_file=/etc/postgresql/pg_hba.conf
