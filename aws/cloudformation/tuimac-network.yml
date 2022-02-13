@@ -4,7 +4,7 @@ Description: Base network for tuimac
 Parameters:
   VpcCidr:
     Type: String
-    Default: 10.0.0.0/26
+    Default: 10.0.0.0/16
 
   PublicSubnetACidr:
     Type: String
@@ -127,7 +127,7 @@ Resources:
         - ''
         - - !Ref 'AWS::Region'
           - a
-      MapPrivateIpOnLaunch: false
+      MapPublicIpOnLaunch: false
       Tags:
         - Key: !Ref TagKey
           Value: !Ref TagValue
@@ -143,7 +143,7 @@ Resources:
         - ''
         - - !Ref 'AWS::Region'
           - b
-      MapPrivateIpOnLaunch: false
+      MapPublicIpOnLaunch: false
       Tags:
         - Key: !Ref TagKey
           Value: !Ref TagValue
@@ -159,7 +159,7 @@ Resources:
         - ''
         - - !Ref 'AWS::Region'
           - c
-      MapPrivateIpOnLaunch: false
+      MapPublicIpOnLaunch: false
       Tags:
         - Key: !Ref TagKey
           Value: !Ref TagValue
@@ -203,11 +203,11 @@ Resources:
   PublicRouteB:
     Type: AWS::EC2::Route
     Properties:
-      RouteTableId: !Ref PublicRouteTableBA
+      RouteTableId: !Ref PublicRouteTableB
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref InternetGateway
 
-  PublicRouteTableBAccociation:
+  PublicRouteTableBAcociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       RouteTableId: !Ref PublicRouteTableB
@@ -230,7 +230,7 @@ Resources:
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref InternetGateway
 
-  PublicRouteTableAAccociation:
+  PublicRouteTableCAccociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       RouteTableId: !Ref PublicRouteTableC
@@ -301,7 +301,7 @@ Resources:
       RouteTableIds:
         - !Ref PublicRouteTableA
         - !Ref PublicRouteTableB
-        - !Ref PublicRouteTableB
+        - !Ref PublicRouteTableC
         - !Ref PrivateRouteTableA
         - !Ref PrivateRouteTableB
         - !Ref PrivateRouteTableC
@@ -323,7 +323,7 @@ Resources:
       RouteTableIds:
         - !Ref PublicRouteTableA
         - !Ref PublicRouteTableB
-        - !Ref PublicRouteTableB
+        - !Ref PublicRouteTableC
         - !Ref PrivateRouteTableA
         - !Ref PrivateRouteTableB
         - !Ref PrivateRouteTableC
