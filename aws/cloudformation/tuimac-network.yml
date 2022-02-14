@@ -69,6 +69,26 @@ Resources:
       InternetGatewayId: !Ref InternetGateway
       VpcId: !Ref Vpc
 
+  # DHCP Option Set
+  DHCPOptionSet:
+    Type: AWS::EC2::DHCPOptions
+    Properties:
+      DomainNameServers:
+        - AmazonProvidedDNS
+      NtpServers:
+        - 169.254.169.123
+      Tags:
+        - Key: !Ref TagKey
+          Value: !Ref TagValue
+        - Key: Name
+          Value: tuimac
+
+  DHCPOptionSetAttachment:
+    Type: AWS::EC2::VPCDHCPOptionsAssociation
+    Properties:
+      VpcId: !Ref Vpc
+      DhcpOptionsId: !Ref DHCPOptionSet
+
   # Subnet
   PublicSubnetA:
     Type: AWS::EC2::Subnet

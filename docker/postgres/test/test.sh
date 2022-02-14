@@ -12,7 +12,7 @@ function create(){
     while true; do
         psql ${DB} -U ${DB_USER} -h ${HOST} -c "INSERT INTO ITEMS (name, count) VALUES ('"${COUNT}"', '${COUNT}');"
         COUNT=`expr $COUNT + 1`
-        sleep 1
+        sleep 0.3
     done
 }
 
