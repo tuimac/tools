@@ -202,6 +202,7 @@ Resources:
             - !Ref SecurityGroup
           SubnetId: !Ref SubnetA
           DeviceIndex: 0
+          PrivateIpAddress: !Ref PrimaryIP
       IamInstanceProfile: !Ref EC2InstanceProfile
       SourceDestCheck: false
       KeyName: !Ref SSHPemFilename
@@ -259,6 +260,7 @@ Resources:
             - !Ref SecurityGroup
           SubnetId: !Ref SubnetB
           DeviceIndex: 0
+          PrivateIpAddress: !Ref SecondaryIP
       IamInstanceProfile: !Ref EC2InstanceProfile
       SourceDestCheck: false
       KeyName: !Ref SSHPemFilename
