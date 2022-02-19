@@ -239,8 +239,9 @@ Resources:
                 echo ${SecondaryIP}' secondary' >> /etc/hosts
                 echo 'primary' > /etc/hostname
                 yum install -y pacemaker pcs
-                su - ec2-user
+                cd /home/ec2-user
                 git clone https://github.com/tuimac/tools.git; echo "cloned"
+                chown ec2-user:ec2-user -R /home/ec2-user/tools
                 reboot
           - {
               PRIMARYIP: !Ref PrimaryIP,
@@ -298,8 +299,9 @@ Resources:
                 echo ${SecondaryIP}' secondary' >> /etc/hosts
                 echo 'secondary' > /etc/hostname
                 yum install -y pacemaker pcs
-                su - ec2-user
+                cd /home/ec2-user
                 git clone https://github.com/tuimac/tools.git; echo "cloned"
+                chown ec2-user:ec2-user -R /home/ec2-user/tools
                 reboot
           - {
               PRIMARYIP: !Ref PrimaryIP,
