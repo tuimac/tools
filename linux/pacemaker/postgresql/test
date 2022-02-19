@@ -1,0 +1,69 @@
+#!/bin/sh
+
+#Initialize
+: ${OCF_FUNCTIONS_DIR=${OCF_ROOT}/resource.d/heartbeat}
+. ${OCF_FUNCTIONS_DIR}/.ocf-shellfuncs
+
+pg_meta_data() {
+    cat << EOF
+<?xml version="1.0"?>
+<!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
+<resource-agent name="postgresql-container" version="0.1">
+    <version>0.1</version>
+    <longdesc lang="en">postgresql-container</longdesc>
+    <shortdesc lang="en">postgresql-container</shortdesc>
+    <parameters>
+    </parameters>
+    <actions>
+        <action name="meta-data" timeout="5" />
+        <action name="start" timeout="5" />
+        <action name="stop" timeout="5" />
+        <action name="monitor" timeout="5" />
+        <action name="validate-all" timeout="5" />
+    </actions>
+</resource-agent>
+EOF
+    return $OCF_SUCCESS
+}
+
+pg_validate(){
+    return $OCF_SUCCESS
+}
+
+pg_start(){
+    touch ${RUNNING_FILE}
+    return $OCF_SUCCESS
+}
+
+pg_stop(){
+    rm -f ${RUNNING_FILE}
+    return $OCF_SUCCESS
+}
+
+pg_monitor(){
+    local status
+    status=$(docker inspect --type=container --format {{.State.Status}} $CONTAINER 2>/dev/null)
+    return $OCF_NOT_RUNNING
+}
+
+pg_usage(){
+    echo "Test Resource."
+    return $OCF_SUCCESS
+}
+
+
+
+# Translate each action into the appropriate function call
+case $__OCF_ACTION in
+meta-data)      pg_meta_data
+                exit $OCF_SUCCESS
+                ;;
+start)          pg_start;;
+stop)           pg_stop;;
+monitor)        pg_monitor;;
+validate-all)   pg_validate;;
+*)              pg_usage
+                exit $OCF_ERR_UNIMPLEMENTED
+                ;;
+esac
+
