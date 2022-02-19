@@ -123,6 +123,10 @@ Resources:
       GroupName: !Ref TagValue
       GroupDescription: for test
       VpcId: !Ref Vpc
+      SecurityGroupIngress:
+        - IpProtocol: -1
+          CidrIp: !Ref VpcCidr
+          Description: ANY
       SecurityGroupEgress:
         - IpProtocol: -1
           CidrIp: 0.0.0.0/0
