@@ -149,6 +149,34 @@ Resources:
       ServiceName: !Sub com.amazonaws.${AWS::Region}.s3
       VpcId: !Ref Vpc
 
+  EC2InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: EC2InstanceRole
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: EC2InstancePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "ec2:*"
+                Resource:
+                  - "*"
+      Tags:
+        - Key: !Ref TagKey
+          Value: !Ref TagValue
+
   EC2InstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
@@ -170,6 +198,7 @@ Resources:
             - !Ref SecurityGroup
           SubnetId: !Ref SubnetA
           DeviceIndex: 0
+      IamInstanceProfile: !Ref EC2InstanceProfile
       SourceDestCheck: false
       KeyName: !Ref SSHPemFilename
       Tags:
@@ -226,6 +255,7 @@ Resources:
             - !Ref SecurityGroup
           SubnetId: !Ref SubnetB
           DeviceIndex: 0
+      IamInstanceProfile: !Ref EC2InstanceProfile
       SourceDestCheck: false
       KeyName: !Ref SSHPemFilename
       Tags:
