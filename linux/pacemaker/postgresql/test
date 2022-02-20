@@ -66,9 +66,9 @@ pg_monitor(){
     fi
     if [ $status == "running" ]; then
         return $OCF_SUCCESS
+    else
+        return $OCF_NOT_RUNNING
     fi
-
-    return $OCF_ERR_GENERIC
 }
 
 pg_usage(){
