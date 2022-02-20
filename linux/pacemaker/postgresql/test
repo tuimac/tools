@@ -31,18 +31,25 @@ pg_validate(){
 }
 
 pg_start(){
-    touch ${RUNNING_FILE}
+    docker start $CONTAINER
     return $OCF_SUCCESS
 }
 
 pg_stop(){
-    rm -f ${RUNNING_FILE}
+    aws ec2 stop-instances --instance-ids i-027bc1a80772708f2
     return $OCF_SUCCESS
 }
 
 pg_monitor(){
     local status
     status=$(docker inspect --type=container --format {{.State.Status}} $CONTAINER 2>/dev/null)
+    if [ $? -ne 0 ]; then
+        return $OCF_NOT_RUNNING
+    fi
+    if [ $status == "running" ]; then
+        return $OCF_SUCCESS
+    fi
+
     return $OCF_NOT_RUNNING
 }
 

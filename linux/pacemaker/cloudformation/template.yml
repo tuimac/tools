@@ -233,12 +233,11 @@ Resources:
                 systemctl enable docker
                 systemctl start docker
                 usermod -aG docker ec2-user
-                curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-                chmod +x /usr/local/bin/docker-compose
                 echo ${PrimaryIP}' primary' >> /etc/hosts
                 echo ${SecondaryIP}' secondary' >> /etc/hosts
                 echo 'primary' > /etc/hostname
                 yum install -y pacemaker pcs
+                echo "password" | passwd --stdin hacluster
                 cd /home/ec2-user
                 git clone https://github.com/tuimac/tools.git; echo "cloned"
                 chown ec2-user:ec2-user -R /home/ec2-user/tools
@@ -292,16 +291,14 @@ Resources:
                   # for bash and zsh, only if no alias is already set
                   alias vi >/dev/null 2>&1 || alias vi=vim
                 fi' > /etc/profile.d/vim.sh
-
                 systemctl enable docker
                 systemctl start docker
                 usermod -aG docker ec2-user
-                curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-                chmod +x /usr/local/bin/docker-compose
                 echo ${PrimaryIP}' primary' >> /etc/hosts
                 echo ${SecondaryIP}' secondary' >> /etc/hosts
                 echo 'secondary' > /etc/hostname
                 yum install -y pacemaker pcs
+                echo "password" | passwd --stdin hacluster
                 cd /home/ec2-user
                 git clone https://github.com/tuimac/tools.git; echo "cloned"
                 chown ec2-user:ec2-user -R /home/ec2-user/tools
