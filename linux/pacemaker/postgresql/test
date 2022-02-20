@@ -4,6 +4,10 @@
 : ${OCF_FUNCTIONS_DIR=${OCF_ROOT}/resource.d/heartbeat}
 . ${OCF_FUNCTIONS_DIR}/.ocf-shellfuncs
 
+OCF_RESKEY_reuse_default="0"
+
+: ${OCF_RESKEY_reuse=${OCF_RESKEY_reuse_default}}
+
 pg_meta_data() {
     cat << EOF
 <?xml version="1.0"?>
@@ -13,6 +17,14 @@ pg_meta_data() {
     <longdesc lang="en">postgresql-container</longdesc>
     <shortdesc lang="en">postgresql-container</shortdesc>
     <parameters>
+    <parameter name="name" required="0" unique="0">
+    <longdesc lang="en">
+    The name to give the created container. By default this will
+    be that resource's instance name.
+    </longdesc>
+    <shortdesc lang="en">docker container name</shortdesc>
+    <content type="string"/>
+    </parameter>
     </parameters>
     <actions>
         <action name="meta-data" timeout="5" />
@@ -58,7 +70,7 @@ pg_usage(){
     return $OCF_SUCCESS
 }
 
-
+CONTAINER=$OCF_RESKEY_name
 
 # Translate each action into the appropriate function call
 case $__OCF_ACTION in
@@ -73,4 +85,3 @@ validate-all)   pg_validate;;
                 exit $OCF_ERR_UNIMPLEMENTED
                 ;;
 esac
-
