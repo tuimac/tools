@@ -5,8 +5,9 @@
 . ${OCF_FUNCTIONS_DIR}/.ocf-shellfuncs
 
 OCF_RESKEY_reuse_default="0"
-
 : ${OCF_RESKEY_reuse=${OCF_RESKEY_reuse_default}}
+
+LOG='/var/log/pcs-docker.log'
 
 pg_meta_data() {
     cat << EOF
@@ -17,14 +18,14 @@ pg_meta_data() {
     <longdesc lang="en">postgresql-container</longdesc>
     <shortdesc lang="en">postgresql-container</shortdesc>
     <parameters>
-    <parameter name="name" required="0" unique="0">
-    <longdesc lang="en">
-    The name to give the created container. By default this will
-    be that resource's instance name.
-    </longdesc>
-    <shortdesc lang="en">docker container name</shortdesc>
-    <content type="string"/>
-    </parameter>
+        <parameter name="name" required="0" unique="0">
+            <shortdesc lang="en">docker container name</shortdesc>
+            <content type="string"/>
+        </parameter>
+        <parameter name="user" required="0" unique="0">
+            <shortdesc lang="en">user for running container</shortdesc>
+            <content type="string"/>
+        </parameter>
     </parameters>
     <actions>
         <action name="meta-data" timeout="5" />
@@ -48,13 +49,13 @@ pg_start(){
 }
 
 pg_stop(){
-    aws ec2 stop-instances --instance-ids i-027bc1a80772708f2
+    aws ec2 stop-instances --instance-ids i-027bc1a80772708f2 >> $LOG 2>&1
     return $OCF_SUCCESS
 }
 
 pg_monitor(){
     local status
-    status=$(docker inspect --type=container --format {{.State.Status}} $CONTAINER 2>/dev/null)
+    status=$(su $RUN_USER -c 'docker inspect --type=container --format {{.State.Status}} $CONTAINER' >> $LOG 2>&1)
     if [ $? -ne 0 ]; then
         return $OCF_NOT_RUNNING
     fi
@@ -71,6 +72,7 @@ pg_usage(){
 }
 
 CONTAINER=$OCF_RESKEY_name
+RUN_USER=$OCF_RESKEY_user
 
 # Translate each action into the appropriate function call
 case $__OCF_ACTION in

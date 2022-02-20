@@ -1,4 +1,4 @@
 #!/bin/bash
 
-status=$(docker inspect --type=container --format {{.State.Status}} postgresql 2>/dev/null)
-test "$status" = "runninge"
+status=$(su ec2-user -c 'docker inspect --type=container --format {{.State.Status}} postgresql')
+echo $status
