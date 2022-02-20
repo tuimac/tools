@@ -68,7 +68,7 @@ pg_monitor(){
         return $OCF_SUCCESS
     fi
 
-    return $OCF_NOT_RUNNING
+    return $OCF_ERR_GENERIC
 }
 
 pg_usage(){
