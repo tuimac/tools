@@ -12,12 +12,17 @@ function delete(){
     sudo pcs status
 }
 
+function deploy(){
+    sudo cp test /usr/lib/ocf/resource.d/heartbeat/test
+}
+
 function userguide(){
     echo -e "usage: ./run.sh [help | create | delete]"
     echo -e "
 optional arguments:
-create              Create image and container after that run the container.
-delete              Delete image and container.
+create              Create pcs resources.
+delete              Delete pcs resources.
+deploy              Copy ocf script to /usr/lib/ocf/resource.d/heartbeat
     "
 }
 
@@ -27,6 +32,8 @@ function main(){
         create
     elif [ $1 == "delete" ]; then
         delete
+    elif [ $1 == "deploy" ]; then
+        deploy
     else
         { userguide; exit 1; }
     fi
