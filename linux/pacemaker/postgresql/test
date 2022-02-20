@@ -8,6 +8,7 @@ OCF_RESKEY_reuse_default="0"
 : ${OCF_RESKEY_reuse=${OCF_RESKEY_reuse_default}}
 
 LOG='/var/log/pcs-docker.log'
+echo '' > $LOG
 
 pg_meta_data() {
     cat << EOF
@@ -48,7 +49,8 @@ pg_validate(){
 }
 
 pg_start(){
-    su $RUN_USER -c 'docker start $CONTAINER'
+    su $RUN_USER -c 'docker start '$CONTAINER
+    echo 'Start '$CONTAINER >> $LOG
     return $OCF_SUCCESS
 }
 

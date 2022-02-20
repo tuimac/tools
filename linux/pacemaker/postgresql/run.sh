@@ -6,7 +6,7 @@ function create(){
 }
 
 function delete(){
-    sudo pcs resource delete test
+    sudo pcs resource delete test --force
     sudo pcs resource refresh test --node primary
     sudo pcs resource refresh test --node secondary
     sudo pcs status
