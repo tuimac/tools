@@ -26,6 +26,10 @@ pg_meta_data() {
             <shortdesc lang="en">user for running container</shortdesc>
             <content type="string"/>
         </parameter>
+        <parameter name="instance_id" required="0" unique="0">
+            <shortdesc lang="en">fence target EC2 instance ID</shortdesc>
+            <content type="string"/>
+        </parameter>
     </parameters>
     <actions>
         <action name="meta-data" timeout="5" />
@@ -44,20 +48,19 @@ pg_validate(){
 }
 
 pg_start(){
-    docker start $CONTAINER
+    su $RUN_USER -c 'docker start $CONTAINER'
     return $OCF_SUCCESS
 }
 
 pg_stop(){
-    aws ec2 stop-instances --instance-ids i-027bc1a80772708f2 >> $LOG 2>&1
+    su $RUN_USER -c 'aws ec2 stop-instances --instance-ids $INSTANCE_ID' >> $LOG 2>&1
     return $OCF_SUCCESS
 }
 
 pg_monitor(){
     local status
-    status=$(su $RUN_USER -c 'docker inspect --type=container --format {{.State.Status}} $CONTAINER') >> $LOG 2>&1
-    echo $CONTAINER >> $LOG
-    echo $RUN_USER >> $LOG
+    status=$(su $RUN_USER -c 'docker inspect --type=container --format {{.State.Status}} '$CONTAINER)
+    echo $status >> $LOG
     if [ $? -ne 0 ]; then
         return $OCF_NOT_RUNNING
     fi
@@ -75,6 +78,7 @@ pg_usage(){
 
 CONTAINER=$OCF_RESKEY_name
 RUN_USER=$OCF_RESKEY_user
+INSTANCE_ID=$OCF_RESKEY_instance_id
 
 # Translate each action into the appropriate function call
 case $__OCF_ACTION in

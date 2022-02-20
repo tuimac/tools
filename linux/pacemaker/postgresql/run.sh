@@ -1,7 +1,7 @@
 #!/bin/bash
 
 function create(){
-    sudo pcs resource create test ocf:heartbeat:test name=postgresql user=ec2-user
+    sudo pcs resource create test ocf:heartbeat:test name=postgresql user=ec2-user instance_id=i-027bc1a80772708f2
     sudo pcs status
 }
 
