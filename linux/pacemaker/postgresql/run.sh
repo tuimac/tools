@@ -1,7 +1,13 @@
 #!/bin/bash
 
+PRIMARY_INS_ID='i-01c7de2d1b2eb836d'
+CONTAINER='postgresql'
+
 function create(){
-    sudo pcs resource create test ocf:heartbeat:test name=postgresql user=ec2-user instance_id=i-027bc1a80772708f2
+    docker inspect $CONTAINER
+    [[ $? -ne 0 ]] && { echo 'There is no container name is '$CONTAINER; exit 1; }
+    docker start $CONTAINER
+    sudo pcs resource create test ocf:heartbeat:test name=${CONTAINER} user=ec2-user instance_id=${PRIMARY_INS_ID}
     sudo pcs status
 }
 
@@ -14,6 +20,11 @@ function delete(){
 
 function deploy(){
     sudo cp test /usr/lib/ocf/resource.d/heartbeat/test
+    ls -l /usr/lib/ocf/resource.d/heartbeat/test
+}
+
+function start(){
+    docker stop $CONTAINER
 }
 
 function userguide(){
@@ -34,6 +45,8 @@ function main(){
         delete
     elif [ $1 == "deploy" ]; then
         deploy
+    elif [ $1 == "start" ]; then
+        start
     else
         { userguide; exit 1; }
     fi
