@@ -7,9 +7,6 @@
 OCF_RESKEY_reuse_default="0"
 : ${OCF_RESKEY_reuse=${OCF_RESKEY_reuse_default}}
 
-LOG='/var/log/pcs-docker.log'
-echo '' > $LOG
-
 pg_meta_data() {
     cat << EOF
 <?xml version="1.0"?>
@@ -62,6 +59,7 @@ pg_stop(){
 
 pg_monitor(){
     local status
+    echo 'hello' >> $LOG
     status=$(su $RUN_USER -c 'docker inspect --type=container --format {{.State.Status}} '$CONTAINER)
     if [ $? -ne 0 ]; then
         echo '!!Monitoring error!!' >> $LOG
@@ -80,6 +78,7 @@ pg_monitor(){
         ;;
     *)
         echo $status >> $LOG
+        echo 'error' >> $LOG
         return $OCF_ERR_GENERIC
     esac
 }

@@ -4,6 +4,7 @@ PRIMARY_INS_ID='i-01c7de2d1b2eb836d'
 CONTAINER='postgresql'
 
 function create(){
+    sudo echo '' >> /var/log/pcs-docker.log
     docker inspect $CONTAINER
     [[ $? -ne 0 ]] && { echo 'There is no container name is '$CONTAINER; exit 1; }
     docker start $CONTAINER
@@ -32,6 +33,10 @@ function start(){
     done
 }
 
+function log(){
+    sudo cat /var/log/pcs-docker.log
+}
+
 function userguide(){
     echo -e "usage: ./run.sh [help | create | delete]"
     echo -e "
@@ -52,6 +57,8 @@ function main(){
         deploy
     elif [ $1 == "start" ]; then
         start
+    elif [ $1 == "log" ]; then
+        log
     else
         { userguide; exit 1; }
     fi
