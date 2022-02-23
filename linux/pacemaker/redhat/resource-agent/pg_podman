@@ -9,6 +9,8 @@ OCF_RESKEY_reuse_default="0"
 
 LOG='/var/log/pcs-podman.log'
 
+whoami >> $LOG
+
 pg_meta_data() {
     cat << EOF
 <?xml version="1.0"?>
@@ -62,6 +64,7 @@ pg_stop(){
 
 pg_monitor(){
     local status
+    cd /home/$RUN_USER
     status=$(su $RUN_USER -c 'podman inspect --type=container --format {{.State.Status}} '$CONTAINER)
     if [ $? -ne 0 ]; then
         echo '!!Monitoring error!!' >> $LOG

@@ -17,8 +17,7 @@ function create(){
 
 function delete(){
     sudo pcs resource delete ${RESOURCE_NAME} --force
-    sudo pcs resource refresh ${RESOURCE_NAME} --node primary
-    sudo pcs resource refresh ${RESOURCE_NAME} --node secondary
+    sudo pcs resource refresh ${RESOURCE_NAME}
     sudo pcs status
 }
 
