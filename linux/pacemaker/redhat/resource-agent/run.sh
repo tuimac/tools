@@ -23,7 +23,7 @@ function delete(){
 }
 
 function deploy(){
-    sudo cp test /usr/lib/ocf/resource.d/heartbeat/${RESOURCE_NAME}
+    sudo cp ${RESOURCE_NAME} /usr/lib/ocf/resource.d/heartbeat/${RESOURCE_NAME}
     ls -l /usr/lib/ocf/resource.d/heartbeat/${RESOURCE_NAME}
 }
 
