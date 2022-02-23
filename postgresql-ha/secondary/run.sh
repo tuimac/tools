@@ -4,7 +4,6 @@
 ##############################
 NAME="postgresql"
 VOLUME="${PWD}/volume"
-BACKUP="${PWD}/backup"
 DATA='/var/lib/pgsql/data/userdata'
 ##############################
 
@@ -28,10 +27,8 @@ function cleanup(){
 
 function createContainer(){
     mkdir ${VOLUME}
-    mkdir ${BACKUP}
     podman unshare chown 26:26 ${VOLUME}
     podman unshare chown 26:26 etc/
-    podman unshare chown 26:26 ${BACKUP}
     podman login registry.redhat.io
     podman build -t ${NAME} .
     runContainer
@@ -55,7 +52,6 @@ function deleteAll(){
     podman rmi ${NAME}
     cleanup
     sudo rm -rf ${VOLUME}
-    sudo rm -rf ${BACKUP}
 }
 
 function userguide(){
