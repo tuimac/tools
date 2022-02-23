@@ -54,6 +54,7 @@ pg_start(){
 }
 
 pg_stop(){
+    echo $INSTANCE_ID >> $LOG
     su $RUN_USER -c 'aws ec2 stop-instances --instance-ids '$INSTANCE_ID >> $LOG 2>&1
     echo 'Stop '$CONTAINER >> $LOG
     return $OCF_SUCCESS
@@ -64,7 +65,7 @@ pg_monitor(){
     status=$(su $RUN_USER -c 'docker inspect --type=container --format {{.State.Status}} '$CONTAINER)
     if [ $? -ne 0 ]; then
         echo '!!Monitoring error!!' >> $LOG
-        su $RUN_USER -c 'docker inspect --type=container --format {{.State.Status}} '$CONTAINER >> $LOG
+        su $RUN_USER -c 'docker inspect --type=container --format {{.State.Status}} '$CONTAINER >> $LOG 2>&1
         return $OCF_ERR_GENERIC
     fi
 
