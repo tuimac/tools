@@ -5,6 +5,3 @@ ENV PGDATA /var/lib/pgsql/data/userdata
 #ADD etc/postgresql.conf /var/lib/pgsql/data/postgresql.conf
 #ADD etc/pg_hba.conf /var/lib/pgsql/data/pg_hba.conf
 ADD entrypoint.sh /usr/bin/run-postgresql
-
-ENTRYPOINT ["container-entrypoint"]
-CMD ["run-postgresql"]

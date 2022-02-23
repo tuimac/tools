@@ -11,7 +11,6 @@ function runContainer(){
     podman run -itd --name ${NAME} \
                 -v ${VOLUME}:${DATA}:Z \
                 -v $(pwd)/etc:/etc/postgresql:Z \
-                -v ${BACKUP}:/var/lib/pgsql/backup:Z \
                 -e POSTGRESQL_USER=test \
                 -e POSTGRESQL_PASSWORD=password \
                 -e POSTGRESQL_DATABASE=test \
@@ -27,8 +26,8 @@ function cleanup(){
 
 function createContainer(){
     mkdir ${VOLUME}
-    podman unshare chown 26:26 ${VOLUME}
-    podman unshare chown 26:26 etc/
+    podman unshare chown -R 26:26 ${VOLUME}
+    podman unshare chown -R 26:26 etc/
     podman login registry.redhat.io
     podman build -t ${NAME} .
     runContainer
@@ -43,7 +42,7 @@ function rerunContainer(){
     podman stop ${NAME}
     podman rm ${NAME}
     runContainer
-    cleanup
+    #cleanup
 }
 
 function deleteAll(){

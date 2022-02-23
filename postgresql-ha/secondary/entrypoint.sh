@@ -17,6 +17,8 @@ check_env_vars
 generate_passwd_file
 generate_postgresql_config
 
+echo '1'
+
 # Is this brand new data volume?
 PG_INITIALIZED=false
 
@@ -31,7 +33,7 @@ fi
 # enough time here to happen (unless liveness probe kills us).  Note that in
 # case of server failure this command still exists immediately.
 pg_ctl start -w --timeout 86400 -o "-h ''"
-
+echo '2'
 # This is just a pedantic safety measure (the timeout above is unlikely to
 # happen), but `pt_ctl -w` is not reliable prior to PostgreSQL v10 where it
 # returns exit_status=0 even if the server is still starting.  For more info
@@ -44,15 +46,14 @@ if $PG_INITIALIZED ; then
         "${APP_DATA}/src/postgresql-init" \
         "${CONTAINER_SCRIPTS_PATH}/init"
     migrate_db
-    create_users
+    #create_users
 fi
-
-process_extending_files \
-    "${APP_DATA}/src/postgresql-start" \
-    "${CONTAINER_SCRIPTS_PATH}/start"
+echo '3'
 
 pg_ctl stop
+echo '4'
 
 unset_env_vars
 echo "Starting server..."
 exec postgres "$@" -c config_file=/etc/postgresql/postgresql.conf
+echo '5'
