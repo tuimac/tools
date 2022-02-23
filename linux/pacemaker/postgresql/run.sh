@@ -4,11 +4,11 @@ PRIMARY_INS_ID='i-01c7de2d1b2eb836d'
 CONTAINER='postgresql'
 
 function create(){
-    sudo echo '' >> /var/log/pcs-docker.log
+    sudo echo '' > /var/log/pcs-docker.log
     docker inspect $CONTAINER
     [[ $? -ne 0 ]] && { echo 'There is no container name is '$CONTAINER; exit 1; }
     docker start $CONTAINER
-    sudo pcs resource create test ocf:heartbeat:test name=${CONTAINER} user=ec2-user instance_id=${PRIMARY_INS_ID}
+    sudo pcs resource create test ocf:heartbeat:test name=${CONTAINER} user=ec2-user instance_id=${PRIMARY_INS_ID} op monitor interval=5s timeout=5s
     sudo pcs status
 }
 
