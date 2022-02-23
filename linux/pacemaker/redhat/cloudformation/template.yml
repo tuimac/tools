@@ -179,6 +179,7 @@ Resources:
               - Effect: Allow
                 Action:
                   - "ec2:*"
+                  - "s3:*"
                 Resource:
                   - "*"
       Tags:
