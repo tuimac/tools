@@ -1,0 +1,109 @@
+#!/bin/sh
+
+#Initialize
+: ${OCF_FUNCTIONS_DIR=${OCF_ROOT}/resource.d/heartbeat}
+. ${OCF_FUNCTIONS_DIR}/.ocf-shellfuncs
+
+OCF_RESKEY_reuse_default="0"
+: ${OCF_RESKEY_reuse=${OCF_RESKEY_reuse_default}}
+
+LOG='/var/log/pcs-podman.log'
+
+pg_meta_data() {
+    cat << EOF
+<?xml version="1.0"?>
+<!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
+<resource-agent name="postgresql-container" version="0.1">
+    <version>0.1</version>
+    <longdesc lang="en">postgresql-container</longdesc>
+    <shortdesc lang="en">postgresql-container</shortdesc>
+    <parameters>
+        <parameter name="name" required="0" unique="0">
+            <shortdesc lang="en">podman container name</shortdesc>
+            <content type="string"/>
+        </parameter>
+        <parameter name="user" required="0" unique="0">
+            <shortdesc lang="en">user for running container</shortdesc>
+            <content type="string"/>
+        </parameter>
+        <parameter name="instance_id" required="0" unique="0">
+            <shortdesc lang="en">fence target EC2 instance ID</shortdesc>
+            <content type="string"/>
+        </parameter>
+    </parameters>
+    <actions>
+        <action name="meta-data" timeout="5" />
+        <action name="start" timeout="5" />
+        <action name="stop" timeout="5" />
+        <action name="monitor" timeout="5" />
+        <action name="validate-all" timeout="5" />
+    </actions>
+</resource-agent>
+EOF
+    return $OCF_SUCCESS
+}
+
+pg_validate(){
+    return $OCF_SUCCESS
+}
+
+pg_start(){
+    su $RUN_USER -c 'podman start '$CONTAINER
+    echo 'Start '$CONTAINER >> $LOG
+    return $OCF_SUCCESS
+}
+
+pg_stop(){
+    echo $INSTANCE_ID >> $LOG
+    su $RUN_USER -c 'aws ec2 stop-instances --instance-ids '$INSTANCE_ID >> $LOG 2>&1
+    echo 'Stop '$CONTAINER >> $LOG
+    return $OCF_SUCCESS
+}
+
+pg_monitor(){
+    local status
+    status=$(su $RUN_USER -c 'podman inspect --type=container --format {{.State.Status}} '$CONTAINER)
+    if [ $? -ne 0 ]; then
+        echo '!!Monitoring error!!' >> $LOG
+        su $RUN_USER -c 'podman inspect --type=container --format {{.State.Status}} '$CONTAINER >> $LOG 2>&1
+        return $OCF_ERR_GENERIC
+    fi
+
+    case $status in
+    running)
+        echo $status >> $LOG
+        return $OCF_SUCCESS
+        ;;
+    exited)
+        echo $status >> $LOG
+        return $OCF_NOT_RUNNING
+        ;;
+    *)
+        echo $status >> $LOG
+        echo 'error' >> $LOG
+        return $OCF_ERR_GENERIC
+    esac
+}
+
+pg_usage(){
+    echo "Test Resource."
+    return $OCF_SUCCESS
+}
+
+CONTAINER=$OCF_RESKEY_name
+RUN_USER=$OCF_RESKEY_user
+INSTANCE_ID=$OCF_RESKEY_instance_id
+
+# Translate each action into the appropriate function call
+case $__OCF_ACTION in
+meta-data)      pg_meta_data
+                exit $OCF_SUCCESS
+                ;;
+start)          pg_start;;
+stop)           pg_stop;;
+monitor)        pg_monitor;;
+validate-all)   pg_validate;;
+*)              pg_usage
+                exit $OCF_ERR_UNIMPLEMENTED
+                ;;
+esac
