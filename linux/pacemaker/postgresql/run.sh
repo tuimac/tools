@@ -25,6 +25,11 @@ function deploy(){
 
 function start(){
     docker stop $CONTAINER
+    docker ps -a
+    while true; do
+        sudo pcs status
+        sleep 3
+    done
 }
 
 function userguide(){

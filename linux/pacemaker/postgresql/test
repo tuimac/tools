@@ -71,12 +71,15 @@ pg_monitor(){
 
     case $status in
     running)
+        echo $status >> $LOG
         return $OCF_SUCCESS
         ;;
     exited)
+        echo $status >> $LOG
         return $OCF_NOT_RUNNING
         ;;
     *)
+        echo $status >> $LOG
         return $OCF_ERR_GENERIC
     esac
 }
