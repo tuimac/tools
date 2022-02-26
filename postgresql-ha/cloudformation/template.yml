@@ -4,40 +4,27 @@ Description: Create RedHat Enterprise Linux HA/DR environment
 Parameters:
   VpcCidr:
     Type: String
-    Default: 10.0.0.0/26
+    Default: 10.0.0.0/27
 
   SubnetACidr:
     Type: String
     Default: 10.0.0.0/28
 
-  SubnetCCidr:
+  SubnetBCidr:
     Type: String
     Default: 10.0.0.16/28
 
-  SubnetDCidr:
-    Type: String
-    Default: 10.0.0.32/28
-
-  BastionIP:
-    Type: String
-    Default: 10.0.0.4
-
   PrimaryIP:
     Type: String
-    Default: 10.0.0.5
+    Default: 10.0.0.4
 
   SecondaryIP:
     Type: String
     Default: 10.0.0.20
 
-  DRIP:
-    Type: String
-    Default: 10.0.0.36
-
   AMIID:
     Type: String
-    Default: ami-0bccc42bba4dedac1
-    Description: RHEL-8.4.0_HVM-20210504-x86_64-2-Hourly2-GP2
+    Default: ami-08daa4649f61b8684
 
   SSHPemFilename:
     Type: String
@@ -45,11 +32,15 @@ Parameters:
 
   TagKey:
     Type: String
-    Default: Environment
+    Default: Name
 
   TagValue:
     Type: String
-    Default: Development
+    Default: Pacemaker
+
+  HAPassword:
+    Type: String
+    Default: password
 
 Resources:
   # VPC
@@ -63,8 +54,6 @@ Resources:
       Tags:
         - Key: !Ref TagKey
           Value: !Ref TagValue
-        - Key: Name
-          Value: RHEL_HA_DR
  
   # Internet Gateway
   InternetGateway:
@@ -73,8 +62,6 @@ Resources:
       Tags:
         - Key: !Ref TagKey
           Value: !Ref TagValue
-        - Key: Name
-          Value: RHEL_HA_DR
 
   InternetGatewayAttachment:
     Type: AWS::EC2::VPCGatewayAttachment
@@ -88,39 +75,22 @@ Resources:
     Properties:
       VpcId: !Ref Vpc
       CidrBlock: !Ref SubnetACidr
-      AvailabilityZone: ap-northeast-1a
+      AvailabilityZone: ap-northeast-3a
       MapPublicIpOnLaunch: true
       Tags:
         - Key: !Ref TagKey
           Value: !Ref TagValue
-        - Key: Name
-          Value: Production-Subnet
 
-  SubnetC:
+  SubnetB:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref Vpc
-      CidrBlock: !Ref SubnetCCidr
-      AvailabilityZone: ap-northeast-1c
+      CidrBlock: !Ref SubnetBCidr
+      AvailabilityZone: ap-northeast-3b
       MapPublicIpOnLaunch: true
       Tags:
         - Key: !Ref TagKey
           Value: !Ref TagValue
-        - Key: Name
-          Value: HA-Subnet
-
-  SubnetD:
-    Type: AWS::EC2::Subnet
-    Properties:
-      VpcId: !Ref Vpc
-      CidrBlock: !Ref SubnetDCidr
-      AvailabilityZone: ap-northeast-1d
-      MapPublicIpOnLaunch: true
-      Tags:
-        - Key: !Ref TagKey
-          Value: !Ref TagValue
-        - Key: Name
-          Value: DR-Subnet
 
   # RouteTable
   RouteTable:
@@ -130,8 +100,6 @@ Resources:
       Tags:
         - Key: !Ref TagKey
           Value: !Ref TagValue
-        - Key: Name
-          Value: RHEL_HA_DR
 
   InternetRoute:
     Type: AWS::EC2::Route
@@ -146,28 +114,22 @@ Resources:
       RouteTableId: !Ref RouteTable
       SubnetId: !Ref SubnetA
 
-  RouteTableAccociationC:
+  RouteTableAccociationB:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       RouteTableId: !Ref RouteTable
-      SubnetId: !Ref SubnetC
-
-  RouteTableAccociationD:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties:
-      RouteTableId: !Ref RouteTable
-      SubnetId: !Ref SubnetD
+      SubnetId: !Ref SubnetB
 
   # Security Group
   SecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: RHEL_HA_DR
-      GroupDescription: for RHEL_HA_DR
+      GroupName: !Ref TagValue
+      GroupDescription: for test
       VpcId: !Ref Vpc
       SecurityGroupIngress:
         - IpProtocol: -1
-          CidrIp: 0.0.0.0/0
+          CidrIp: !Ref VpcCidr
           Description: ANY
       SecurityGroupEgress:
         - IpProtocol: -1
@@ -176,8 +138,6 @@ Resources:
       Tags:
         - Key: !Ref TagKey
           Value: !Ref TagValue
-        - Key: Name
-          Value: RHEL_HA_DR
 
   # Endpoint
   S3Endpoint:
@@ -196,29 +156,6 @@ Resources:
         - !Ref RouteTable
       ServiceName: !Sub com.amazonaws.${AWS::Region}.s3
       VpcId: !Ref Vpc
-
-  # IAM Role
-  SpotFleetInstancesRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: SpotFleetInstancesRole
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - spotfleet.amazonaws.com
-            Action:
-              - sts:AssumeRole
-      Path: /
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AmazonEC2SpotFleetTaggingRole
-      Tags:
-        - Key: !Ref TagKey
-          Value: !Ref TagValue
-        - Key: Name
-          Value: RHEL_HA_DR-SpotFleetRole
 
   EC2InstanceRole:
     Type: AWS::IAM::Role
@@ -241,14 +178,13 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
+                  - "ec2:*"
                   - "s3:*"
                 Resource:
                   - "*"
       Tags:
         - Key: !Ref TagKey
           Value: !Ref TagValue
-        - Key: Name
-          Value: RHEL_HA_DR-EC2InstanceRole
 
   EC2InstanceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -258,265 +194,124 @@ Resources:
         - !Ref EC2InstanceRole
 
   # EC2 Instance
-  BastionInstance:
-    Type: AWS::EC2::SpotFleet
+  Primary:
+    Type: AWS::EC2::Instance
     Properties:
-      SpotFleetRequestConfigData:
-        IamFleetRole: !GetAtt SpotFleetInstancesRole.Arn
-        TerminateInstancesWithExpiration: false
-        InstanceInterruptionBehavior: stop
-        TargetCapacity: 1
-        LaunchSpecifications:
-          - EbsOptimized: true
-            IamInstanceProfile:
-              Arn: !GetAtt EC2InstanceProfile.Arn
-            ImageId: !Ref AMIID
-            InstanceType: t3.micro
-            KeyName: !Ref SSHPemFilename
-            Monitoring:
-              Enabled: false
-            NetworkInterfaces:
-              - AssociatePublicIpAddress: true
-                DeleteOnTermination: true
-                Description: RHEL_HA_DR-ENI
-                DeviceIndex: 0
-                PrivateIpAddresses:
-                  - Primary: true
-                    PrivateIpAddress: !Ref BastionIP
-                Groups:
-                  - !Ref SecurityGroup
-                SubnetId: !Ref SubnetA
-            SpotPrice: 1
-            TagSpecifications:
-              - ResourceType: instance
-                Tags:
-                  - Key: !Ref TagKey
-                    Value: !Ref TagValue
-                  - Key: Name
-                    Value: bastion
-            UserData:
-              Fn::Base64: !Sub 
-                - |
-                  #!/bin/bash
-                  dnf install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm
-                  dnf -qy module disable postgresql
-                  dnf install -y postgresql13
-                  yum install -y git python3 python3-pip vim*
-                  cd /home/ec2-user
-                  git clone https://github.com/tuimac/tools
-                  chown ec2-user:ec2-user -R /home/ec2-user/tools
-                  echo ${BASTION}' bastion' >> /etc/hosts 
-                  echo ${PRIMARY}' primary' >> /etc/hosts 
-                  echo ${SECONDARY}' secondary' >> /etc/hosts 
-                  echo ${DR}' dr' >> /etc/hosts
-                  pip3 install awscli
-                  export AWS_DEFAULT_REGION=ap-northeast-1
-                  aws s3 cp s3://01-cfn-repository/tuimac.pem /home/ec2-user/tuimac.pem
-                  chown ec2-user:ec2-user /home/ec2-user/tuimac.pem
-                  chmod 600 /home/ec2-user/tuimac.pem
-                  echo 'bastion' > /etc/hostname
-                  cd /home/ec2-user/tools/vim/installer/
-                  ./centos.sh
-                  echo 'alias vi="vim"' >> /home/ec2-user/.bashrc
-                  runuser -l ec2-user -c "git config --global user.email 'tuimac.devadm01@gmail.com'"
-                  runuser -l ec2-user -c "git config --global user.name 'tuimac'"
-                  sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
-                  reboot
-                - {
-                    BASTION: !Ref BastionIP,
-                    PRIMARY: !Ref PrimaryIP,
-                    SECONDARY: !Ref SecondaryIP,
-                    DR: !Ref DRIP
-                  }
+      ImageId: !Ref AMIID
+      InstanceType: t3.small
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: true
+          DeleteOnTermination: true
+          Description: Primary Server ENI
+          GroupSet:
+            - !Ref SecurityGroup
+          SubnetId: !Ref SubnetA
+          DeviceIndex: 0
+          PrivateIpAddress: !Ref PrimaryIP
+      IamInstanceProfile: !Ref EC2InstanceProfile
+      SourceDestCheck: false
+      KeyName: !Ref SSHPemFilename
+      Tags:
+        - Key: Name
+          Value: primary
+      UserData:
+        Fn::Base64: !Sub
+          - |
+            #!/bin/bash
+            LOG=/var/log/user-data.log
+            touch $LOG
+            exec >> $LOG 2>&1
+                dnf update -y --releasever=8.4
+                dnf install -y podman git vim*
+                mkdir -p /etc/vim/undo
+                mkdir -p /etc/vim/backup
+                rm /etc/vimrc
+                curl -L https://raw.githubusercontent.com/tuimac/tools/master/vim/vimrc -o /etc/vimrc
+                chmod -R 777 /etc/vim
+                echo 'if [ -n "$BASH_VERSION" -o -n "$KSH_VERSION" -o -n "$ZSH_VERSION" ]; then
+                  [ -x /usr/bin/id ] || return
+                  ID=`/usr/bin/id -u`
+                  #[ -n "$ID" -a "$ID" -le 200 ] && return
+                  # for bash and zsh, only if no alias is already set
+                  alias vi >/dev/null 2>&1 || alias vi=vim
+                fi' > /etc/profile.d/vim.sh
+                echo ${PrimaryIP}' primary' >> /etc/hosts
+                echo ${SecondaryIP}' secondary' >> /etc/hosts
+                echo 'primary' > /etc/hostname
+                dnf install -y pcs pacemaker fence-agents-aws python3 python3-pip corosync
+                systemctl enable pcsd.service
+                pip3 install awscli
+                echo ${HA_PASSWORD} | passwd --stdin hacluster
+                cd /home/ec2-user
+                git clone https://github.com/tuimac/tools.git; echo "cloned"
+                chown ec2-user:ec2-user -R /home/ec2-user/tools
+                su - ec2-user
+                git config --global user.email 'tuimac.devadm01@gmail.com'
+                git config --global user.name 'tuimac'
+                reboot
+          - {
+              PRIMARYIP: !Ref PrimaryIP,
+              SECONDARYIP: !Ref SecondaryIP,
+              HA_PASSWORD: !Ref HAPassword
+            }
 
-  PrimaryDBInstance:
-    Type: AWS::EC2::SpotFleet
+  Secondary:
+    Type: AWS::EC2::Instance
     Properties:
-      SpotFleetRequestConfigData:
-        IamFleetRole: !GetAtt SpotFleetInstancesRole.Arn
-        TerminateInstancesWithExpiration: false
-        InstanceInterruptionBehavior: stop
-        TargetCapacity: 1
-        LaunchSpecifications:
-          - EbsOptimized: true
-            IamInstanceProfile:
-              Arn: !GetAtt EC2InstanceProfile.Arn
-            ImageId: !Ref AMIID
-            InstanceType: t3.small
-            KeyName: !Ref SSHPemFilename
-            Monitoring:
-              Enabled: false
-            NetworkInterfaces:
-              - AssociatePublicIpAddress: true
-                DeleteOnTermination: true
-                Description: RHEL_HA_DR-ENI
-                DeviceIndex: 0
-                PrivateIpAddresses:
-                  - Primary: true
-                    PrivateIpAddress: !Ref PrimaryIP
-                Groups:
-                  - !Ref SecurityGroup
-                SubnetId: !Ref SubnetA
-            SpotPrice: 1
-            TagSpecifications:
-              - ResourceType: instance
-                Tags:
-                  - Key: !Ref TagKey
-                    Value: !Ref TagValue
-                  - Key: Name
-                    Value: primary
-            UserData:
-              Fn::Base64: !Sub
-                - |
-                  #!/bin/bash
-                  yum install -y git
-                  cd /home/ec2-user
-                  git clone https://github.com/tuimac/tools
-                  chown ec2-user:ec2-user -R /home/ec2-user/tools
-                  yum install -y podman vim*
-                  echo ${BASTION}' bastion' >> /etc/hosts 
-                  echo ${PRIMARY}' primary' >> /etc/hosts 
-                  echo ${SECONDARY}' secondary' >> /etc/hosts 
-                  echo ${DR}' dr' >> /etc/hosts
-                  echo 'primary' > /etc/hostname
-                  cd /home/ec2-user/tools/vim/installer/
-                  ./centos.sh
-                  echo 'alias vi="vim"' >> /home/ec2-user/.bashrc
-                  sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
-                  runuser -l ec2-user -c "git config --global user.email 'tuimac.devadm01@gmail.com'"
-                  runuser -l ec2-user -c "git config --global user.name 'tuimac'"
-                  reboot
-                - {
-                    BASTION: !Ref BastionIP,
-                    PRIMARY: !Ref PrimaryIP,
-                    SECONDARY: !Ref SecondaryIP,
-                    DR: !Ref DRIP
-                  }
-
-  SecondaryDBInstance:
-    Type: AWS::EC2::SpotFleet
-    Properties:
-      SpotFleetRequestConfigData:
-        IamFleetRole: !GetAtt SpotFleetInstancesRole.Arn
-        TerminateInstancesWithExpiration: false
-        InstanceInterruptionBehavior: stop
-        TargetCapacity: 1
-        LaunchSpecifications:
-          - EbsOptimized: true
-            IamInstanceProfile:
-              Arn: !GetAtt EC2InstanceProfile.Arn
-            ImageId: !Ref AMIID
-            InstanceType: t3.small
-            KeyName: !Ref SSHPemFilename
-            Monitoring:
-              Enabled: false
-            NetworkInterfaces:
-              - AssociatePublicIpAddress: true
-                DeleteOnTermination: true
-                Description: RHEL_HA_DR-ENI
-                DeviceIndex: 0
-                PrivateIpAddresses:
-                  - Primary: true
-                    PrivateIpAddress: !Ref SecondaryIP
-                Groups:
-                  - !Ref SecurityGroup
-                SubnetId: !Ref SubnetC
-            SpotPrice: 1
-            TagSpecifications:
-              - ResourceType: instance
-                Tags:
-                  - Key: !Ref TagKey
-                    Value: !Ref TagValue
-                  - Key: Name
-                    Value: secondary
-            UserData:
-              Fn::Base64: !Sub
-                - |
-                  #!/bin/bash
-                  yum install -y git
-                  cd /home/ec2-user
-                  git clone https://github.com/tuimac/tools
-                  chown ec2-user:ec2-user -R /home/ec2-user/tools
-                  yum install -y podman vim*
-                  echo ${BASTION}' bastion' >> /etc/hosts 
-                  echo ${PRIMARY}' primary' >> /etc/hosts 
-                  echo ${SECONDARY}' secondary' >> /etc/hosts 
-                  echo ${DR}' dr' >> /etc/hosts
-                  echo 'secondary' > /etc/hostname
-                  cd /home/ec2-user/tools/vim/installer/
-                  ./centos.sh
-                  echo 'alias vi="vim"' >> /home/ec2-user/.bashrc
-                  runuser -l ec2-user -c "git config --global user.email 'tuimac.devadm01@gmail.com'"
-                  runuser -l ec2-user -c "git config --global user.name 'tuimac'"
-                  sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
-                  reboot
-                - {
-                    BASTION: !Ref BastionIP,
-                    PRIMARY: !Ref PrimaryIP,
-                    SECONDARY: !Ref SecondaryIP,
-                    DR: !Ref DRIP
-                  }
-
-  DRDBInstance:
-    Type: AWS::EC2::SpotFleet
-    Properties:
-      SpotFleetRequestConfigData:
-        IamFleetRole: !GetAtt SpotFleetInstancesRole.Arn
-        TerminateInstancesWithExpiration: false
-        InstanceInterruptionBehavior: stop
-        TargetCapacity: 1
-        LaunchSpecifications:
-          - EbsOptimized: true
-            IamInstanceProfile:
-              Arn: !GetAtt EC2InstanceProfile.Arn
-            ImageId: !Ref AMIID
-            InstanceType: t3.small
-            KeyName: !Ref SSHPemFilename
-            Monitoring:
-              Enabled: false
-            NetworkInterfaces:
-              - AssociatePublicIpAddress: true
-                DeleteOnTermination: true
-                Description: RHEL_HA_DR-ENI
-                DeviceIndex: 0
-                PrivateIpAddresses:
-                  - Primary: true
-                    PrivateIpAddress: !Ref DRIP
-                Groups:
-                  - !Ref SecurityGroup
-                SubnetId: !Ref SubnetD
-            SpotPrice: 1
-            TagSpecifications:
-              - ResourceType: instance
-                Tags:
-                  - Key: !Ref TagKey
-                    Value: !Ref TagValue
-                  - Key: Name
-                    Value: dr
-            UserData:
-              Fn::Base64: !Sub
-                - |
-                  #!/bin/bash
-                  yum install -y git
-                  cd /home/ec2-user
-                  git clone https://github.com/tuimac/tools
-                  chown ec2-user:ec2-user -R /home/ec2-user/tools
-                  yum install -y podman vim*
-                  echo ${BASTION}' bastion' >> /etc/hosts 
-                  echo ${PRIMARY}' primary' >> /etc/hosts 
-                  echo ${SECONDARY}' secondary' >> /etc/hosts 
-                  echo ${DR}' dr' >> /etc/hosts
-                  echo 'dr' > /etc/hostname
-                  cd /home/ec2-user/tools/vim/installer/
-                  ./centos.sh
-                  echo 'alias vi="vim"' >> /home/ec2-user/.bashrc
-                  runuser -l ec2-user -c "git config --global user.email 'tuimac.devadm01@gmail.com'"
-                  runuser -l ec2-user -c "git config --global user.name 'tuimac'"
-                  sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
-                  reboot
-                - {
-                    BASTION: !Ref BastionIP,
-                    PRIMARY: !Ref PrimaryIP,
-                    SECONDARY: !Ref SecondaryIP,
-                    DR: !Ref DRIP
-                  }
+      ImageId: !Ref AMIID
+      InstanceType: t3.small
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: true
+          DeleteOnTermination: true
+          Description: Secondary Server ENI
+          GroupSet:
+            - !Ref SecurityGroup
+          SubnetId: !Ref SubnetB
+          DeviceIndex: 0
+          PrivateIpAddress: !Ref SecondaryIP
+      IamInstanceProfile: !Ref EC2InstanceProfile
+      SourceDestCheck: false
+      KeyName: !Ref SSHPemFilename
+      Tags:
+        - Key: Name
+          Value: secondary
+      UserData:
+        Fn::Base64: !Sub
+          - |
+            #!/bin/bash
+            LOG=/var/log/user-data.log
+            touch $LOG
+            exec >> $LOG 2>&1
+                dnf update -y --releasever=8.4
+                dnf install -y podman git vim*
+                mkdir -p /etc/vim/undo
+                mkdir -p /etc/vim/backup
+                rm /etc/vimrc
+                curl -L https://raw.githubusercontent.com/tuimac/tools/master/vim/vimrc -o /etc/vimrc
+                chmod -R 777 /etc/vim
+                echo 'if [ -n "$BASH_VERSION" -o -n "$KSH_VERSION" -o -n "$ZSH_VERSION" ]; then
+                  [ -x /usr/bin/id ] || return
+                  ID=`/usr/bin/id -u`
+                  #[ -n "$ID" -a "$ID" -le 200 ] && return
+                  # for bash and zsh, only if no alias is already set
+                  alias vi >/dev/null 2>&1 || alias vi=vim
+                fi' > /etc/profile.d/vim.sh
+                echo ${PrimaryIP}' primary' >> /etc/hosts
+                echo ${SecondaryIP}' secondary' >> /etc/hosts
+                echo 'secondary' > /etc/hostname
+                dnf install -y pcs pacemaker fence-agents-aws python3 python3-pip corosync
+                systemctl enable pcsd.service
+                pip3 install awscli
+                echo ${HA_PASSWORD} | passwd --stdin hacluster
+                cd /home/ec2-user
+                git clone https://github.com/tuimac/tools.git; echo "cloned"
+                chown ec2-user:ec2-user -R /home/ec2-user/tools
+                su - ec2-user
+                git config --global user.email 'tuimac.devadm01@gmail.com'
+                git config --global user.name 'tuimac'
+                reboot
+          - {
+              PRIMARYIP: !Ref PrimaryIP,
+              SECONDARYIP: !Ref SecondaryIP,
+              HA_PASSWORD: !Ref HAPassword
+            }

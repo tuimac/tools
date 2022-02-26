@@ -1,3 +1,3 @@
 #!/bin/bash
 
-aws cloudformation create-stack --stack-name rhel-ha-dr --region ap-northeast-1 --capabilities CAPABILITY_NAMED_IAM --template-body file://template.yml
+aws cloudformation create-stack --stack-name pacemaker --region ap-northeast-3 --capabilities CAPABILITY_NAMED_IAM --template-body file://template.yml
