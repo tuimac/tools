@@ -245,9 +245,8 @@ Resources:
                 cd /home/ec2-user
                 git clone https://github.com/tuimac/tools.git; echo "cloned"
                 chown ec2-user:ec2-user -R /home/ec2-user/tools
-                su - ec2-user
-                git config --global user.email 'tuimac.devadm01@gmail.com'
-                git config --global user.name 'tuimac'
+                runuser -l ec2-user -c "git config --global user.email 'tuimac.devadm01@gmail.com'"
+                runuser -l ec2-user -c "git config --global user.name 'tuimac'"
                 reboot
           - {
               PRIMARYIP: !Ref PrimaryIP,
@@ -306,9 +305,8 @@ Resources:
                 cd /home/ec2-user
                 git clone https://github.com/tuimac/tools.git; echo "cloned"
                 chown ec2-user:ec2-user -R /home/ec2-user/tools
-                su - ec2-user
-                git config --global user.email 'tuimac.devadm01@gmail.com'
-                git config --global user.name 'tuimac'
+                runuser -l ec2-user -c "git config --global user.email 'tuimac.devadm01@gmail.com'"
+                runuser -l ec2-user -c "git config --global user.name 'tuimac'"
                 reboot
           - {
               PRIMARYIP: !Ref PrimaryIP,
