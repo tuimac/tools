@@ -3,8 +3,8 @@
 # Change variables below if you need
 ##############################
 NAME='postgresql'
-VOLUME='${PWD}/volume'
-BACKUP='${PWD}/backup'
+VOLUME="${PWD}/volume"
+BACKUP="${PWD}/backup"
 DATA='/var/lib/postgresql/data'
 ##############################
 
@@ -33,9 +33,9 @@ function cleanup(){
 function createContainer(){
     mkdir ${VOLUME}
     mkdir ${BACKUP}
-    podman unshare chown 26:26 ${VOLUME}
-    podman unshare chown 26:26 etc/
-    podman unshare chown 26:26 ${BACKUP}
+    podman unshare chown 999:999 ${VOLUME}
+    podman unshare chown 999:999 conf/
+    podman unshare chown 999:999 ${BACKUP}
     podman build -t ${NAME} .
     runContainer
 }
@@ -58,6 +58,7 @@ function deleteAll(){
     podman rmi ${NAME}
     cleanup
     sudo rm -rf ${VOLUME}
+    sudo rm -rf ${BACKUP}
     sudo chown -R ${USER}:${USER} conf/
 }
 
