@@ -247,6 +247,9 @@ Resources:
                 chown ec2-user:ec2-user -R /home/ec2-user/tools
                 runuser -l ec2-user -c "git config --global user.email 'tuimac.devadm01@gmail.com'"
                 runuser -l ec2-user -c "git config --global user.name 'tuimac'"
+                aws s3 cp s3://tuimac000/tuimac.pem /home/ec2-user/tuimac.pem
+                chown ec2-user:ec2-user /home/ec2-user/tuimac.pem
+                chmod 600 /home/ec2-user/tuimac.pem
                 reboot
           - {
               PRIMARYIP: !Ref PrimaryIP,
@@ -307,6 +310,7 @@ Resources:
                 chown ec2-user:ec2-user -R /home/ec2-user/tools
                 runuser -l ec2-user -c "git config --global user.email 'tuimac.devadm01@gmail.com'"
                 runuser -l ec2-user -c "git config --global user.name 'tuimac'"
+                chmod 777 -R /usr/lib/ocf/resource.d/heartbeat
                 reboot
           - {
               PRIMARYIP: !Ref PrimaryIP,

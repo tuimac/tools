@@ -23,6 +23,7 @@ function delete(){
 
 function deploy(){
     sudo cp ${RESOURCE_NAME} /usr/lib/ocf/resource.d/heartbeat/${RESOURCE_NAME}
+    sudo scp -i ~/tuimac.pem $RESOURCE_NAME ec2-user@secondary:/usr/lib/ocf/resource.d/heartbeat/$RESOURCE_NAME
     ls -l /usr/lib/ocf/resource.d/heartbeat/${RESOURCE_NAME}
 }
 
