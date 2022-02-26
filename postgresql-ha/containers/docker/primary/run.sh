@@ -10,8 +10,8 @@ DATA='/var/lib/postgresql/data'
 
 function runContainer(){
     podman run -itd --name ${NAME} \
-                -v ${VOLUME}:${DATA} \
-                -v $(pwd)/conf:/etc/postgresql \
+                -v ${VOLUME}:${DATA}:Z \
+                -v $(pwd)/conf:/etc/postgresql:Z \
                 -v ${BACKUP}:/var/lib/pgsql/backup:Z \
                 -e POSTGRES_PASSWORD=password \
                 -e POSTGRES_USER=test \

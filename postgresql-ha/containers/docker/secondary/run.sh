@@ -9,8 +9,8 @@ DATA='/var/lib/postgresql/data'
 
 function runContainer(){
     podman run -itd --name ${NAME} \
-                -v ${VOLUME}:${DATA} \
-		        -v $(pwd)/postgresql.conf:/etc/postgresql/postgresql.conf \
+                -v ${VOLUME}:${DATA}:Z \
+		        -v $(pwd)/conf:/etc/postgresql:Z \
                 -e POSTGRES_PASSWORD=password \
                 -e POSTGRES_USER=test \
                 -h ${NAME} \
@@ -26,8 +26,8 @@ function cleanup(){
 
 function createContainer(){
     mkdir ${VOLUME}
-    podman unshare chown -R 26:26 ${VOLUME}
-    podman unshare chown -R 26:26 etc/
+    podman unshare chown -R 999:999 ${VOLUME}
+    podman unshare chown -R 999:999 conf/
     podman build -t ${NAME} .
     runContainer
 }
