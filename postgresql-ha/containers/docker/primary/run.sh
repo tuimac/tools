@@ -2,17 +2,17 @@
 
 # Change variables below if you need
 ##############################
-NAME="postgresql"
-VOLUME="${PWD}/volume"
-podmanHUBUSER="tuimac"
-IMAGE=${podmanHUBUSER}/${NAME}
+NAME='postgresql'
+VOLUME='${PWD}/volume'
+BACKUP='${PWD}/backup'
+DATA='/var/lib/postgresql/data'
 ##############################
 
 function runContainer(){
-    DATA='/var/lib/postgresql/data'
     podman run -itd --name ${NAME} \
                 -v ${VOLUME}:${DATA} \
                 -v $(pwd)/conf:/etc/postgresql \
+                -v ${BACKUP}:/var/lib/pgsql/backup:Z \
                 -e POSTGRES_PASSWORD=password \
                 -e POSTGRES_USER=test \
                 -e POSTGRES_DB=test \
@@ -32,6 +32,10 @@ function cleanup(){
 
 function createContainer(){
     mkdir ${VOLUME}
+    mkdir ${BACKUP}
+    podman unshare chown 26:26 ${VOLUME}
+    podman unshare chown 26:26 etc/
+    podman unshare chown 26:26 ${BACKUP}
     podman build -t ${NAME} .
     runContainer
 }
@@ -54,6 +58,7 @@ function deleteAll(){
     podman rmi ${NAME}
     cleanup
     sudo rm -rf ${VOLUME}
+    sudo chown -R ${USER}:${USER} conf/
 }
 
 function commitImage(){

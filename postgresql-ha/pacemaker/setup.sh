@@ -6,5 +6,3 @@ sudo pcs cluster enable --all
 sudo pcs cluster start --all
 sleep 3
 sudo pcs status
-
-sudo yum install -y zip

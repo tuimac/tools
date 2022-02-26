@@ -4,12 +4,10 @@
 ##############################
 NAME="postgresql"
 VOLUME="${PWD}/volume"
-podmanHUBUSER="tuimac"
-IMAGE=${podmanHUBUSER}/${NAME}
+DATA='/var/lib/postgresql/data'
 ##############################
 
 function runContainer(){
-    DATA='/var/lib/postgresql/data'
     podman run -itd --name ${NAME} \
                 -v ${VOLUME}:${DATA} \
 		        -v $(pwd)/postgresql.conf:/etc/postgresql/postgresql.conf \
@@ -27,6 +25,9 @@ function cleanup(){
 }
 
 function createContainer(){
+    mkdir ${VOLUME}
+    podman unshare chown -R 26:26 ${VOLUME}
+    podman unshare chown -R 26:26 etc/
     podman build -t ${NAME} .
     runContainer
 }
