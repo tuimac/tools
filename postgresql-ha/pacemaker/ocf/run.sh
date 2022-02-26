@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PRIMARY_INS_ID='i-09401db977f479a4a'
+PRIMARY_INS_ID='i-0acf98a9958c0e0fe'
 CONTAINER='postgresql'
 LOG='/var/log/pcs-podman.log'
 RESOURCE_NAME='pg_podman'

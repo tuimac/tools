@@ -4,5 +4,7 @@ sudo pcs host auth primary secondary -u hacluster
 sudo pcs cluster setup test primary secondary
 sudo pcs cluster enable --all
 sudo pcs cluster start --all
-sleep 2
+sleep 3
 sudo pcs status
+
+sudo yum install -y zip
