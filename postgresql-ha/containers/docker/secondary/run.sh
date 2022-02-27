@@ -11,8 +11,6 @@ function runContainer(){
     podman run -itd --name ${NAME} \
                 -v ${VOLUME}:${DATA}:Z \
 		        -v $(pwd)/conf:/etc/postgresql:Z \
-                -e POSTGRES_PASSWORD=password \
-                -e POSTGRES_USER=test \
                 -h ${NAME} \
                 -p 5432:5432 \
                 ${NAME} \
@@ -25,7 +23,6 @@ function cleanup(){
 }
 
 function createContainer(){
-    mkdir ${VOLUME}
     podman unshare chown -R 999:999 ${VOLUME}
     podman unshare chown -R 999:999 conf/
     podman build -t ${NAME} .
