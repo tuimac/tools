@@ -222,7 +222,7 @@ Resources:
             touch $LOG
             exec >> $LOG 2>&1
                 dnf update -y --releasever=8.4
-                dnf install -y podman git zip vim*
+                dnf install -y podman git zip postgresql vim*
                 mkdir -p /etc/vim/undo
                 mkdir -p /etc/vim/backup
                 rm /etc/vimrc
@@ -285,7 +285,7 @@ Resources:
             touch $LOG
             exec >> $LOG 2>&1
                 dnf update -y --releasever=8.4
-                dnf install -y podman git zip vim*
+                dnf install -y podman git zip postgresql vim*
                 mkdir -p /etc/vim/undo
                 mkdir -p /etc/vim/backup
                 rm /etc/vimrc

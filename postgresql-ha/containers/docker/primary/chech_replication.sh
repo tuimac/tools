@@ -2,4 +2,4 @@
 
 export PGPASSWORD='password'
 
-psql -U test -h localhost -c 'select * from pg_stat_replication;'
+podman exec -it postgresql psql -U test -h localhost -c 'select * from pg_stat_replication;'
