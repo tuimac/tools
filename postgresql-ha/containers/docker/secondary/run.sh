@@ -50,6 +50,7 @@ function deleteAll(){
     podman rmi ${NAME}
     cleanup
     sudo rm -rf ${VOLUME}
+    sudo chown ${USER}:${USER} -R conf/
 }
 
 function commitImage(){
