@@ -59,7 +59,7 @@ function deleteAll(){
     cleanup
     sudo rm -rf ${VOLUME}
     sudo rm -rf ${BACKUP}
-    sudo chown -R ${USER}:${USER} conf/
+    sudo chown -R ${USER}:${USER} -R conf/
 }
 
 function commitImage(){
