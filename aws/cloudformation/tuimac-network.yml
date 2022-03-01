@@ -298,7 +298,7 @@ Resources:
         - Key: Name
           Value: tuimac-private-c
 
-  PrivateRouteTableAAccociation:
+  PrivateRouteTableCAccociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       RouteTableId: !Ref PrivateRouteTableC
