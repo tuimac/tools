@@ -60,7 +60,7 @@ function config_fluentd_conf(){
 <match kinesis.$NAME>
   @type kinesis_firehose
   region ap-northeast-3
-  delivery_stream_name $HOSTNAME_$NAME
+  delivery_stream_name $LOG_NAME_PATTERN
 </match>
 EOF"
     sudo systemctl restart td-agent.service
