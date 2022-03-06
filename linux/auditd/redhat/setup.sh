@@ -12,3 +12,4 @@ chcon -t auditd_log_t $NEW_DIR
 chcon -t auditd_log_t ${NEW_DIR}/audit.log
 
 echo '-a exit,always -S execve' >> /etc/audit/audit.rules 
+cat /etc/audit/audit.rules
