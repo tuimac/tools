@@ -8,7 +8,7 @@ DATA='/var/lib/postgresql/data'
 ##############################
 
 function runContainer(){
-    podman run -itd --name ${NAME} \
+    docker run -itd --name ${NAME} \
                 -v ${VOLUME}:${DATA}:Z \
 		        -v $(pwd)/conf:/etc/postgresql:Z \
                 -h ${NAME} \
@@ -18,14 +18,14 @@ function runContainer(){
 }
 
 function cleanup(){
-    podman image prune -f
-    podman container prune -f
+    docker image prune -f
+    docker container prune -f
 }
 
 function createContainer(){
-    podman unshare chown -R 999:999 ${VOLUME}
-    podman unshare chown -R 999:999 conf/
-    podman build -t ${NAME} .
+    docker unshare chown -R 999:999 ${VOLUME}
+    docker unshare chown -R 999:999 conf/
+    docker build -t ${NAME} .
     runContainer
 }
 
@@ -35,38 +35,38 @@ function rerunContainer(){
     if [ "$answer" != "n" ]; then
         commitImage ${NAME}
     fi
-    podman stop ${NAME}
-    podman rm ${NAME}
+    docker stop ${NAME}
+    docker rm ${NAME}
     runContainer
     cleanup
 }
 
 function deleteAll(){
-    podman stop ${NAME}
-    podman rm ${NAME}
-    podman rmi ${NAME}
+    docker stop ${NAME}
+    docker rm ${NAME}
+    docker rmi ${NAME}
     cleanup
     sudo rm -rf ${VOLUME}
     sudo chown ${USER}:${USER} -R conf/
 }
 
 function commitImage(){
-    podman stop ${NAME}
-    podman commit ${NAME} $1
-    podman start ${NAME}
+    docker stop ${NAME}
+    docker commit ${NAME} $1
+    docker start ${NAME}
 }
 
 function pushImage(){
     commitImage ${IMAGE}
-    podman push ${IMAGE}
+    docker push ${IMAGE}
     if [ $? -ne 0 ]; then
-        cat .password.txt | base64 -d | podman login --username ${podmanHUBUSER} --password-stdin
+        cat .password.txt | base64 -d | docker login --username ${dockerHUBUSER} --password-stdin
         if [ $? -ne 0 ]; then
-            podman login --username ${podmanHUBUSER}
+            docker login --username ${dockerHUBUSER}
         fi
-        podman push ${IMAGE}
+        docker push ${IMAGE}
     fi
-    podman rmi ${IMAGE}
+    docker rmi ${IMAGE}
     cleanup
 }
 
@@ -102,7 +102,7 @@ create              Create image and container after that run the container.
 rerun               Delete only container and rerun container with new settings.
 delete              Delete image and container.
 commit              Create image from target container and push the image to remote repository.
-push                Push image you create to podman Hub.
+push                Push image you create to docker Hub.
 register-secret     Create password.txt for make it login process within 'commit' operation.
     "
 }
