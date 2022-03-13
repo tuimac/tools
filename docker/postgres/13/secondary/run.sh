@@ -23,8 +23,8 @@ function cleanup(){
 }
 
 function createContainer(){
-    docker unshare chown -R 999:999 ${VOLUME}
-    docker unshare chown -R 999:999 conf/
+    #docker unshare chown -R 999:999 ${VOLUME}
+    #docker unshare chown -R 999:999 conf/
     docker build -t ${NAME} .
     runContainer
 }
