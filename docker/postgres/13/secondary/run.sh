@@ -14,7 +14,8 @@ function runContainer(){
                 -h ${NAME} \
                 -p 5432:5432 \
                 ${NAME} \
-		        postgres -c config_file=/etc/postgresql/postgresql.conf
+		        postgres -c config_file=/etc/postgresql/postgresql.conf \
+                -c hba_file=/etc/postgresql/pg_hba.conf
 }
 
 function cleanup(){
