@@ -33,9 +33,9 @@ function cleanup(){
 function createContainer(){
     mkdir ${VOLUME}
     mkdir ${BACKUP}
-    docker unshare chown 999:999 ${VOLUME}
-    docker unshare chown 999:999 conf/
-    docker unshare chown 999:999 ${BACKUP}
+    #docker unshare chown 999:999 ${VOLUME}
+    #docker unshare chown 999:999 conf/
+    #docker unshare chown 999:999 ${BACKUP}
     docker build -t ${NAME} .
     runContainer
 }
