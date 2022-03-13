@@ -2,6 +2,6 @@
 
 export PGPASSWORD='password'
 
-podman exec -it postgresql psql -U test -h localhost -c 'select * from pg_stat_replication;'
+docker exec -it postgresql psql -U test -h localhost -c 'select * from pg_stat_replication;'
 echo '########################################################################################'
-podman exec -it postgresql psql -U test -h localhost -c 'select * from pg_stat_activity;'
+docker exec -it postgresql psql -U test -h localhost -c 'select * from pg_stat_activity;'
