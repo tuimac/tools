@@ -16,6 +16,8 @@ function runContainer(){
                 ${NAME} \
 		        postgres -c config_file=/etc/postgresql/postgresql.conf \
                 -c hba_file=/etc/postgresql/pg_hba.conf
+    docker stop ${NAME}
+    docker start ${NAME}
 }
 
 function cleanup(){
