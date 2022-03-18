@@ -13,9 +13,9 @@ services:
     ports:
       - 5432:5432
     volumes:
-      - postgresql/data:/var/lib/postgresql/data
-      - postgresql/etc:/etc/postgresql
-      - postgresql/wal_archive:/var/lib/postgresql/archive
+      - ./postgresql/data:/var/lib/postgresql/data
+      - ./postgresql/etc:/etc/postgresql
+      - ./postgresql/wal_archive:/var/lib/postgresql/archive
     command: postgres -c config_file=/etc/postgresql/postgresql.conf -c hba_file=/etc/postgresql/pg_hba.conf
     tty: true
     stdin_open: true
@@ -31,7 +31,7 @@ services:
     ports:
       - 8080:8080
     volumes:
-      - tomcat/webapps:/usr/local/tomcat/webapps
+      - ./tomcat/webapps:/usr/local/tomcat/webapps
     
 networks:
   cicd:
