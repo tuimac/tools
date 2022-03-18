@@ -13,9 +13,6 @@ function runContainer(){
                 -v ${VOLUME}:${DATA}:Z \
                 -v $(pwd)/etc:/etc/postgresql:Z \
                 -v ${BACKUP}:/var/lib/pgsql/backup:Z \
-                -e POSTGRESQL_USER=test \
-                -e POSTGRESQL_PASSWORD=password \
-                -e POSTGRESQL_DATABASE=test \
                 -h ${NAME} \
                 -p 5432:5432 \
                 ${NAME}

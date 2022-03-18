@@ -1,12 +1,9 @@
-FROM registry.redhat.io/rhel8/postgresql-13:1-31
+FROM registry.access.redhat.com/ubi8:8.4
 
-ENV PGDATA /var/lib/pgsql/data/userdata
+EXPOSE 5432
 
-#ADD etc/postgresql.conf /var/lib/pgsql/data/postgresql.conf
-#ADD etc/pg_hba.conf /var/lib/pgsql/data/pg_hba.conf
-ADD entrypoint.sh /usr/bin/run-postgresql
+ENV POSTGRESQL_VERSION=13
 
-RUN mkdir /var/lib/pgsql/backup
-
-ENTRYPOINT ["container-entrypoint"]
-CMD ["run-postgresql"]
+RUN dnf install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm && \
+    dnf -qy module disable postgresql && \
+    dnf install -y postgresql${ENV POSTGRESQL_VERSION}-server
