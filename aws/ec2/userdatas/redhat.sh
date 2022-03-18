@@ -2,8 +2,10 @@
 LOG=/var/log/user-data.log
 touch $LOG
 exec >> $LOG 2>&1
-    yum update -y --releasever=8.4
-    yum install -y git python3 python3-pip vim*
+    echo 8.4 > /etc/yum/vars/releasever
+    echo 8.4 > /etc/dnf/vars/releasever
+    dnf update -y
+    dnf install -y git python3 python3-pip vim*
     mkdir -p /etc/vim/undo
     mkdir -p /etc/vim/backup
     rm /etc/vimrc
@@ -18,6 +20,7 @@ exec >> $LOG 2>&1
     fi' > /etc/profile.d/vim.sh
     echo "alias vi='vim'" >> /etc/profile
     pip3 install awscli
+    sed -i 's/SELINUX=enforcing/SELINUX=disabled/' /etc/selinux/config
     su - ec2-user
     cd /home/ec2-user
     git clone https://github.com/tuimac/tools.git; echo "cloned"
