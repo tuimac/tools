@@ -15,7 +15,7 @@ function delete(){
 }
 
 function main(){
-    [[ -z $1 ]] && { userguide; exit 1; }
+    [[ -z $1 ]] && { echo 'Error raised!!'; exit 1; }
     if [ $1 == "create" ]; then
         create
     elif [ $1 == "delete" ]; then
