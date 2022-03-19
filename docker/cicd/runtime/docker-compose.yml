@@ -1,0 +1,55 @@
+version: '3.9'
+services:
+  postgresql:
+    image: postgres:latest
+    container_name: postgresql
+    hostname: postgresql
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_USER: test
+      POSTGRES_DB: test
+      TZ: Asia/Tokyo
+    ports:
+      - 5432:5432
+    volumes:
+      - ./postgresql/data:/var/lib/postgresql/data
+      - ./postgresql/conf:/etc/postgresql
+      - ./postgresql/wal_archive:/var/lib/postgresql/archive
+      - ./postgresql/logs:/var/log/postgresql
+    command: postgres -c config_file=/etc/postgresql/postgresql.conf -c hba_file=/etc/postgresql/pg_hba.conf
+    tty: true
+    stdin_open: true
+    networks:
+      - runtime
+  tomcat:
+    image: tomcat:latest
+    container_name: tomcat
+    hostname: tomcat
+    restart: always
+    environment:
+      TZ: Asia/Tokyo
+    ports:
+      - 8080:8080
+    volumes:
+      - ./tomcat/webapps:/usr/local/tomcat/webapps
+      - ./tomcat/logs:/usr/local/tomcat/logs
+      - ./tomcat/conf/server.xml:/usr/local/tomcat/conf/server.xml
+      - ./tomcat/conf/tomcat-users.xml:/usr/local/tomcat/conf/tomcat-users.xml
+      - ./tomcat/conf/logging.properties:/usr/local/tomcat/conf/logging.properties
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    hostname: nginx
+    restart: always
+    environment:
+      TZ: Asia/Tokyo
+    ports:
+      - 80:80
+    volumes:
+      - ./nginx/conf/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/logs:/var/log/nginx
+      - ./nginx/webapps:/usr/share/nginx/html
+networks:
+  runtime:
+    name: runtime

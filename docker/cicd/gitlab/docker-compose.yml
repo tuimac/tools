@@ -21,7 +21,7 @@ services:
     tty: true
     stdin_open: true
     networks:
-      - cicd
+      - gitlab
   tomcat:
     image: tomcat:latest
     container_name: tomcat
@@ -50,5 +50,5 @@ services:
       - ./nginx/conf/nginx.conf:/etc/nginx/nginx.conf
       - ./nginx/logs:/var/log/nginx
 networks:
-  cicd:
-    name: cicd
+  gitlab:
+    name: gitlab
