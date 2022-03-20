@@ -15,4 +15,5 @@ log_level = 'info'
   port = '22'
   user = 'ec2-user'
   identity_file = '/host_ssh_key/tuimac.pem'
+  disable_strict_host_checking = false
   builds_dir = '/home/ec2-user/tools/docker/cicd/gitlab/build'
