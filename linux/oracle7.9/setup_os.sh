@@ -1,6 +1,6 @@
 #!/bin/bash
 
-[[ $USER != 'root' ]] && { echo 'Must be root!!'; exit 1 }
+[[ $USER != 'root' ]] && { echo 'Must be root!!'; exit 1; }
 
 firewall-cmd --zone=public --add-port=80/tcp --permanent
 firewall-cmd --zone=public --add-port=8000/tcp --permanent
