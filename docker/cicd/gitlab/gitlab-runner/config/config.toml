@@ -1,0 +1,6 @@
+concurrent = 1
+check_interval = 0
+log_level = 'info'
+
+[session_server]
+  session_timeout = 1800

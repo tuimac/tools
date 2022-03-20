@@ -1,4 +1,4 @@
 data
 logs
-gitlab
-gitlab-runner
+gitlab/gitlab-runner/host_ssh_key/
+gitlab/gitlab/

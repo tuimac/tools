@@ -23,7 +23,7 @@ services:
     environment:
       TZ: Asia/Tokyo
     volumes:
-      - ./gitlab-runner/config:/etc/gitlab-runner
+      - ./gitlab-runner/host_ssh_key:/host_ssh_key
     networks:
       - gitlab
 networks:
