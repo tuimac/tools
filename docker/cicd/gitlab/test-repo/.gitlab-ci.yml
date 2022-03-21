@@ -1,0 +1,19 @@
+before_script:
+  - cd /home/ec2-user/tools/docker/cicd/gitlab/build
+stages:
+  - build
+  - deploy
+build:
+  stage: build
+  script:
+    - whoami
+    - bash /home/ec2-user/tools/docker/cicd/gitlab/build/build.sh
+  tags:
+    - test
+deploy:
+  stage: deploy
+  script:
+    - whoami
+    - bash /home/ec2-user/tools/docker/cicd/gitlab/deploy/deploy.sh
+  tags:
+    - test
