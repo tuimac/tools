@@ -2,8 +2,6 @@
 
 function create(){
     docker-compose up -d
-    IP=`hostname -I`
-    sudo echo $IP' gitlab' >> hosts
 }
 
 function delete(){

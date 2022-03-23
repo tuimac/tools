@@ -13,6 +13,8 @@ services:
       - ./gitlab/config:/etc/gitlab
       - ./gitlab/logs:/var/log/gitlab
       - ./gitlab/data:/var/opt/gitlab
+    extra_hosts:
+      - 'gitlab:10.0.0.4'
     networks:
       - gitlab
   gitlab-runner:
@@ -24,6 +26,7 @@ services:
       TZ: Asia/Tokyo
     volumes:
       - ./gitlab-runner/host_ssh_key:/host_ssh_key
+      - ./gitlab-runner/config/config.toml:/etc/gitlab-runner/config.toml
     networks:
       - gitlab
 networks:

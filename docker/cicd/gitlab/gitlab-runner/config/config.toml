@@ -4,16 +4,4 @@ log_level = 'info'
 
 [session_server]
   session_timeout = 1800
-  listen_address = ':8093'
-
-[[runners]]
-  name = 'test'
-  url = 'http://10.0.0.13:8000'
-  executor = 'ssh'
-  [runners.ssh]
-  host = '10.0.0.13'
-  port = '22'
-  user = 'ec2-user'
-  identity_file = '/host_ssh_key/tuimac.pem'
-  disable_strict_host_checking = false
-  builds_dir = '/home/ec2-user/tools/docker/cicd/gitlab/build'
+  listen_address = '[::]:8093'
