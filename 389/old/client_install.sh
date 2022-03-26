@@ -1,8 +1,7 @@
 #!/bin/bash
 
-LDAP='ldap.tuimac.me'
-BASE='dc=tuimac,dc=me'
-GROUP='test'
+LDAP='ldap.tuimac.com'
+BASE='dc=tuimac,dc=com'
 
 # Install modules
 yum install oddjob-mkhomedir sssd -y

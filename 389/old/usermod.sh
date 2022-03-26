@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DN='dc=tuimac,dc=me'
+DN='dc=tuimac,dc=com'
 LDAPPW='P@ssw0rd'
 
 function createLdif(){

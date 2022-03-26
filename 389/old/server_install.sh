@@ -2,8 +2,8 @@
 
 PASSWORD='P@ssw0rd'
 DSID='ldap'
-DOMAIN='tuimac.me'
-BASE='dc=tuimac,dc=me'
+DOMAIN='tuimac.com'
+BASE='dc=tuimac,dc=com'
 GROUP='test'
 
 # Confirm exec user is root or not
