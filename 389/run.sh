@@ -20,7 +20,7 @@ defaults = 999999999
 full_machine_name = $DOMAIN
 selinux = False
 start = True
-strict_host_checking = False
+strict_host_checking = True
 backup_dir = /var/lib/dirsrv/slapd-{instance_name}/backup
 bin_dir = /usr/bin
 cert_dir = /etc/dirsrv/slapd-{instance_name}
@@ -91,6 +91,7 @@ EOF
     systemctl restart sssd
     sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
     systemctl restart sshd
+    systemctl status sssd
 }
 
 function list(){
