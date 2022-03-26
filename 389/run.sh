@@ -7,15 +7,11 @@ INSTANCE='ldap'
 ROOT_PASSWORD='P@ssw0rd'
 
 
-function list(){
-    ldapsearch -x -H ldaps://${INSTANCE}.${SUFFIX_DOMAIN} -D "cn=Directory Manager" -w ${ROOT_PASSWORD} -b ${SUFFIX}
-}
-
-function install(){
+function server-install(){
     [[ $USER != 'root' ]] && { echo 'Must be root!'; exit 1; }
 
-    dnf enable 389-ds-base -y
-    dnf install 389-ds-base 389-ds-base-legacy-tools -y
+    dnf module enable 389-ds* -y
+    dnf install 389-ds* -y
 
     cat <<EOF > instance.inf
 [general]
@@ -51,6 +47,54 @@ EOF
     rm instance.inf
     echo 'TLS_REQCERT never' >> /etc/openldap/ldap.conf
     list
+    systemctl status dirsrv@${INSTANCE}
+}
+
+function client-install(){
+    [[ $USER != 'root' ]] && { echo 'Must be root!'; exit 1; }
+    dnf install oddjob-mkhomedir sssd -y
+    cat <<EOF > /etc/sssd/sssd.conf
+[sssd]
+debug_level = 6
+config_file_version = 2
+services = nss, sudo, pam, ssh
+domains = default
+
+[domain/default]
+id_provider = ldap
+auth_provider = ldap
+chpass_provider = ldap
+sudo_provider = ldap
+ldap_sudo_search_base = ou=SUDOers,$SUFFIX
+ldap_uri = ldaps://$DOMAIN
+ldap_search_base = $SUFFIX
+ldap_id_use_start_tls = True
+cache_credentials = True
+ldap_tls_reqcert = never
+
+[nss]
+homedir_substring = /home
+entry_negative_timeout = 20
+entry_cache_nowait_percentage = 50
+
+[pam]
+
+[sudo]
+
+[autofs]
+
+[ssh]
+
+[pac]
+EOF
+    chmod 600 /etc/sssd/sssd.conf
+    systemctl restart sssd
+    sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
+    systemctl restart sshd
+}
+
+function list(){
+    ldapsearch -x -H ldaps://${INSTANCE}.${SUFFIX_DOMAIN} -D "cn=Directory Manager" -w ${ROOT_PASSWORD} -b ${SUFFIX}
 }
 
 function apply(){
@@ -126,8 +170,10 @@ create-base              Create Base User and Group.
 
 function main(){
     [[ -z $1 ]] && { userguide; exit 1; }
-    if [ $1 == "install" ]; then
-        install
+    if [ $1 == "server-install" ]; then
+        server-install
+    elif [ $1 == "client-install" ]; then
+        client-install
     elif [ $1 == "list" ]; then
         list
     elif [ $1 == "create-base" ]; then
