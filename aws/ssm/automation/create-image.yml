@@ -1,23 +1,41 @@
 description: Create Image
 schemaVersion: '0.3'
 parameters:
-  ImageName:
+  InstanceHostname:
     type: String
     description: (Required)
-  ImageTag:
+  Retention:
     type: String
-    description: (Required) 
+    description: (Required)
 mainSteps:
   - name: GetImageId
-    action: aws:executeAwsApi
+    action: aws:executeScript
     inputs:
-      Service: ec2
-      Api: DescribeImages
-      Filters:
-        - Name: 'name'
-          Values:
-            - '{{ ImageName }}*'
-    outputs:
-      - Name: ImageIds
-        Selector: '$.Images[0].ImageId'
-        Type: 'String'
+      Runtime: python3.9
+      Handler: handler
+      InputPayload:
+        InputPayload:
+          Hostname: '{{ InstanceHostname }}'
+          Retention: '{{ Retention }}'
+      Script: |-
+        import boto3
+        def handler(events, context):
+          # Initialization
+          hostname = events['Hostname']
+          retention = events['Retention']
+          ec2 = boto3.client('ec2')
+          target_images = []
+
+          # Get target images information
+          images = ec2.describe_images(
+            Owner = ['self'],
+            Filters = [{
+              'Name': 'tag:HostName',
+              'Values': [hostname]
+            }]
+          )['Images']
+
+          # Extract target images over the retention
+          images.sort(key=lambda sort_key: sort_key.get('CreationDate'), reverse=True)
+          return {'DeleteTargets': images[retention:]} 
+  - name: 
