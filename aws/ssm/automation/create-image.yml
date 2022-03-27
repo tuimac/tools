@@ -13,7 +13,7 @@ mainSteps:
     timeoutSeconds: 3600
     onFailure: Abort
     inputs:
-      Runtime: python3.8
+      Runtime: python3.7
       Handler: handler
       InputPayload:
         InputPayload:
@@ -50,7 +50,7 @@ mainSteps:
     timeoutSeconds: 3600
     onFailure: Abort
     inputs:
-      Runtime: python3.8
+      Runtime: python3.7
       Handler: handler
       InputPayload:
         InputPayload:
@@ -115,6 +115,7 @@ mainSteps:
       ImageDescription: Created by Automation
     outputs:
       - Name: ImageId
+        Selector: '$.ImageId'
         Type: String
   - name: PutTags
     action: aws:createTags
