@@ -1,30 +1,23 @@
 description: Create Image
 schemaVersion: '0.3'
 parameters:
-  Tag:
+  ImageName:
+    type: String
+    description: (Required)
+  ImageTag:
     type: String
     description: (Required) 
 mainSteps:
-  - name: StopPASEC2Instance
-    action: 'aws:executeAwsApi'
+  - name: GetImageId
+    action: aws:executeAwsApi
     inputs:
-      Service: ssm
-      Api: StartAutomationExecution
-      TargetParameterName: InstanceId
-      DocumentName: AWS-StartEC2Instance
-      Targets:
-        - Key: 'tag:SAP'
+      Service: ec2
+      Api: DescribeImages
+      Filters:
+        - Name: 'name'
           Values:
-            - PAS
-    nextStep: StopASCSEC2Instance
-  - name: StopASCSEC2Instance
-    action: 'aws:executeAwsApi'
-    inputs:
-      Service: ssm
-      Api: StartAutomationExecution
-      TargetParameterName: InstanceId
-      DocumentName: AWS-StartEC2Instance
-      Targets:
-        - Key: 'tag:SAP'
-          Values:
-            - ASCS
+            - '{{ ImageName }}*'
+    outputs:
+      - Name: ImageIds
+        Selector: '$.Images[0].ImageId'
+        Type: 'String'
