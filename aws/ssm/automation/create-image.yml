@@ -8,10 +8,12 @@ parameters:
     type: String
     description: (Required)
 mainSteps:
-  - name: GetImageId
+  - name: GetDeleteImageId
     action: aws:executeScript
+    timeoutSeconds: 3600
+    onFailure: Abort
     inputs:
-      Runtime: python3.9
+      Runtime: python3.8
       Handler: handler
       InputPayload:
         InputPayload:
@@ -37,5 +39,22 @@ mainSteps:
 
           # Extract target images over the retention
           images.sort(key=lambda sort_key: sort_key.get('CreationDate'), reverse=True)
-          return {'DeleteTargets': images[retention:]} 
-  - name: 
+          return {'DeleteTargets': images[retention:]}
+    outputs:
+      - Name: DeleteTargets
+        Selector: $.Payload.DeleteTargets
+        Type: List
+  - name: DeleteImages
+    action: aws:executeScript
+    timeoutSeconds: 3600
+    onFailure: Abort
+    inputs:
+      Runtime: python3.8
+      Handler: handler
+      InputPayload:
+        InputPayload:
+          DeleteTargets: '{{ GetDeleteImageId.DeleteTargets }}'
+      Script: |-
+        import boto3
+        def handler(event, context):
+           
