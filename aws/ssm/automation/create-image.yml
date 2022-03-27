@@ -44,6 +44,7 @@ mainSteps:
       - Name: DeleteTargets
         Selector: $.Payload.DeleteTargets
         Type: List
+    nextStep: DeleteImages
   - name: DeleteImages
     action: aws:executeScript
     timeoutSeconds: 3600
@@ -90,4 +91,17 @@ mainSteps:
             if len(execution_ids) == len(results):
               break
           return True
-            
+    nextStep: ListEC2InstanceId
+  - name: CreateImage
+    action: 'aws:executeAwsApi'
+    inputs:
+      Service: ssm
+      Api: StartAutomationExecution
+      TargetParameterName: InstanceId
+      DocumentName: 
+      Targets:
+        - Key: 'tag:SAP'
+          Values:
+            - PAS
+      
+           
