@@ -43,7 +43,7 @@ mainSteps:
     outputs:
       - Name: DeleteTargets
         Selector: $.Payload.DeleteTargets
-        Type: List
+        Type: StringList
     nextStep: DeleteImages
   - name: DeleteImages
     action: aws:executeScript
@@ -91,17 +91,41 @@ mainSteps:
             if len(execution_ids) == len(results):
               break
           return True
-    nextStep: ListEC2InstanceId
-  - name: CreateImage
+    nextStep: GetInstanceId
+  - name: GetInstanceId
     action: 'aws:executeAwsApi'
     inputs:
-      Service: ssm
-      Api: StartAutomationExecution
-      TargetParameterName: InstanceId
-      DocumentName: 
-      Targets:
-        - Key: 'tag:SAP'
-          Values:
-            - PAS
-      
-           
+      Service: ec2
+      Api: DescribeInstances
+      Filters:
+        - Name: 'tag:Hostname'
+          Values: ['{{ InstanceHostname }}']
+    outputs:
+      - Name: InstanceId
+        Selector: '$.Reservations[0].Instances[0].InstanceId'
+        Type: String
+  - name: CreateImage
+    action: aws:createImage
+    maxAttempts: 3
+    onFailure: Abort
+    inputs:
+      InstanceId: '{{ GetInstanceId.InstanceId }}'
+      ImageName: !Sub $InstanceHostname-{{ global:DATE_TIME }}
+      NoReboot: false
+      ImageDescription: Created by Automation
+    outputs:
+      - Name: ImageId
+        Type: String
+  - name: PutTags
+    action: aws:createTags
+    maxAttempts: 3
+    onFailure: Abort
+    inputs:
+      ResourceType: EC2
+      ResourceIds:
+        - '{{ CreateImage.ImageId }}'
+      Tags:
+        - Key: Hostname
+          Value: '{{ InstanceHostname }}'
+        - Key: Name
+          Value: !Sub $InstanceHostname-{{ global:DATE_TIME }}
