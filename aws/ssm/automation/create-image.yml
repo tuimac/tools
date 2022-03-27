@@ -56,5 +56,38 @@ mainSteps:
           DeleteTargets: '{{ GetDeleteImageId.DeleteTargets }}'
       Script: |-
         import boto3
+        import time
         def handler(event, context):
-           
+          # Initialization
+          targets = events['DeleteTargets']
+          ssm = boto3.client('ssm')
+          execution_ids = []
+
+          # Execute deleteImage automation
+          for target in targets:
+            execution_ids.append(ssm.start_automation_execution(
+              DocumentName = 'AWS-DeleteImage',
+              Parameters = {
+                'ImageId': [target['ImageId']] 
+              }
+            )['AutomationExecutionId'])
+            time.sleep(1)
+          
+          # Confirm automation execution status
+          while true:
+            results = ssm.describe_automation_executions(
+              Filters = [
+                {
+                  'Key': 'ExecutionId',
+                  'Values': execution_ids
+                },
+                {
+                  'Key': 'ExecutionStatus',
+                  'Values': ['Success']
+                }
+              ]
+            )['AutomationExecutionMetadataList']
+            if len(execution_ids) == len(results):
+              break
+          return True
+            
