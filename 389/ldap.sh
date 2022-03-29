@@ -6,7 +6,6 @@ SUFFIX_DOMAIN='tuimac.com'
 INSTANCE='ldap'
 ROOT_PASSWORD='P@ssw0rd'
 
-
 function server-install(){
     [[ $USER != 'root' ]] && { echo 'Must be root!'; exit 1; }
 
@@ -14,40 +13,8 @@ function server-install(){
     dnf install 389-ds* -y
 
     cat <<EOF > instance.inf
-[general]
-config_version = 2
-defaults = 999999999
-full_machine_name = $DOMAIN
-selinux = False
-start = True
-strict_host_checking = True
-backup_dir = /var/lib/dirsrv/slapd-{instance_name}/backup
-bin_dir = /usr/bin
-cert_dir = /etc/dirsrv/slapd-{instance_name}
-config_dir = /etc/dirsrv/slapd-{instance_name}
-db_dir = /var/lib/dirsrv/slapd-{instance_name}/database
-log_dir = /var/log/dirsrv/slapd-{instance_name}
 
-[slapd]
-instance_name = $INSTANCE
-port = 389
-root_dn = cn=Directory Manager
-root_password = $ROOT_PASSWORD
-secure_port = 636
-self_sign_cert = True
-self_sign_cert_valid_months = 1200
-
-[backend-userroot]
-create_suffix_entry = False
-require_index = False
-suffix = $SUFFIX
 EOF
-    dscreate from-file instance.inf
-    dsctl ldap status
-    rm instance.inf
-    echo 'TLS_REQCERT never' >> /etc/openldap/ldap.conf
-    list
-    systemctl status dirsrv@${INSTANCE}
 }
 
 function client-install(){
