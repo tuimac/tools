@@ -5,19 +5,29 @@ CONF='/etc/td-agent/td-agent.conf'
 
 [[ $USER != 'root' ]] && { echo -n 'Must be root!'; exit 1; }
 
-curl -L https://toolbelt.treasuredata.com/sh/install-redhat-td-agent4.sh | sudo sh
-sudo systemctl status td-agent.service
-sudo td-agent-gem install fluent-plugin-kinesis
+#curl -L https://toolbelt.treasuredata.com/sh/install-redhat-td-agent4.sh | sh
 
-sudo cat ${CONF}
+rpm --import https://packages.treasuredata.com/GPG-KEY-td-agent
+cat >/etc/yum.repos.d/td.repo <<'EOF';
+[treasuredata]
+name=TreasureData
+baseurl=http://packages.treasuredata.com/4/redhat/8/\$basearch
+gpgcheck=1
+gpgkey=https://packages.treasuredata.com/GPG-KEY-td-agent
+EOF
 
-sudo sed -i 's/User=td-agent/User=root/' ${SYSTEMD}
-sudo sed -i 's/Group=td-agent/Group=root/' ${SYSTEMD}
+systemctl status td-agent.service
+td-agent-gem install fluent-plugin-kinesis
 
-sudo cat ${SYSTEMD}
+cat ${CONF}
 
-sudo systemctl daemon-reload
-sudo systemctl start td-agent.service
-sudo systemctl status td-agent.service
+sed -i 's/User=td-agent/User=root/' ${SYSTEMD}
+sed -i 's/Group=td-agent/Group=root/' ${SYSTEMD}
 
-sudo cat /var/log/td-agent/td-agent.log
+cat ${SYSTEMD}
+
+systemctl daemon-reload
+systemctl start td-agent.service
+systemctl status td-agent.service
+
+cat /var/log/td-agent/td-agent.log
