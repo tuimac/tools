@@ -1,0 +1,84 @@
+description: Create Image
+schemaVersion: '0.3'
+assumeRole: 'arn:aws:iam::xxxxxxxxxxx:role/xxxxxx'
+parameters:
+  InstanceHostname:
+    type: String
+    description: (Required)
+  TargetTagKey:
+    type: String
+    description: (Required)
+  PrefixTagKey:
+    type: String
+    description: (Required)
+mainSteps:
+  - name: ListTargetEC2Instances
+    action: aws:executeAwsApi
+    timeoutSeconds: 60
+    inputs:
+      Service: ec2
+      Api: DescribeInstances
+      Filters:
+        - Name: !Sub tag:{{ TargetTag }}
+          Values:
+            - 'yes'
+    outputs:
+      - Name: InstanceIds
+        Selector: $.Reservations..Instances..InstanceId
+        Type: StringList
+    nextStep: CreateImages
+  - name: CreateImages
+    action: aws:executeScript
+    timeoutSeconds: 3600
+    onFailure: Abort
+    inputs:
+      Runtime: python3.7
+      Handler: handler
+      InputPayload:
+        InputPayload:
+          EC2Instances: '{{ ListTargetEC2Instances.InstanceIds }}'
+          PrefixTagKey: '{{ PrefixTagKey }}'
+      Script: |-
+        import boto3
+        import datetime
+        import time
+        def handler(events, context):
+          # Initialization
+          instanceIds = events['EC2Instances']
+          prefixTagKey = events['PrefixTagKey']
+          today = datetime.datetime.now().strftime('%Y%m%d')
+          ec2 = boto3.client('ec2')
+
+          # Create images
+          for instanceId in instanceIds:
+            # Get EC2 instance tag and create AMI name
+            tags = ec2.describe_tags(
+              Filters = [{
+                'Name': 'resource-id',
+                'Values': [instanceId]
+              }]
+            )['Tags']
+            tag_value = [ tag['Value'] for tag in tags if tag['Key'] == prefixTagKey]
+            image_name = tag_value[0] + '-' + today
+
+            # Create image with some tags
+            ec2.create_image(
+              InstanceId = instanceId,
+              Name = image_name
+              NoReboot = False,
+              TagSpecifications = [
+                {
+                  'ResourceType': 'image',
+                  'Tags': [
+                    {'Key': 'Name', 'Value': image_name}
+                  ]
+                },
+                {
+                  'ResourceType': 'snapshot',
+                  'Tags': [
+                    {'Key': 'Name', 'Value': image_name}
+                  ]
+                }
+              ]
+            )
+            time.sleep(1)
