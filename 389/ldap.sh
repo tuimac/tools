@@ -12,7 +12,7 @@ function server-install(){
     dnf module enable 389-ds* -y
     dnf install expect 389-ds* -y
 
-	expect -c '
+	expect -c "
 	set timeout 5
 	spawn setup-ds.pl
 	expect \"Would you like to continue with set up? \[yes\]:\"
@@ -42,7 +42,7 @@ function server-install(){
 	expect \"Type the full path and filename, the word suggest, or the word none \[suggest\]:\"
 	send \"\r\n\"
 	expect \"Log file is*\"
-	exit 0'
+	exit 0"
 	systemctl stop dirsrv@${INSTANCE}
 	echo $ROOT_PASSWORD > /etc/dirsrv/slapd-${INSTANCE}/password.txt
 	chown dirsrv.dirsrv /etc/dirsrv/slapd-${INSTANCE}/password.txt
@@ -54,6 +54,7 @@ function server-install(){
 	cd /etc/dirsrv/slapd-${INSTANCE}/
 	openssl rand -out noise.bin 2048
 	certutil -S -x -d . -f password.txt -z noise.bin -n "Server-Cert" -s "CN=${DOMAIN}" -t "CT,C,C" -m $RANDOM -k rsa -g 2048 -Z SHA256 --keyUsage certSigning,keyEncipherment
+    rm /etc/dirsrv/slapd-${INSTANCE}/password.txt
 	certutil -L -d /etc/dirsrv/slapd-${INSTANCE}
 	certutil -L -d /etc/dirsrv/slapd-${INSTANCE} -n "Server-Cert" -a > ds.crt
 	certutil -L -d /etc/dirsrv/slapd-${INSTANCE} -n "Server-Cert"
@@ -61,7 +62,7 @@ function server-install(){
 	sed -i 47i'\nsslapd-secureport: 636' /etc/dirsrv/slapd-${INSTANCE}/dse.ldif
 	systemctl start dirsrv@${INSTANCE}
 	systemctl enable dirsrv@${INSTANCE}
-	cp ds.crt /etc/openldap/
+	mv ds.crt /etc/openldap/
 	cat <<EOF >> /etc/openldap/ldap.conf
 TLS_CACERT /etc/openldap/ds.crt
 TLS_REQCERT never
