@@ -110,6 +110,11 @@ EOF
     chmod 600 /etc/sssd/sssd.conf
     systemctl restart sssd
     sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
+    authconfig --enablemkhomedir --update
+    authconfig --enableldap --update
+    authconfig --enableldapauth --update
+    authconfig --enableshadow --update
+    authconfig --enablelocauthorize --update
     systemctl restart sshd
     systemctl status sssd
 }
@@ -126,19 +131,7 @@ function apply(){
 
 function create-base(){
    cat <<EOF > base.ldif
-dn: ou=group,$SUFFIX
-objectClass: organizationalUnit
-ou: group
-
--
-
-dn: ou=user,$SUFFIX
-objectClass: organizationalUnit
-ou: user
-
--
-
-dn: cn=admin,ou=group,$SUFFIX
+dn: cn=test,ou=Groups,$SUFFIX
 objectClass: posixGroup
 objectClass: top
 cn: admin
@@ -146,9 +139,9 @@ gidNumber: 2000
 
 -
 
-dn: uid=admin,ou=user,$SUFFIX
-uid: admin
-cn: admin
+dn: uid=test,ou=People,$SUFFIX
+uid: test
+cn: test
 objectClass: account
 objectClass: posixAccount
 objectClass: top
@@ -157,7 +150,7 @@ userPassword: P@ssw0rd
 loginShell: /bin/bash
 uidNumber: 2000
 gidNumber: 2000
-homeDirectory: /home/admin
+homeDirectory: /home/test
 
 -
 
@@ -168,13 +161,37 @@ ou: SUDOers
 
 -
 
-dn: cn=admin,ou=SUDOers,$SUFFIX
-objectClass: sudoRole
+dn: cn=defaults,ou=SUDOers,$SUFFIX
 objectClass: top
-cn: admin
-sudoUser: admin
+objectClass: sudoRole
+cn: defaults
+description: Default sudoOption's go here
+sudoOption: env_keep+=SSH_AUTH_SOCK
+
+-
+
+dn: cn=%wheel,ou=SUDOers,$SUFFIX
+objectClass: top
+objectClass: sudoRole
+cn: %wheel
+sudoUser: %wheel
 sudoHost: ALL
 sudoCommand: ALL
+
+-
+
+dn: uid=admin,ou=People,$SUFFIX
+uid: admin
+cn: admin
+objectClass: account
+objectClass: posixAccount
+objectClass: top
+objectClass: shadowAccount
+userPassword: P@ssw0rd
+loginShell: /bin/bash
+uidNumber: 3000
+gidNumber: 10
+homeDirectory: /home/admin
 EOF
     cat base.ldif
     apply base.ldif
