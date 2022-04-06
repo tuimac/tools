@@ -1,10 +1,9 @@
 #!/bin/bash
 LOG=/var/log/user-data.log
-HOSTNAME=docker
-DOMAIN=tuimac.private
 touch $LOG
 exec >> $LOG 2>&1
-    yum update -y
+    yum update -y --releasever=8.4
+    yum install -y git vim*
     mkdir -p /etc/vim/undo
     mkdir -p /etc/vim/backup
     rm /etc/vimrc
@@ -17,16 +16,9 @@ exec >> $LOG 2>&1
       # for bash and zsh, only if no alias is already set
       alias vi >/dev/null 2>&1 || alias vi=vim
     fi' > /etc/profile.d/vim.sh
-    yum install -y docker git
-    systemctl enable docker
-    usermod -aG docker ec2-user
-    curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-    chmod +x /usr/local/bin/docker-compose
-    IP=`curl http://169.254.169.254/latest/meta-data/local-ipv4`
-    cat <<EOF >> /etc/hosts
-$IP $HOSTNAME ${HOSTNAME}.${DOMAIN}
-EOF
-    echo ${HOSTNAME}.${DOMAIN} > /etc/hostname
+    echo "alias vi='vim'" >> /etc/profile
     su - ec2-user
+    cd /home/ec2-user
     git clone https://github.com/tuimac/tools.git; echo "cloned"
+    chown -R ec2-user:ec2-user /home/ec2-user/tools
     reboot
