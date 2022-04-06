@@ -202,12 +202,12 @@ EOF
 
 function primary(){
     [[ $USER != 'root' ]] && { echo 'Must be root!'; exit 1; }
-     dsconf $INSTANCE replication enable \
-         --suffix="${SUFFIX_DOMAIN}" \
-         --role="supplier" \
-         --replica-id=1 \
-         --bind-dn="cn=replication manager,cn=config" \
-         --bind-passwd="${REP_PASSWORD}"
+    dsconf $INSTANCE replication enable \
+        --suffix="${SUFFIX_DOMAIN}" \
+        --role="supplier" \
+        --replica-id=1 \
+        --bind-dn="cn=replication manager,cn=config" \
+        --bind-passwd="${REP_PASSWORD}"
 }
 
 function secondary(){
@@ -217,6 +217,8 @@ function secondary(){
         --host="${PRIMARY_HOST}" \
         --port=389 \
         --conn-protocol=LDAP \
+        --bind-dn="cn=Directory Manager" \
+        --bind-password="${ROOT_PASSWORD}" \
         --bind-dn="cn=replication manager,cn=config" \
         --bind-passwd="${REP_PASSWORD}" \
         --bind-method=SIMPLE \
