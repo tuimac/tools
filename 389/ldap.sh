@@ -199,7 +199,7 @@ EOF
 }
 
 function replication(){
-    echo 'stub'
+
 }
 
 function userguide(){
