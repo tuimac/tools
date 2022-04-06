@@ -235,6 +235,7 @@ Resources:
                 echo ${PrimaryIP}' primary.tuimac.com' >> /etc/hosts
                 echo ${SecondaryIP}' primary.tuimac.com' >> /etc/hosts
                 echo 'primary.tuimac.com' > /etc/hostname
+                sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
                 cd /home/ec2-user
                 git clone https://github.com/tuimac/tools.git; echo "cloned"
                 chown ec2-user:ec2-user -R /home/ec2-user/tools
@@ -290,6 +291,7 @@ Resources:
                 echo ${PrimaryIP}' primary.tuimac.com' >> /etc/hosts
                 echo ${SecondaryIP}' secondary.tuimac.com' >> /etc/hosts
                 echo 'secondary.tuimac.com' > /etc/hostname
+                sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
                 cd /home/ec2-user
                 git clone https://github.com/tuimac/tools.git; echo "cloned"
                 chown ec2-user:ec2-user -R /home/ec2-user/tools

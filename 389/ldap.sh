@@ -1,9 +1,9 @@
 #!/bin/bash
 
-DOMAIN='ldap.tuimac.com'
+DOMAIN='primary.tuimac.com'
 SUFFIX='dc=tuimac,dc=com'
 SUFFIX_DOMAIN='tuimac.com'
-INSTANCE='ldap'
+INSTANCE='primary'
 ROOT_PASSWORD='P@ssw0rd'
 
 function server-install(){
@@ -198,6 +198,10 @@ EOF
     rm base.ldif
 }
 
+function replication(){
+    echo 'stub'
+}
+
 function userguide(){
     echo -e "usage: ./run.sh [help]"
     echo -e "
@@ -218,6 +222,8 @@ function main(){
         create-base
     elif [ $1 == "apply" ]; then
         apply $2
+    elif [ $1 == "replication" ]; then
+        replication
     elif [ $1 == "help" ]; then
         userguide
     else
