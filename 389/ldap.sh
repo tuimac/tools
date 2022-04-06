@@ -202,25 +202,25 @@ EOF
 
 function primary(){
     [[ $USER != 'root' ]] && { echo 'Must be root!'; exit 1; }
+    dsconf $INSTANCE replication create-manager
     dsconf $INSTANCE replication enable \
-        --suffix="${SUFFIX_DOMAIN}" \
-        --role="supplier" \
-        --replica-id=1 \
-        --bind-dn="cn=replication,cn=config" \
-        --bind-passwd="${REP_PASSWORD}"
+        --suffix ${SUFFIX_DOMAIN} \
+        --role supplier \
+        --replica-id 1 \
+        --bind-dn="cn=replication manager,cn=config" \
+        --bind-passwd ${REP_PASSWORD}
 }
 
 function secondary(){
     [[ $USER != 'root' ]] && { echo 'Must be root!'; exit 1; }
+    dsconf $INSTANCE replication create-manager
     dsconf $INSTANCE repl-agmt create \
-        --suffix="${SUFFIX_DOMAIN}" \
-        --host="${PRIMARY_HOST}" \
-        --port=389 \
-        --conn-protocol=LDAP \
-        --bind-dn="cn=Directory Manager" \
-        --bind-password="${ROOT_PASSWORD}" \
-        --bind-dn="cn=replication,cn=config" \
-        --bind-passwd="${REP_PASSWORD}" \
+        --suffix ${SUFFIX_DOMAIN} \
+        --host ${PRIMARY_HOST} \
+        --port 636 \
+        --conn-protocol LDAP \
+        --bind-dn="cn=replication manager,cn=config" \
+        --bind-passwd ${REP_PASSWORD} \
         --bind-method=SIMPLE \
         --init agreement-supplier1-to-supplier2
 }
