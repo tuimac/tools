@@ -1,10 +1,12 @@
 #!/bin/bash
 
 DOMAIN='primary.tuimac.com'
+PRIMARY_HOST='primary.tuimac.com'
 SUFFIX='dc=tuimac,dc=com'
 SUFFIX_DOMAIN='tuimac.com'
 INSTANCE='primary'
 ROOT_PASSWORD='P@ssw0rd'
+REP_PASSWORD='P@ssw0rd'
 
 function server-install(){
     [[ $USER != 'root' ]] && { echo 'Must be root!'; exit 1; }
@@ -198,8 +200,27 @@ EOF
     rm base.ldif
 }
 
-function replication(){
+function primary(){
+    [[ $USER != 'root' ]] && { echo 'Must be root!'; exit 1; }
+     dsconf $INSTANCE replication enable \
+         --suffix="${SUFFIX_DOMAIN}" \
+         --role="supplier" \
+         --replica-id=1 \
+         --bind-dn="cn=replication manager,cn=config" \
+         --bind-passwd="${REP_PASSWORD}"
+}
 
+function secondary(){
+    [[ $USER != 'root' ]] && { echo 'Must be root!'; exit 1; }
+    dsconf $INSTANCE repl-agmt create \
+        --suffix="${SUFFIX_DOMAIN}" \
+        --host="${PRIMARY_HOST}" \
+        --port=389 \
+        --conn-protocol=LDAP \
+        --bind-dn="cn=replication manager,cn=config" \
+        --bind-passwd="${REP_PASSWORD}" \
+        --bind-method=SIMPLE \
+        --init agreement-supplier1-to-supplier2
 }
 
 function userguide(){
@@ -222,8 +243,10 @@ function main(){
         create-base
     elif [ $1 == "apply" ]; then
         apply $2
-    elif [ $1 == "replication" ]; then
-        replication
+    elif [ $1 == "primary" ]; then
+        primary
+    elif [ $1 == "secondary" ]; then
+        secondary
     elif [ $1 == "help" ]; then
         userguide
     else
