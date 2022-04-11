@@ -25,6 +25,7 @@ Parameters:
   AMIID:
     Type: String
     Default: ami-08daa4649f61b8684
+    Description: RHEL_HA-8.4.0_HVM-20210504-x86_64-2-Hourly2-GP2
 
   SSHPemFilename:
     Type: String
