@@ -209,6 +209,14 @@ Resources:
           SubnetId: !Ref SubnetA
           DeviceIndex: 0
           PrivateIpAddress: !Ref PrimaryIP
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            DeleteOnTermination: true
+            Encrypted: true
+            Iops: 3000
+            VolumeSize: 10
+            VolumeType: gp3
       IamInstanceProfile: !Ref EC2InstanceProfile
       SourceDestCheck: false
       KeyName: !Ref SSHPemFilename
@@ -272,6 +280,14 @@ Resources:
           SubnetId: !Ref SubnetB
           DeviceIndex: 0
           PrivateIpAddress: !Ref SecondaryIP
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            DeleteOnTermination: true
+            Encrypted: true
+            Iops: 3000
+            VolumeSize: 10
+            VolumeType: gp3
       IamInstanceProfile: !Ref EC2InstanceProfile
       SourceDestCheck: false
       KeyName: !Ref SSHPemFilename
