@@ -11,8 +11,9 @@ REP_PASSWORD='P@ssw0rd'
 function server-install(){
     [[ $USER != 'root' ]] && { echo 'Must be root!'; exit 1; }
 
-    dnf module enable 389-ds* -y
-    dnf install expect 389-ds* -y
+    dnf module enable 389-ds -y
+    #dnf install expect 389-ds* -y
+    dnf install -y expect 389-ds-base-1.4.3.16-13.module+el8.4.0+10307+74bbfb4e 389-ds-base-legacy-tools-1.4.3.16-13.module+el8.4.0+10307+74bbfb4e
 
 	expect -c "
 	set timeout 5
