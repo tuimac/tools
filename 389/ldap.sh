@@ -203,8 +203,8 @@ EOF
 
 function primary(){
     [[ $USER != 'root' ]] && { echo 'Must be root!'; exit 1; }
-    dsconf $INSTANCE replication create-manager
-    dsconf $INSTANCE replication enable \
+    dsconf -D 'cn=Directory Manager' ldaps://${DOMAIN} replication create-manager
+    dsconf -D 'cn=Directory Manager' ldaps://${DOMAIN} replication enable \
         --suffix ${SUFFIX} \
         --role supplier \
         --replica-id 1 \
@@ -214,8 +214,8 @@ function primary(){
 
 function secondary(){
     [[ $USER != 'root' ]] && { echo 'Must be root!'; exit 1; }
-    dsconf $INSTANCE replication create-manager
-    dsconf $INSTANCE repl-agmt create \
+    dsconf -D 'cn=Directory Manager' ldaps://${DOMAIN} replication create-manager
+    dsconf -D 'cn=Directory Manager' ldaps://${DOMAIN} repl-agmt create \
         --suffix ${SUFFIX} \
         --host ${PRIMARY_HOST} \
         --port 636 \
