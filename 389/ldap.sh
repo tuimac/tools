@@ -208,7 +208,7 @@ function primary(){
     dsconf -D 'cn=Directory Manager' ldaps://${DOMAIN} replication enable \
         --suffix ${SUFFIX} \
         --role supplier \
-        --replica-id 1 \
+        --replica-id 2 \
         --bind-dn="cn=replication manager,cn=config" \
         --bind-passwd ${REP_PASSWORD}
     dsconf -D 'cn=Directory Manager' ldaps://${DOMAIN} repl-agmt create \
@@ -234,13 +234,18 @@ function secondary(){
 }
 
 function rep-delete(){
-    sudo dsconf -D 'cn=Directory Manager' ldaps://${DOMAIN} repl-agmt delete \
+    dsconf -D 'cn=Directory Manager' ldaps://${DOMAIN} repl-agmt delete \
         --suffix ${SUFFIX} \
         ${REP_NAME}
+    dsconf -D 'cn=Directory Manager' ldaps://${DOMAIN} replication disable \
+        --suffix ${SUFFIX}
 }
 
 function rep-monitor(){
-    dsconf -D 'cn=Directory Manager' ldaps://${DOMAIN} replication monitor
+    dsconf -D 'cn=Directory Manager' ldaps://${DOMAIN} replication status \
+        --suffix ${SUFFIX} \
+        --bind-dn="cn=replication manager,cn=config" \
+        --bind-passwd ${REP_PASSWORD}
 }
 
 function userguide(){
