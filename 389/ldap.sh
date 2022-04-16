@@ -11,9 +11,9 @@ REP_PASSWORD='P@ssw0rd'
 function server-install(){
     [[ $USER != 'root' ]] && { echo 'Must be root!'; exit 1; }
 
-    dnf module enable 389-ds -y
-    #dnf install expect 389-ds* -y
-    dnf install -y expect 389-ds-base-1.4.3.16-13.module+el8.4.0+10307+74bbfb4e 389-ds-base-legacy-tools-1.4.3.16-13.module+el8.4.0+10307+74bbfb4e
+    dnf module enable 389-ds* -y
+    dnf install expect 389-ds* -y
+    #dnf install -y expect 389-ds-base-1.4.3.16-13.module+el8.4.0+10307+74bbfb4e 389-ds-base-legacy-tools-1.4.3.16-13.module+el8.4.0+10307+74bbfb4e
 
 	expect -c "
 	set timeout 5
@@ -205,7 +205,7 @@ function primary(){
     [[ $USER != 'root' ]] && { echo 'Must be root!'; exit 1; }
     dsconf $INSTANCE replication create-manager
     dsconf $INSTANCE replication enable \
-        --suffix ${SUFFIX_DOMAIN} \
+        --suffix ${SUFFIX} \
         --role supplier \
         --replica-id 1 \
         --bind-dn="cn=replication manager,cn=config" \
@@ -216,10 +216,10 @@ function secondary(){
     [[ $USER != 'root' ]] && { echo 'Must be root!'; exit 1; }
     dsconf $INSTANCE replication create-manager
     dsconf $INSTANCE repl-agmt create \
-        --suffix ${SUFFIX_DOMAIN} \
+        --suffix ${SUFFIX} \
         --host ${PRIMARY_HOST} \
         --port 636 \
-        --conn-protocol LDAP \
+        --conn-protocol LDAPS \
         --bind-dn="cn=replication manager,cn=config" \
         --bind-passwd ${REP_PASSWORD} \
         --bind-method=SIMPLE \
