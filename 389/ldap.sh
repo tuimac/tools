@@ -225,6 +225,12 @@ function primary(){
 function secondary(){
     [[ $USER != 'root' ]] && { echo 'Must be root!'; exit 1; }
     dsconf -D 'cn=Directory Manager' ldaps://${DOMAIN} replication create-manager
+    dsconf -D 'cn=Directory Manager' ldaps://${DOMAIN} replication enable \
+        --suffix ${SUFFIX} \
+        --role supplier \
+        --replica-id 1 \
+        --bind-dn="cn=replication manager,cn=config" \
+        --bind-passwd ${REP_PASSWORD}
 }
 
 function rep-delete(){
