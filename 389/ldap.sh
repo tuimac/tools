@@ -1,12 +1,13 @@
 #!/bin/bash
 
 DOMAIN='primary.tuimac.com'
-PRIMARY_HOST='primary.tuimac.com'
+SECONDARY_HOST='secondary.tuimac.com'
 SUFFIX='dc=tuimac,dc=com'
 SUFFIX_DOMAIN='tuimac.com'
 INSTANCE='primary'
 ROOT_PASSWORD='P@ssw0rd'
 REP_PASSWORD='P@ssw0rd'
+REP_NAME='test'
 
 function server-install(){
     [[ $USER != 'root' ]] && { echo 'Must be root!'; exit 1; }
@@ -210,20 +211,30 @@ function primary(){
         --replica-id 1 \
         --bind-dn="cn=replication manager,cn=config" \
         --bind-passwd ${REP_PASSWORD}
+    dsconf -D 'cn=Directory Manager' ldaps://${DOMAIN} repl-agmt create \
+        --suffix ${SUFFIX} \
+        --host ${SECONDARY_HOST} \
+        --port 389 \
+        --conn-protocol LDAP \
+        --bind-dn="cn=replication manager,cn=config" \
+        --bind-passwd ${REP_PASSWORD} \
+        --bind-method=SIMPLE \
+        --init ${REP_NAME}
 }
 
 function secondary(){
     [[ $USER != 'root' ]] && { echo 'Must be root!'; exit 1; }
     dsconf -D 'cn=Directory Manager' ldaps://${DOMAIN} replication create-manager
-    dsconf -D 'cn=Directory Manager' ldaps://${DOMAIN} repl-agmt create \
+}
+
+function rep-delete(){
+    sudo dsconf -D 'cn=Directory Manager' ldaps://${DOMAIN} repl-agmt delete \
         --suffix ${SUFFIX} \
-        --host ${PRIMARY_HOST} \
-        --port 636 \
-        --conn-protocol LDAPS \
-        --bind-dn="cn=replication manager,cn=config" \
-        --bind-passwd ${REP_PASSWORD} \
-        --bind-method=SIMPLE \
-        --init agreement-supplier1-to-supplier2
+        ${REP_NAME}
+}
+
+function rep-monitor(){
+    dsconf -D 'cn=Directory Manager' ldaps://${DOMAIN} replication monitor
 }
 
 function userguide(){
@@ -250,6 +261,10 @@ function main(){
         primary
     elif [ $1 == "secondary" ]; then
         secondary
+    elif [ $1 == "rep-monitor" ]; then
+        rep-monitor
+    elif [ $1 == "rep-delete" ]; then
+        rep-delete
     elif [ $1 == "help" ]; then
         userguide
     else
