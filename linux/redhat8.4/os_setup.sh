@@ -5,11 +5,19 @@ HOST_NAME=''
 INSTALL_MODULES=''
 LDAP_SERVER=''
 BASE_DN=''
+AUDIT_LOG_DIR='/var/log/audit/'
+SCRIPT_LOG_DIR='/var/log/os/script'
 
-function 
+function install_ssmagent(){
+    echo -en '\n## install_ssmagent'
+    dnf install -y https://s3.ap-northeast-3.amazonaws.com/amazon-ssm-ap-northeast-3/latest/linux_amd64/amazon-ssm-agent.rpm
+    systemctl enable amazon-ssm-agent
+    systemctl start amazon-ssm-agent
+    systemctl status amazon-ssm-agent
+}
 
 function install_sssd(){
-    echo '## install_sssd'
+    echo -en '\n## install_sssd'
     dnf install oddjob-mkhomedir sssd -y
     cat <<EOF > /etc/sssd/sssd.conf
 [sssd]
@@ -68,6 +76,7 @@ function config_cloudinit(){
     local config='/etc/cloud/cloud.cfg'
     sed -i 's/^ssh_pwauth:   0/ssh_pwauth:   1/g' $config
     sed -i '12 a preserve_hostname: true' $config
+    cat $config
 }
 
 function update_hostname(){
@@ -77,7 +86,7 @@ function update_hostname(){
 }
 
 function update_modules(){
-    echo '## update_modules'
+    echo -en '\n## update_modules'
     echo '8.4' > /etc/yum/vars/releasever
     echo '8.4' > /etc/dnf/vars/releasever
     dnf update -y
@@ -88,9 +97,35 @@ function update_modules(){
     cat /etc/os-release
 }
 
+function config_audit(){
+    echo -en '\n## config_audit'
+    local config='/etc/audit/auditd.conf'
+    local rule_config='/etc/audit/rules.d/audit.rules'
+    mkdir -p $AUDIT_LOG_DIR
+
+    sed -i "s|log_file = \/var\/log\/audit\/audit.log|log_file = $AUDIT_LOGaudit.log|g" $config
+    echo '-a exit,always -F arch=b32 -S execve -k auditcmd' >> $rule_config
+    echo '-a exit,always -F arch=b64 -S execve -k auditcmd' >> $rule_config
+
+    cat $config
+    cat $rule_config
+
+    mkdir -p $SCRIPT_LOG_DIR
+    
+    cat <<EOF >> /etc/profile
+P_PROC=`ps aux | grep \$PPID | grep sshd | awk '{ print $11 }'`
+if [ "\$P_PROC" = sshd: ]; then
+  script -q /var/log/script/`whoami`_`date '+%Y%m%d%H%M%S'`.log
+  exit
+fi
+EOF
+    cat /etc/profile
+}
+
 function main(){
     [[ $USER != 'root' ]] && { echo 'Must be root!'; exit 1; }
     update_modules >> $LOG 2>&1
+    config_audit >> $LOG 2>&1
     update_hostname >> $LOG 2>&1
     config_cloudinit >> $LOG 2>&1
     config_sshd >> $LOG 2>&1

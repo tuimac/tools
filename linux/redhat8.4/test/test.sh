@@ -1,3 +1,7 @@
 #!/bin/bash
 
-echo -en '\ntest' > test.log
+TEST='hello'
+
+cat <<EOF >> test.log
+\$TESTfsdaf
+EOF
