@@ -47,10 +47,22 @@ EOF
     cat /etc/profile
 }
 
+function config_selinux(){
+    echo -en '\n ## config_selinux'
+    sed -i 's/SELINUX=enforcing/SELINUX=disabled/' /etc/selinux/config
+    cat /etc/selinux/config
+}
+
 function update_hostname(){
     echo -en '\n## update_hostname'
-    echo $HOST_NAME > /etc/hostname
+    hostnamectl set-hostname ${HOST_NAME}
     cat /etc/hostname 
+}
+
+function update_timezone(){
+    echo -en '\n## update_timezone'
+    timezonectl set-timezone Asia/Tokyo
+    date
 }
 
 function config_cloudinit(){
@@ -58,6 +70,7 @@ function config_cloudinit(){
     local config='/etc/cloud/cloud.cfg'
     sed -i 's/^ssh_pwauth:   0/ssh_pwauth:   1/g' $config
     sed -i '12 a preserve_hostname: true' $config
+    sed -i '13 a repo_upgrade: none' $config
     cat $config
 }
 
@@ -141,7 +154,9 @@ function main(){
     [[ $USER != 'root' ]] && { echo 'Must be root!'; exit 1; }
     update_modules >> $LOG 2>&1
     config_audit >> $LOG 2>&1
+    config_selinux >> $LOG 2>&1
     update_hostname >> $LOG 2>&1
+    update_timezone >> $LOG 2>&1
     config_cloudinit >> $LOG 2>&1
     config_sshd >> $LOG 2>&1
     install_sssd >> $LOG 2>&1
