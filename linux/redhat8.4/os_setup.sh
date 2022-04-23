@@ -7,13 +7,66 @@ LDAP_SERVER=''
 BASE_DN=''
 AUDIT_LOG_DIR='/var/log/audit/'
 SCRIPT_LOG_DIR='/var/log/os/script'
+REGION='ap-northeast-3'
+CW_PARAM_STORE=''
 
-function install_ssmagent(){
-    echo -en '\n## install_ssmagent'
-    dnf install -y https://s3.ap-northeast-3.amazonaws.com/amazon-ssm-ap-northeast-3/latest/linux_amd64/amazon-ssm-agent.rpm
-    systemctl enable amazon-ssm-agent
-    systemctl start amazon-ssm-agent
-    systemctl status amazon-ssm-agent
+function update_modules(){
+    echo -en '\n## update_modules'
+    echo '8.4' > /etc/yum/vars/releasever
+    echo '8.4' > /etc/dnf/vars/releasever
+    dnf update -y
+    if [ ! -z $INSTALL_MODULES ]; then
+        dnf install -y $INSTALL_MODULES
+    fi
+    cat /etc/redhat-release
+    cat /etc/os-release
+}
+
+function config_audit(){
+    echo -en '\n## config_audit'
+    local config='/etc/audit/auditd.conf'
+    local rule_config='/etc/audit/rules.d/audit.rules'
+    mkdir -p $AUDIT_LOG_DIR
+
+    sed -i "s|log_file = \/var\/log\/audit\/audit.log|log_file = $AUDIT_LOGaudit.log|g" $config
+    echo '-a exit,always -F arch=b32 -S execve -k auditcmd' >> $rule_config
+    echo '-a exit,always -F arch=b64 -S execve -k auditcmd' >> $rule_config
+
+    cat $config
+    cat $rule_config
+
+    mkdir -p $SCRIPT_LOG_DIR
+    
+    cat <<EOF >> /etc/profile
+P_PROC=`ps aux | grep \$PPID | grep sshd | awk '{ print $11 }'`
+if [ "\$P_PROC" = sshd: ]; then
+  script -q /var/log/script/`whoami`_`date '+%Y%m%d%H%M%S'`.log
+  exit
+fi
+EOF
+    cat /etc/profile
+}
+
+function update_hostname(){
+    echo -en '\n## update_hostname'
+    echo $HOST_NAME > /etc/hostname
+    cat /etc/hostname 
+}
+
+function config_cloudinit(){
+    echo -en '\n## config_cloudinit'
+    local config='/etc/cloud/cloud.cfg'
+    sed -i 's/^ssh_pwauth:   0/ssh_pwauth:   1/g' $config
+    sed -i '12 a preserve_hostname: true' $config
+    cat $config
+}
+
+function config_sshd(){
+    echo -en '\n## config_sshd'
+    local config='/etc/ssh/sshd_config'
+    sed -i 's/^PermitRootLogin yes/PermitRootLogin no/g'
+    sed -i 's/^PasswordAuthentication no/PasswordAuthentication yes/g'
+    systemctl restart sshd
 }
 
 function install_sssd(){
@@ -63,63 +116,18 @@ EOF
     systemctl status sssd
 }
 
-function config_sshd(){
-    echo -en '\n## config_sshd'
-    local config='/etc/ssh/sshd_config'
-    sed -i 's/^PermitRootLogin yes/PermitRootLogin no/g'
-    sed -i 's/^PasswordAuthentication no/PasswordAuthentication yes/g'
-    systemctl restart sshd
+function install_ssmagent(){
+    echo -en '\n## install_ssmagent'
+    dnf install -y https://s3.${REGION}.amazonaws.com/amazon-ssm-${REGION}/latest/linux_amd64/amazon-ssm-agent.rpm
+    systemctl enable amazon-ssm-agent
+    systemctl start amazon-ssm-agent
+    systemctl status amazon-ssm-agent
 }
 
-function config_cloudinit(){
-    echo -en '\n## config_cloudinit'
-    local config='/etc/cloud/cloud.cfg'
-    sed -i 's/^ssh_pwauth:   0/ssh_pwauth:   1/g' $config
-    sed -i '12 a preserve_hostname: true' $config
-    cat $config
-}
-
-function update_hostname(){
-    echo -en '\n## update_hostname'
-    echo $HOST_NAME > /etc/hostname
-    cat /etc/hostname 
-}
-
-function update_modules(){
-    echo -en '\n## update_modules'
-    echo '8.4' > /etc/yum/vars/releasever
-    echo '8.4' > /etc/dnf/vars/releasever
-    dnf update -y
-    if [ ! -z $INSTALL_MODULES ]; then
-        dnf install -y $INSTALL_MODULES
-    fi
-    cat /etc/redhat-release
-    cat /etc/os-release
-}
-
-function config_audit(){
-    echo -en '\n## config_audit'
-    local config='/etc/audit/auditd.conf'
-    local rule_config='/etc/audit/rules.d/audit.rules'
-    mkdir -p $AUDIT_LOG_DIR
-
-    sed -i "s|log_file = \/var\/log\/audit\/audit.log|log_file = $AUDIT_LOGaudit.log|g" $config
-    echo '-a exit,always -F arch=b32 -S execve -k auditcmd' >> $rule_config
-    echo '-a exit,always -F arch=b64 -S execve -k auditcmd' >> $rule_config
-
-    cat $config
-    cat $rule_config
-
-    mkdir -p $SCRIPT_LOG_DIR
-    
-    cat <<EOF >> /etc/profile
-P_PROC=`ps aux | grep \$PPID | grep sshd | awk '{ print $11 }'`
-if [ "\$P_PROC" = sshd: ]; then
-  script -q /var/log/script/`whoami`_`date '+%Y%m%d%H%M%S'`.log
-  exit
-fi
-EOF
-    cat /etc/profile
+function install_cloudwatchagent(){
+    echo -en '\n## install_cloudwatchagent'
+    rpm -U https://s3.${REGION}.amazonaws.com/amazoncloudwatch-agent-${REGION}/redhat/amd64/latest/amazon-cloudwatch-agent.rpm
+    /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s -c ssm:${CW_PARAM_STORE}    
 }
 
 function main(){
@@ -131,6 +139,8 @@ function main(){
     config_sshd >> $LOG 2>&1
     install_sssd >> $LOG 2>&1
     install_ssmagent >> $LOG 2>&1
+    install_cloudwatchagent >> $LOG 2>&1
+    reboot
 }
 
 main
