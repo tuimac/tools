@@ -130,6 +130,13 @@ function install_cloudwatchagent(){
     /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s -c ssm:${CW_PARAM_STORE}    
 }
 
+function config_histroy(){
+    echo -en '\n## config_history'
+    local config_line='export HISTTIMEFORMAT="%d/%m/%y %T "'
+    sh -c "echo $config_line >> /etc/profile"
+    cat /etc/profile
+}
+
 function main(){
     [[ $USER != 'root' ]] && { echo 'Must be root!'; exit 1; }
     update_modules >> $LOG 2>&1
