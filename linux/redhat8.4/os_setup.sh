@@ -9,6 +9,7 @@ AUDIT_LOG_DIR='/var/log/os/audit/'
 SCRIPT_LOG_DIR='/var/log/os/script/'
 REGION='ap-northeast-3'
 CW_PARAM_STORE='cloudwatch'
+MEM_SIZE='2'
 
 function update_modules(){
     echo '8.4' > /etc/yum/vars/releasever
@@ -29,7 +30,7 @@ function config_audit(){
     local rule_config='/etc/audit/rules.d/audit.rules'
     mkdir -p $AUDIT_LOG_DIR
 
-    sed -i "s|log_file = \/var\/log\/audit\/audit.log|log_file = $AUDIT_LOG_DIRaudit.log|g" $config
+    sed -i "s|log_file = \/var\/log\/audit\/audit.log|log_file = ${AUDIT_LOG_DIR}audit.log|g" $config
     echo '-a exit,always -F arch=b32 -S execve -k auditcmd' >> $rule_config
     echo '-a exit,always -F arch=b64 -S execve -k auditcmd' >> $rule_config
 
@@ -37,14 +38,16 @@ function config_audit(){
     cat $rule_config
 
     mkdir -p $SCRIPT_LOG_DIR
-    
+
     cat <<EOF >> /etc/profile
-P_PROC=`ps aux | grep \$PPID | grep sshd | awk '{ print $11 }'`
+
+# Script
+P_PROC=\`ps aux | grep \$PPID | grep sshd | awk '{ print \$11 }'\`
 if [ "\$P_PROC" = sshd: ]; then
-  script -q /var/log/script/`whoami`_`date '+%Y%m%d%H%M%S'`.log
+  script -q /var/log/script/\`whoami\`_\`date '+%Y%m%d%H%M%S'\`.log
   exit
 fi
-EOF
+EOF 
     cat /etc/profile
 }
 
@@ -59,7 +62,7 @@ function update_hostname(){
 }
 
 function update_timezone(){
-    timezonectl set-timezone Asia/Tokyo
+    timedatectl set-timezone Asia/Tokyo
     date
 }
 
@@ -73,8 +76,8 @@ function config_cloudinit(){
 
 function config_sshd(){
     local config='/etc/ssh/sshd_config'
-    sed -i 's/^PermitRootLogin yes/PermitRootLogin no/g'
-    sed -i 's/^PasswordAuthentication no/PasswordAuthentication yes/g'
+    sed -i 's/^PermitRootLogin yes/PermitRootLogin no/g' $config
+    sed -i 's/^PasswordAuthentication no/PasswordAuthentication yes/g' $config
     systemctl restart sshd
 }
 
@@ -142,8 +145,11 @@ function install_cloudwatchagent(){
 }
 
 function config_history(){
-    local config_line='export HISTTIMEFORMAT=\"%d/%m/%y %T \"'
-    sh -c "echo $config_line >> /etc/profile"
+    cat <<EOF >> /etc/profile
+
+# Custom History
+export HISTTIMEFORMAT=\"%d/%m/%y %T \"
+EOF
     cat /etc/profile
 }
 
@@ -162,6 +168,18 @@ EOF
     systemctl start td-agent
     sleep 1
     systemctl status td-agent
+}
+
+function create_swap(){
+    local swapfile='/swap/swapfile'
+    [[ ! -d /swap ]] && { mkdir /swap; }
+    dd if=/dev/zero of=$swapfile bs=1024M count=$MEM_SIZE
+    chmod 600 $swapfile
+    mkswap $swapfile
+    swapon $swapfile
+    swapon -s
+    sh -c 'echo "/swap/swapfile swap swap defaults 0 0" >> /etc/fstab'
+    cat /etc/fstab
 }
 
 function main(){
@@ -190,6 +208,8 @@ function main(){
     config_history >> $LOG 2>&1
     echo -en '\n####### install_tdagent #######\n' | tee -a $LOG
     install_tdagent >> $LOG 2>&1
+    echo -en '\n####### create_swap #######\n' | tee -a $LOG
+    create_swap >> $LOG 2>&1
     echo -en '\n####### reboot #######\n' | tee -a $LOG
     reboot
 }
