@@ -14,6 +14,7 @@ function update_modules(){
     echo '8.4' > /etc/yum/vars/releasever
     echo '8.4' > /etc/dnf/vars/releasever
     dnf update -y
+    sleep 1
     dnf install -y python3-pip
     pip3 install --upgrade requests
     if [ ! -z $INSTALL_MODULES ]; then
@@ -136,37 +137,54 @@ function install_cloudwatchagent(){
     /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s -c ssm:${CW_PARAM_STORE}    
 }
 
-function config_histroy(){
+function config_history(){
     local config_line='export HISTTIMEFORMAT="%d/%m/%y %T "'
     sh -c "echo $config_line >> /etc/profile"
     cat /etc/profile
 }
 
+function install_tdagent(){
+    rpm --import https://packages.treasuredata.com/GPG-KEY-td-agent
+    cat <<EOF > /etc/yum.repos.d/td.repo
+[treasuredata]
+name=TreasureData
+baseurl=http://packages.treasuredata.com/4/redhat/8/\$basearch
+gpgcheck=1
+gpgkey=https://packages.treasuredata.com/GPG-KEY-td-agent
+EOF
+    yum install -y td-agent
+    chmod 644 -R /var/log
+    systemctl start td-agent
+    systemctl status td-agent
+}
+
 function main(){
     [[ $USER != 'root' ]] && { echo 'Must be root!'; exit 1; }
-    echo -en '\n####### update_modules #######\n' | tee $LOG
+    echo -en '\n####### update_modules #######\n' | tee -a -a $LOG
     update_modules >> $LOG 2>&1
-    echo -en '\n####### config_audit #######\n' | tee $LOG
+    echo -en '\n####### config_audit #######\n' | tee -a $LOG
     config_audit >> $LOG 2>&1
-    echo -en '\n####### config_selinux #######\n' | tee $LOG
+    echo -en '\n####### config_selinux #######\n' | tee -a $LOG
     config_selinux >> $LOG 2>&1
-    echo -en '\n####### update_hostname #######\n' | tee $LOG
+    echo -en '\n####### update_hostname #######\n' | tee -a $LOG
     update_hostname >> $LOG 2>&1
-    echo -en '\n####### update_timezone #######\n' | tee $LOG
+    echo -en '\n####### update_timezone #######\n' | tee -a $LOG
     update_timezone >> $LOG 2>&1
-    echo -en '\n####### config_cloudinit #######\n' | tee $LOG
+    echo -en '\n####### config_cloudinit #######\n' | tee -a $LOG
     config_cloudinit >> $LOG 2>&1
-    echo -en '\n####### config_sshd #######\n' | tee $LOG
+    echo -en '\n####### config_sshd #######\n' | tee -a $LOG
     config_sshd >> $LOG 2>&1
-    echo -en '\n####### install_sssd #######\n' | tee $LOG
+    echo -en '\n####### install_sssd #######\n' | tee -a $LOG
     install_sssd >> $LOG 2>&1
-    echo -en '\n####### install_ssmagent #######\n' | tee $LOG
+    echo -en '\n####### install_ssmagent #######\n' | tee -a $LOG
     install_ssmagent >> $LOG 2>&1
-    echo -en '\n####### install_cloudwatchagent #######\n' | tee $LOG
+    echo -en '\n####### install_cloudwatchagent #######\n' | tee -a $LOG
     install_cloudwatchagent >> $LOG 2>&1
-    echo -en '\n####### config_history #######\n' | tee $LOG
+    echo -en '\n####### config_history #######\n' | tee -a $LOG
     config_history >> $LOG 2>&1
-    echo -en '\n####### reboot #######\n' | tee $LOG
+    echo -en '\n####### install_tdagent #######\n' | tee -a $LOG
+    install_tdagent >> $LOG 2>&1
+    echo -en '\n####### reboot #######\n' | tee -a $LOG
     reboot
 }
 
