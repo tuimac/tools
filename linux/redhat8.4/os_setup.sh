@@ -11,10 +11,10 @@ REGION='ap-northeast-3'
 CW_PARAM_STORE=''
 
 function update_modules(){
-    echo -en '\n## update_modules'
     echo '8.4' > /etc/yum/vars/releasever
     echo '8.4' > /etc/dnf/vars/releasever
     dnf update -y
+    pip3 install --upgrade requests
     if [ ! -z $INSTALL_MODULES ]; then
         dnf install -y $INSTALL_MODULES
     fi
@@ -23,7 +23,6 @@ function update_modules(){
 }
 
 function config_audit(){
-    echo -en '\n## config_audit'
     local config='/etc/audit/auditd.conf'
     local rule_config='/etc/audit/rules.d/audit.rules'
     mkdir -p $AUDIT_LOG_DIR
@@ -48,25 +47,21 @@ EOF
 }
 
 function config_selinux(){
-    echo -en '\n ## config_selinux'
     sed -i 's/SELINUX=enforcing/SELINUX=disabled/' /etc/selinux/config
     cat /etc/selinux/config
 }
 
 function update_hostname(){
-    echo -en '\n## update_hostname'
     hostnamectl set-hostname ${HOST_NAME}
     cat /etc/hostname 
 }
 
 function update_timezone(){
-    echo -en '\n## update_timezone'
     timezonectl set-timezone Asia/Tokyo
     date
 }
 
 function config_cloudinit(){
-    echo -en '\n## config_cloudinit'
     local config='/etc/cloud/cloud.cfg'
     sed -i 's/^ssh_pwauth:   0/ssh_pwauth:   1/g' $config
     sed -i '12 a preserve_hostname: true' $config
@@ -75,7 +70,6 @@ function config_cloudinit(){
 }
 
 function config_sshd(){
-    echo -en '\n## config_sshd'
     local config='/etc/ssh/sshd_config'
     sed -i 's/^PermitRootLogin yes/PermitRootLogin no/g'
     sed -i 's/^PasswordAuthentication no/PasswordAuthentication yes/g'
@@ -83,7 +77,6 @@ function config_sshd(){
 }
 
 function install_sssd(){
-    echo -en '\n## install_sssd'
     dnf install oddjob-mkhomedir sssd -y
     cat <<EOF > /etc/sssd/sssd.conf
 [sssd]
@@ -130,21 +123,19 @@ EOF
 }
 
 function install_ssmagent(){
-    echo -en '\n## install_ssmagent'
     dnf install -y https://s3.${REGION}.amazonaws.com/amazon-ssm-${REGION}/latest/linux_amd64/amazon-ssm-agent.rpm
     systemctl enable amazon-ssm-agent
     systemctl start amazon-ssm-agent
+    sleep 1
     systemctl status amazon-ssm-agent
 }
 
 function install_cloudwatchagent(){
-    echo -en '\n## install_cloudwatchagent'
     rpm -U https://s3.${REGION}.amazonaws.com/amazoncloudwatch-agent-${REGION}/redhat/amd64/latest/amazon-cloudwatch-agent.rpm
     /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s -c ssm:${CW_PARAM_STORE}    
 }
 
 function config_histroy(){
-    echo -en '\n## config_history'
     local config_line='export HISTTIMEFORMAT="%d/%m/%y %T "'
     sh -c "echo $config_line >> /etc/profile"
     cat /etc/profile
@@ -152,16 +143,29 @@ function config_histroy(){
 
 function main(){
     [[ $USER != 'root' ]] && { echo 'Must be root!'; exit 1; }
+    echo -en '\n####### update_modules #######\n' | tee $LOG
     update_modules >> $LOG 2>&1
+    echo -en '\n####### config_audit #######\n' | tee $LOG
     config_audit >> $LOG 2>&1
+    echo -en '\n####### config_selinux #######\n' | tee $LOG
     config_selinux >> $LOG 2>&1
+    echo -en '\n####### update_hostname #######\n' | tee $LOG
     update_hostname >> $LOG 2>&1
+    echo -en '\n####### update_timezone #######\n' | tee $LOG
     update_timezone >> $LOG 2>&1
+    echo -en '\n####### config_cloudinit #######\n' | tee $LOG
     config_cloudinit >> $LOG 2>&1
+    echo -en '\n####### config_sshd #######\n' | tee $LOG
     config_sshd >> $LOG 2>&1
+    echo -en '\n####### install_sssd #######\n' | tee $LOG
     install_sssd >> $LOG 2>&1
+    echo -en '\n####### install_ssmagent #######\n' | tee $LOG
     install_ssmagent >> $LOG 2>&1
+    echo -en '\n####### install_cloudwatchagent #######\n' | tee $LOG
     install_cloudwatchagent >> $LOG 2>&1
+    echo -en '\n####### config_history #######\n' | tee $LOG
+    config_history >> $LOG 2>&1
+    echo -en '\n####### reboot #######\n' | tee $LOG
     reboot
 }
 
