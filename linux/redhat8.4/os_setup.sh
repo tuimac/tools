@@ -1,14 +1,14 @@
 #!/bin/bash
 
 LOG='os_setup.log'
-HOST_NAME=''
-INSTALL_MODULES=''
-LDAP_SERVER=''
-BASE_DN=''
+HOST_NAME='devtest'
+INSTALL_MODULES='podman'
+LDAP_SERVER='ldap.tuimac.com'
+BASE_DN='dc=tuimac,dc=com'
 AUDIT_LOG_DIR='/var/log/audit/'
-SCRIPT_LOG_DIR='/var/log/os/script'
+SCRIPT_LOG_DIR='/var/log/os/script/'
 REGION='ap-northeast-3'
-CW_PARAM_STORE=''
+CW_PARAM_STORE='cloudwatch'
 
 function update_modules(){
     echo '8.4' > /etc/yum/vars/releasever
