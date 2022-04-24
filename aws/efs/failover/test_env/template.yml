@@ -14,13 +14,21 @@ Parameters:
     Type: String
     Default: 10.0.0.16/28
 
-  PrimaryIP:
+  PrimaryEC2IP:
     Type: String
     Default: 10.0.0.4
 
-  SecondaryIP:
+  SecondaryEC2IP:
     Type: String
     Default: 10.0.0.20
+
+  PrimaryEFSIP:
+    Type: String
+    Default: 10.0.0.5
+
+  SecondaryEFSIP:
+    Type: String
+    Default: 10.0.0.21
 
   AMIID:
     Type: String
@@ -155,9 +163,36 @@ Resources:
       VpcId: !Ref Vpc
 
   # EFS
-  EFS:
-    S
-	
+  EFSFileSystem:
+    Type: AWS::EFS::FileSystem
+    Properties:
+      BackupPolicy:
+        Status: DISABLED
+      Encrypted: true
+      FileSystemTags:
+        - Key: !Ref TagKey
+          Value: !Ref TagValue
+      PerformanceMode: generalPurpose
+      ThroughputMode: bursting
+      
+  EFSMountTargetA:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref EESFileSystem
+      IpAddress: !Ref PrimaryEFSIP
+      SecurityGroups:
+        - !Ref SecurityGroup
+      SubnetId: !Ref SubnetA
+
+  EFSMountTargetB:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref EESFileSystem
+      IpAddress: !Ref SecondaryEFSIP
+      SecurityGroups:
+        - !Ref SecurityGroup
+      SubnetId: !Ref SubnetB
+
   # IAM Role
   EC2InstanceRole:
     Type: AWS::IAM::Role
@@ -209,7 +244,7 @@ Resources:
             - !Ref SecurityGroup
           SubnetId: !Ref SubnetA
           DeviceIndex: 0
-          PrivateIpAddress: !Ref PrimaryIP
+          PrivateIpAddress: !Ref PrimaryEC2IP
       IamInstanceProfile: !Ref EC2InstanceProfile
       SourceDestCheck: true
       KeyName: !Ref SSHPemFilename
@@ -237,8 +272,9 @@ Resources:
                   # for bash and zsh, only if no alias is already set
                   alias vi >/dev/null 2>&1 || alias vi=vim
                 fi' > /etc/profile.d/vim.sh
-                echo ${PrimaryIP}' primary.tuimac.com' >> /etc/hosts
-                echo ${SecondaryIP}' secondary.tuimac.com' >> /etc/hosts
+                echo ${PRIMARYIP}' primary.tuimac.com' >> /etc/hosts
+                echo ${SECONDARYIP}' secondary.tuimac.com' >> /etc/hosts
+                echo ${EFSIP}' efs.tuimac.com' >> /etc/hosts
                 echo 'primary.tuimac.com' > /etc/hostname
                 sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
                 cd /home/ec2-user
@@ -249,8 +285,9 @@ Resources:
                 runuser -l ec2-user -c "git config --global user.name 'tuimac'"
                 reboot
           - {
-              PRIMARYIP: !Ref PrimaryIP,
-              SECONDARYIP: !Ref SecondaryIP,
+              PRIMARYIP: !Ref PrimaryEC2IP,
+              SECONDARYIP: !Ref SecondaryEC2IP,
+              EFSIP: !Ref PrimaryEFSIP,
             }
 
   Secondary:
@@ -266,7 +303,7 @@ Resources:
             - !Ref SecurityGroup
           SubnetId: !Ref SubnetB
           DeviceIndex: 0
-          PrivateIpAddress: !Ref SecondaryIP
+          PrivateIpAddress: !Ref SecondaryEC2IP
       IamInstanceProfile: !Ref EC2InstanceProfile
       SourceDestCheck: false
       KeyName: !Ref SSHPemFilename
@@ -294,8 +331,9 @@ Resources:
                   # for bash and zsh, only if no alias is already set
                   alias vi >/dev/null 2>&1 || alias vi=vim
                 fi' > /etc/profile.d/vim.sh
-                echo ${PrimaryIP}' primary.tuimac.com' >> /etc/hosts
-                echo ${SecondaryIP}' secondary.tuimac.com' >> /etc/hosts
+                echo ${PRIMARYIP}' primary.tuimac.com' >> /etc/hosts
+                echo ${SECONDARYIP}' secondary.tuimac.com' >> /etc/hosts
+                echo ${EFSIP}' efs.tuimac.com' >> /etc/hosts
                 echo 'secondary.tuimac.com' > /etc/hostname
                 sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
                 cd /home/ec2-user
@@ -305,6 +343,7 @@ Resources:
                 runuser -l ec2-user -c "git config --global user.name 'tuimac'"
                 reboot
           - {
-              PRIMARYIP: !Ref PrimaryIP,
-              SECONDARYIP: !Ref SecondaryIP,
+              PRIMARYIP: !Ref PrimaryEC2IP,
+              SECONDARYIP: !Ref SecondaryEC2IP,
+              EFSIP: !Ref SecondaryEFSIP,
             }
