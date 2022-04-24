@@ -2,10 +2,10 @@
 
 LOG='os_setup.log'
 HOST_NAME='devtest'
-INSTALL_MODULES='podman'
+INSTALL_MODULES=''
 LDAP_SERVER='ldap.tuimac.com'
 BASE_DN='dc=tuimac,dc=com'
-AUDIT_LOG_DIR='/var/log/audit/'
+AUDIT_LOG_DIR='/var/log/os/audit/'
 SCRIPT_LOG_DIR='/var/log/os/script/'
 REGION='ap-northeast-3'
 CW_PARAM_STORE='cloudwatch'
@@ -29,7 +29,7 @@ function config_audit(){
     local rule_config='/etc/audit/rules.d/audit.rules'
     mkdir -p $AUDIT_LOG_DIR
 
-    sed -i "s|log_file = \/var\/log\/audit\/audit.log|log_file = $AUDIT_LOGaudit.log|g" $config
+    sed -i "s|log_file = \/var\/log\/audit\/audit.log|log_file = $AUDIT_LOG_DIRaudit.log|g" $config
     echo '-a exit,always -F arch=b32 -S execve -k auditcmd' >> $rule_config
     echo '-a exit,always -F arch=b64 -S execve -k auditcmd' >> $rule_config
 
@@ -134,11 +134,15 @@ function install_ssmagent(){
 
 function install_cloudwatchagent(){
     rpm -U https://s3.${REGION}.amazonaws.com/amazoncloudwatch-agent-${REGION}/redhat/amd64/latest/amazon-cloudwatch-agent.rpm
-    /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s -c ssm:${CW_PARAM_STORE}    
+    /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s -c ssm:${CW_PARAM_STORE}
+    systemctl enable amazon-cloudwatch-agent
+    systemctl start amazon-cloudwatch-agent
+    sleep 1
+    systemctl status amazon-cloudwatch-agent
 }
 
 function config_history(){
-    local config_line='export HISTTIMEFORMAT="%d/%m/%y %T "'
+    local config_line='export HISTTIMEFORMAT=\"%d/%m/%y %T \"'
     sh -c "echo $config_line >> /etc/profile"
     cat /etc/profile
 }
@@ -154,7 +158,9 @@ gpgkey=https://packages.treasuredata.com/GPG-KEY-td-agent
 EOF
     yum install -y td-agent
     chmod 644 -R /var/log
+    systemctl enable td-agent
     systemctl start td-agent
+    sleep 1
     systemctl status td-agent
 }
 
