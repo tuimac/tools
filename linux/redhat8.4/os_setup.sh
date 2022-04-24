@@ -48,7 +48,7 @@ if [ "\$P_PROC" = sshd: ]; then
   exit
 fi
 EOF
-    chmod 666 -R $SCRIPT_LOG_DIR
+    chmod 777 -R $SCRIPT_LOG_DIR
     cat /etc/profile
 }
 

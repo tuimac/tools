@@ -178,7 +178,7 @@ Resources:
   EFSMountTargetA:
     Type: AWS::EFS::MountTarget
     Properties:
-      FileSystemId: !Ref EESFileSystem
+      FileSystemId: !Ref EFSFileSystem
       IpAddress: !Ref PrimaryEFSIP
       SecurityGroups:
         - !Ref SecurityGroup
@@ -187,7 +187,7 @@ Resources:
   EFSMountTargetB:
     Type: AWS::EFS::MountTarget
     Properties:
-      FileSystemId: !Ref EESFileSystem
+      FileSystemId: !Ref EFSFileSystem
       IpAddress: !Ref SecondaryEFSIP
       SecurityGroups:
         - !Ref SecurityGroup
