@@ -48,7 +48,6 @@ if [ "\$P_PROC" = sshd: ]; then
   exit
 fi
 EOF
-    chmod 777 -R $SCRIPT_LOG_DIR
     cat /etc/profile
 }
 
@@ -165,6 +164,7 @@ gpgkey=https://packages.treasuredata.com/GPG-KEY-td-agent
 EOF
     yum install -y td-agent
     chmod 644 -R /var/log
+    chmod 666 -R $SCRIPT_LOG_DIR
     systemctl enable td-agent
     systemctl start td-agent
     sleep 1
