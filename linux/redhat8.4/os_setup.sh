@@ -14,6 +14,7 @@ function update_modules(){
     echo '8.4' > /etc/yum/vars/releasever
     echo '8.4' > /etc/dnf/vars/releasever
     dnf update -y
+    dnf install -y python3-pip
     pip3 install --upgrade requests
     if [ ! -z $INSTALL_MODULES ]; then
         dnf install -y $INSTALL_MODULES
