@@ -36,19 +36,6 @@ function config_audit(){
 
     cat $config
     cat $rule_config
-
-    mkdir -p $SCRIPT_LOG_DIR
-
-    cat <<EOF >> /etc/profile
-
-# Script
-P_PROC=\`ps aux | grep \$PPID | grep sshd | awk '{ print \$11 }'\`
-if [ "\$P_PROC" = sshd: ]; then
-  script -q $SCRIPT_LOG_DIR/\`whoami\`_\`date '+%Y%m%d%H%M%S'\`.log
-  exit
-fi
-EOF
-    cat /etc/profile
 }
 
 function config_selinux(){
@@ -166,7 +153,6 @@ gpgkey=https://packages.treasuredata.com/GPG-KEY-td-agent
 EOF
     yum install -y td-agent
     chmod 644 -R /var/log
-    chmod 777 -R $SCRIPT_LOG_DIR
     systemctl enable td-agent
     systemctl start td-agent
     sleep 1
