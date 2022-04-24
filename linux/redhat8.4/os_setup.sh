@@ -148,7 +148,9 @@ function config_history(){
     cat <<EOF >> /etc/profile
 
 # Custom History
-export HISTTIMEFORMAT=\"%d/%m/%y %T \"
+export HISTSIZE=100000
+export HISTTIMEFORMAT="%d/%m/%y %T "
+export HISTCONTROL=ignoreboth
 EOF
     cat /etc/profile
 }
@@ -164,7 +166,7 @@ gpgkey=https://packages.treasuredata.com/GPG-KEY-td-agent
 EOF
     yum install -y td-agent
     chmod 644 -R /var/log
-    chmod 666 -R $SCRIPT_LOG_DIR
+    chmod 777 -R $SCRIPT_LOG_DIR
     systemctl enable td-agent
     systemctl start td-agent
     sleep 1
