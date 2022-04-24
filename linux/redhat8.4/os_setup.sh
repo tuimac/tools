@@ -5,8 +5,8 @@ HOST_NAME='devtest'
 INSTALL_MODULES=''
 LDAP_SERVER='ldap.tuimac.com'
 BASE_DN='dc=tuimac,dc=com'
-AUDIT_LOG_DIR='/var/log/os/audit/'
-SCRIPT_LOG_DIR='/var/log/os/script/'
+AUDIT_LOG_DIR='/var/log/os/audit'
+SCRIPT_LOG_DIR='/var/log/os/script'
 REGION='ap-northeast-3'
 CW_PARAM_STORE='cloudwatch'
 MEM_SIZE='2'
@@ -30,7 +30,7 @@ function config_audit(){
     local rule_config='/etc/audit/rules.d/audit.rules'
     mkdir -p $AUDIT_LOG_DIR
 
-    sed -i "s|log_file = \/var\/log\/audit\/audit.log|log_file = ${AUDIT_LOG_DIR}audit.log|g" $config
+    sed -i "s|log_file = \/var\/log\/audit\/audit.log|log_file = ${AUDIT_LOG_DIR}\/audit.log|g" $config
     echo '-a exit,always -F arch=b32 -S execve -k auditcmd' >> $rule_config
     echo '-a exit,always -F arch=b64 -S execve -k auditcmd' >> $rule_config
 
@@ -44,11 +44,11 @@ function config_audit(){
 # Script
 P_PROC=\`ps aux | grep \$PPID | grep sshd | awk '{ print \$11 }'\`
 if [ "\$P_PROC" = sshd: ]; then
-  script -q $SCRIPT_LOG_DIR\`whoami\`_\`date '+%Y%m%d%H%M%S'\`.log
+  script -q $SCRIPT_LOG_DIR/\`whoami\`_\`date '+%Y%m%d%H%M%S'\`.log
   exit
 fi
 EOF
-    chmod 666 $SCRIPT_LOG_DIR
+    chmod 666 -R $SCRIPT_LOG_DIR
     cat /etc/profile
 }
 
