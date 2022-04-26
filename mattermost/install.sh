@@ -1,14 +1,26 @@
 #!/bin/bash
 
+####################################################################
+
+# Parameters
+## PostgreSQL
 PG_CONF='/var/lib/pgsql/data/postgresql.conf'
 PG_HBA='/var/lib/pgsql/data/pg_hba.conf'
 ARCHIVE_DIR='/var/lib/pgsql/archive'
 PG_LOG_DIR='/var/log/postgresql'
 
-[[ $USER -ne 'root' ]] && { echo 'Must be root!'; exit 1; }
+## Mattermost
+VERSION='6.6.0'
+MM_CONF='config.json'
+
+####################################################################
+
+# Initialization
+[[ $USER != 'root' ]] && { echo 'Must be root!'; exit 1; }
+[[ ! -f config.json ]] && { echo 'There is no config.json!'; exit 1; }
 
 # Install PostgreSQL13.3
-yum module install postgresql:13/server
+yum module install -y postgresql:13/server
 postgresql-setup --initdb
 systemctl start postgresql.service
 systemctl enable postgresql.service
@@ -30,7 +42,7 @@ mkdir $PG_LOG_DIR
 chown postgres:postgres -R $PG_LOG_DIR
 chmod 700 -R $PG_LOG_DIR
 
-# Overwrite postgresql.conf
+## Overwrite postgresql.conf
 cat << EOF > $PG_CONF
 listen_addresses = '*'
 port = 5432
@@ -59,7 +71,7 @@ log_checkpoints on
 log_timezone = 'Asia/Tokyo'
 EOF
 
-# Overwrite pg_hba.conf
+## Overwrite pg_hba.conf
 cat << EOF > $PG_HBA
 # TYPE  DATABASE        USER            ADDRESS                 METHOD
 local   all             all                                     trust
@@ -70,5 +82,16 @@ host    replication     all             127.0.0.1/32           	ident
 host    replication     all             ::1/128                 ident
 EOF
 
-# Reload configuration
+## Reload configuration
 systemctl reload postgresql
+
+# Install Mattermost
+curl -L https://releases.mattermost.com/${VERSION}/mattermost-${VERSION}-linux-amd64.tar.gz -o mattermost.tar.gz
+tar -xvzf mattermost.tar.gz
+mv mattermost /opt
+mkdir /opt/mattermost/data
+useradd --system --user-group mattermost
+chown -R mattermost:mattermost /opt/mattermost
+chmod -R g+w /opt/mattermost
+cp config.json /opt/mattermost/config/
+
