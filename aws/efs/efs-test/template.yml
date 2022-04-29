@@ -193,6 +193,15 @@ Resources:
       SecurityGroups:
         - !Ref SecurityGroup
 
+  # AWS Backup
+  AWSBackupVault:
+    Type: AWS::Backup::BackupVault
+    Properties:
+      BackupVaultName: !Ref TagValue
+      BackupVaultTags:
+        - Key: !Ref TagKey
+          Value: !Ref TagValue
+
   # IAM Role
   EC2InstanceRole:
     Type: AWS::IAM::Role
@@ -345,11 +354,17 @@ Resources:
                     cd /home/ec2-user
                     git clone https://github.com/tuimac/tools.git; echo "cloned"
                     chown ec2-user:ec2-user -R /home/ec2-user/tools
-                    runuser -l ec2-user -c "git config --global user.email 'tuimac.devadm01@gmail.com'"
-                    runuser -l ec2-user -c "git config --global user.name 'tuimac'"
+                    mkdir /home/ec2-user/efs
+                    echo 'efs.tuimac.com:/ /home/ec2-user/efs nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport,_netdev,nofail 0 0' >> /etc/fstab
+                    mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport efs.tuimac.com:/ /home/ec2-user/efs
+                    chown ec2-user:ec2-user -R /home/ec2-user/efs
+                    echo 'export BACKUP_VAULT='${BACKUP_VAULT} >> /etc/profile
+                    echo 'export BACKUP_ROLE_ARN='${BACKUP_ROLE_ARN} >> /etc/profile
                     reboot
                 - {
                     PRIMARYEC2IP: !Ref PrimaryEC2IP,
+                    BACKUP_VAULT: !Ref AWSBackupVault,
+                    BACKUP_ROLE_ARN: !GetAtt AWSBackupServiceRole.Arn
                     SECONDARYEC2IP: !Ref SecondaryEC2IP,
                     EFSIP: !Ref PrimaryEFSIP,
                   }
