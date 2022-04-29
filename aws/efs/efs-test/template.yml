@@ -14,13 +14,21 @@ Parameters:
     Type: String
     Default: 10.0.0.16/28
 
-  PrimaryIP:
+  PrimaryEC2IP:
     Type: String
     Default: 10.0.0.4
 
-  SecondaryIP:
+  SecondaryEC2IP:
     Type: String
     Default: 10.0.0.20
+  
+  PrimaryEFSIP:
+    Type: String
+    Default: 10.0.0.5
+
+  SecondaryEFSIP:
+    Type: String
+    Default: 10.0.0.21
 
   AMIID:
     Type: String
@@ -154,6 +162,37 @@ Resources:
       ServiceName: !Sub com.amazonaws.${AWS::Region}.s3
       VpcId: !Ref Vpc
 
+  # EFS
+  EFSFileSystem:
+    Type: AWS::EFS::FileSystem
+    Properties:
+      BackupPolicy:
+        Status: DISABLED
+      Encrypted: true
+      FileSystemTags:
+        - Key: !Ref TagKey
+          Value: !Ref TagValue
+      PerformanceMode: generalPurpose
+      ThroughputMode: bursting
+
+  EFSMountTargetA:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref EFSFileSystem
+      SubnetId: !Ref SubnetA
+      IpAddress: !Ref PrimaryEFSIP
+      SecurityGroups:
+        - !Ref SecurityGroup
+
+  EFSMountTargetB:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref EFSFileSystem
+      SubnetId: !Ref SubnetB
+      IpAddress: !Ref SecondaryEFSIP
+      SecurityGroups:
+        - !Ref SecurityGroup
+
   # IAM Role
   EC2InstanceRole:
     Type: AWS::IAM::Role
@@ -213,79 +252,83 @@ Resources:
 
   # EC2 Instances
   Primary:
-    SpotFleetRequestConfigData:
-      IamFleetRole: !Ref SpotFleetInstanceRole
-      TerminateInstancesWithExpiration: false
-      InstanceInterruptionBehavior: stop
-      TargetCapacity: 1
-      LaunchSpecifications:
-        - BlockDeviceMappings:
-            - DeviceName: /dev/sda1
-              Ebs:
+    Type: AWS::EC2::SpotFleet
+    Properties:
+      SpotFleetRequestConfigData:
+        IamFleetRole: !GetAtt SpotFleetInstanceRole.Arn
+        TerminateInstancesWithExpiration: false
+        InstanceInterruptionBehavior: stop
+        TargetCapacity: 1
+        LaunchSpecifications:
+          - BlockDeviceMappings:
+              - DeviceName: /dev/sda1
+                Ebs:
+                  DeleteOnTermination: true
+                  Encrypted: true
+                  Iops: 3000
+                  VolumeSize: 10
+                  VolumeType: gp3
+            IamInstanceProfile:
+              Arn: !GetAtt EC2InstanceProfile.Arn
+            KeyName: !Ref SSHPemFilename
+            ImageId: !Ref AMIID
+            InstanceType: t3.small
+            Monitoring:
+              Enabled: false
+            NetworkInterfaces:
+              - AssociatePublicIpAddress: true
                 DeleteOnTermination: true
-                Encrypted: true
-                Iops: 3000
-                VolumeSize: 10
-                VolumeType: gp3
-          EbsOptimized: true
-          IamInstanceProfile:
-            Arn: !GetAtt EC2InstanceProfile.Arn
-          ImageId: !Ref AMIID
-          InstanceType: t3.small
-          Monitoring:
-            Enabled: false
-          NetworkInterfaces:
-            - AssociatePublicIpAddress: true
-              DeleteOnTermination: true
-              Description: Primary server
-              DeviceIndex: 0
-              PrivateIpAddresses:
-                - Primary: true
-                  PrivateIpAddress: !Ref PrimaryIP
-              Groups:
-                - !Ref SecurityGroup
-              SubnetId: !Ref SubnetA
-          SpotPrice: 1
-          TagSpecifications:
-            - ResourceType: instance
-              Tags:
-                - Key: Name
-                  Value: primary
-          UserData:
-            Fn::Base64: !Sub
-              - |
-                #!/bin/bash
-                LOG=/var/log/user-data.log
-                touch $LOG
-                exec >> $LOG 2>&1
-                  echo '8.4' > /etc/yum/vars/releasever
-                  echo '8.4' > /etc/dnf/vars/releasever
-                  dnf update -y
-                  dnf install -y python3-pip nfs-utils git vim*
-                  pip3 install --upgrade requests
-                  mkdir -p /etc/vim/undo
-                  mkdir -p /etc/vim/backup
-                  rm /etc/vimrc
-                  curl -L https://raw.githubusercontent.com/tuimac/tools/master/vim/vimrc -o /etc/vimrc
-                  chmod -R 777 /etc/vim
-                  echo 'if [ -n "$BASH_VERSION" -o -n "$KSH_VERSION" -o -n "$ZSH_VERSION" ]; then
-                    [ -x /usr/bin/id ] || return
-                    ID=`/usr/bin/id -u`
-                    #[ -n "$ID" -a "$ID" -le 200 ] && return
-                    # for bash and zsh, only if no alias is already set
-                    alias vi >/dev/null 2>&1 || alias vi=vim
-                  fi' > /etc/profile.d/vim.sh
-                  echo ${PrimaryIP}' primary.tuimac.com' >> /etc/hosts
-                  echo ${SecondaryIP}' secondary.tuimac.com' >> /etc/hosts
-                  echo 'primary.tuimac.com' > /etc/hostname
-                  sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
-                  cd /home/ec2-user
-                  git clone https://github.com/tuimac/tools.git; echo "cloned"
-                  chown ec2-user:ec2-user -R /home/ec2-user/tools
-                  runuser -l ec2-user -c "git config --global user.email 'tuimac.devadm01@gmail.com'"
-                  runuser -l ec2-user -c "git config --global user.name 'tuimac'"
-                  reboot
-              - {
-                  PRIMARYIP: !Ref PrimaryIP,
-                  SECONDARYIP: !Ref SecondaryIP,
-                }
+                Description: Primary server
+                DeviceIndex: 0
+                PrivateIpAddresses:
+                  - Primary: true
+                    PrivateIpAddress: !Ref PrimaryEC2IP
+                Groups:
+                  - !Ref SecurityGroup
+                SubnetId: !Ref SubnetA
+            SpotPrice: 1
+            TagSpecifications:
+              - ResourceType: instance
+                Tags:
+                  - Key: Name
+                    Value: primary
+            UserData:
+              Fn::Base64: !Sub
+                - |
+                  #!/bin/bash
+                  LOG=/var/log/user-data.log
+                  touch $LOG
+                  exec >> $LOG 2>&1
+                    echo '8.4' > /etc/yum/vars/releasever
+                    echo '8.4' > /etc/dnf/vars/releasever
+                    dnf update -y
+                    dnf install -y python3-pip nfs-utils git vim*
+                    pip3 install --upgrade requests
+                    mkdir -p /etc/vim/undo
+                    mkdir -p /etc/vim/backup
+                    rm /etc/vimrc
+                    curl -L https://raw.githubusercontent.com/tuimac/tools/master/vim/vimrc -o /etc/vimrc
+                    chmod -R 777 /etc/vim
+                    echo 'if [ -n "$BASH_VERSION" -o -n "$KSH_VERSION" -o -n "$ZSH_VERSION" ]; then
+                      [ -x /usr/bin/id ] || return
+                      ID=`/usr/bin/id -u`
+                      #[ -n "$ID" -a "$ID" -le 200 ] && return
+                      # for bash and zsh, only if no alias is already set
+                      alias vi >/dev/null 2>&1 || alias vi=vim
+                    fi' > /etc/profile.d/vim.sh
+                    echo ${EFSIP}' efs.tuimac.com' >> /etc/hosts
+                    echo ${PRIMARYEC2IP}' primary.tuimac.com' >> /etc/hosts
+                    echo ${SECONDARYEC2IP}' secondary.tuimac.com' >> /etc/hosts
+                    hostnamectl set-hostname 'primary.tuimac.com'
+                    sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
+                    cd /home/ec2-user
+                    git clone https://github.com/tuimac/tools.git; echo "cloned"
+                    chown ec2-user:ec2-user -R /home/ec2-user/tools
+                    runuser -l ec2-user -c "git config --global user.email 'tuimac.devadm01@gmail.com'"
+                    runuser -l ec2-user -c "git config --global user.name 'tuimac'"
+                    reboot
+                - {
+                    PRIMARYEC2IP: !Ref PrimaryEC2IP,
+                    SECONDARYEC2IP: !Ref SecondaryEC2IP,
+                    EFSIP: !Ref PrimaryEFSIP,
+                  }
