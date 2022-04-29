@@ -360,11 +360,13 @@ Resources:
                     chown ec2-user:ec2-user -R /home/ec2-user/efs
                     echo 'export BACKUP_VAULT='${BACKUP_VAULT} >> /etc/profile
                     echo 'export BACKUP_ROLE_ARN='${BACKUP_ROLE_ARN} >> /etc/profile
+                    echo 'export EFS_ARN='${EFS_ARN} >> /etc/profile
                     reboot
                 - {
                     PRIMARYEC2IP: !Ref PrimaryEC2IP,
                     BACKUP_VAULT: !Ref AWSBackupVault,
                     BACKUP_ROLE_ARN: !GetAtt AWSBackupServiceRole.Arn
+                    EFS_ARN: !GetAtt EFSFileSystem.Arn
                     SECONDARYEC2IP: !Ref SecondaryEC2IP,
                     EFSIP: !Ref PrimaryEFSIP,
                   }
