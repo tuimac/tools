@@ -1,0 +1,291 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Create RedHat Enterprise Linux 389 directory service replication environment
+
+Parameters:
+  VpcCidr:
+    Type: String
+    Default: 10.0.0.0/27
+
+  SubnetACidr:
+    Type: String
+    Default: 10.0.0.0/28
+
+  SubnetBCidr:
+    Type: String
+    Default: 10.0.0.16/28
+
+  PrimaryIP:
+    Type: String
+    Default: 10.0.0.4
+
+  SecondaryIP:
+    Type: String
+    Default: 10.0.0.20
+
+  AMIID:
+    Type: String
+    Default: ami-0a46491bf29e538d1
+    Description: RHEL-8.4.0_HVM-20210825-x86_64-0-Hourly2-GP2
+
+  SSHPemFilename:
+    Type: String
+    Default: tuimac
+
+  TagKey:
+    Type: String
+    Default: Name
+
+  TagValue:
+    Type: String
+    Default: efs-test
+
+Resources:
+  # VPC
+  Vpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCidr
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      InstanceTenancy: default
+      Tags:
+        - Key: !Ref TagKey
+          Value: !Ref TagValue
+ 
+  # Internet Gateway
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: !Ref TagKey
+          Value: !Ref TagValue
+
+  InternetGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref Vpc
+
+  # Subnet
+  SubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      CidrBlock: !Ref SubnetACidr
+      AvailabilityZone: ap-northeast-3a
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: !Ref TagKey
+          Value: !Ref TagValue
+
+  SubnetB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      CidrBlock: !Ref SubnetBCidr
+      AvailabilityZone: ap-northeast-3b
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: !Ref TagKey
+          Value: !Ref TagValue
+
+  # RouteTable
+  RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref Vpc
+      Tags:
+        - Key: !Ref TagKey
+          Value: !Ref TagValue
+
+  InternetRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref RouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  RouteTableAccociationA:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref RouteTable
+      SubnetId: !Ref SubnetA
+
+  RouteTableAccociationB:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref RouteTable
+      SubnetId: !Ref SubnetB
+
+  # Security Group
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Ref TagValue
+      GroupDescription: for test
+      VpcId: !Ref Vpc
+      SecurityGroupIngress:
+        - IpProtocol: -1
+          CidrIp: !Ref VpcCidr
+          Description: ANY
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+          Description: ANY
+      Tags:
+        - Key: !Ref TagKey
+          Value: !Ref TagValue
+
+  # Endpoint
+  S3Endpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PolicyDocument: '{
+        "Version": "2012-10-17",
+        "Statement":[{
+          "Effect": "Allow",
+          "Principal": "*",
+          "Action": "*",
+          "Resource": "*"
+        }]
+      }'
+      RouteTableIds:
+        - !Ref RouteTable
+      ServiceName: !Sub com.amazonaws.${AWS::Region}.s3
+      VpcId: !Ref Vpc
+
+  # IAM Role
+  EC2InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: EC2InstanceRole
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: EC2InstancePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "ec2:*"
+                  - "s3:*"
+                Resource:
+                  - "*"
+      Tags:
+        - Key: !Ref TagKey
+          Value: !Ref TagValue
+
+  EC2InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+        - !Ref EC2InstanceRole
+
+  SpotFleetInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: SpotFleetInstance
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - spotfleet.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonEC2SpotFleetTaggingRole
+      Tags:
+        - Key: !Ref TagKey
+          Value: !Ref TagValue
+
+  # EC2 Instances
+  Primary:
+    SpotFleetRequestConfigData:
+      IamFleetRole: !Ref SpotFleetInstanceRole
+      TerminateInstancesWithExpiration: false
+      InstanceInterruptionBehavior: stop
+      TargetCapacity: 1
+      LaunchSpecifications:
+        - BlockDeviceMappings:
+            - DeviceName: /dev/sda1
+              Ebs:
+                DeleteOnTermination: true
+                Encrypted: true
+                Iops: 3000
+                VolumeSize: 10
+                VolumeType: gp3
+          EbsOptimized: true
+          IamInstanceProfile:
+            Arn: !GetAtt EC2InstanceProfile.Arn
+          ImageId: !Ref AMIID
+          InstanceType: t3.small
+          Monitoring:
+            Enabled: false
+          NetworkInterfaces:
+            - AssociatePublicIpAddress: true
+              DeleteOnTermination: true
+              Description: Primary server
+              DeviceIndex: 0
+              PrivateIpAddresses:
+                - Primary: true
+                  PrivateIpAddress: !Ref PrimaryIP
+              Groups:
+                - !Ref SecurityGroup
+              SubnetId: !Ref SubnetA
+          SpotPrice: 1
+          TagSpecifications:
+            - ResourceType: instance
+              Tags:
+                - Key: Name
+                  Value: primary
+          UserData:
+            Fn::Base64: !Sub
+              - |
+                #!/bin/bash
+                LOG=/var/log/user-data.log
+                touch $LOG
+                exec >> $LOG 2>&1
+                  echo '8.4' > /etc/yum/vars/releasever
+                  echo '8.4' > /etc/dnf/vars/releasever
+                  dnf update -y
+                  dnf install -y python3-pip nfs-utils git vim*
+                  pip3 install --upgrade requests
+                  mkdir -p /etc/vim/undo
+                  mkdir -p /etc/vim/backup
+                  rm /etc/vimrc
+                  curl -L https://raw.githubusercontent.com/tuimac/tools/master/vim/vimrc -o /etc/vimrc
+                  chmod -R 777 /etc/vim
+                  echo 'if [ -n "$BASH_VERSION" -o -n "$KSH_VERSION" -o -n "$ZSH_VERSION" ]; then
+                    [ -x /usr/bin/id ] || return
+                    ID=`/usr/bin/id -u`
+                    #[ -n "$ID" -a "$ID" -le 200 ] && return
+                    # for bash and zsh, only if no alias is already set
+                    alias vi >/dev/null 2>&1 || alias vi=vim
+                  fi' > /etc/profile.d/vim.sh
+                  echo ${PrimaryIP}' primary.tuimac.com' >> /etc/hosts
+                  echo ${SecondaryIP}' secondary.tuimac.com' >> /etc/hosts
+                  echo 'primary.tuimac.com' > /etc/hostname
+                  sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
+                  cd /home/ec2-user
+                  git clone https://github.com/tuimac/tools.git; echo "cloned"
+                  chown ec2-user:ec2-user -R /home/ec2-user/tools
+                  runuser -l ec2-user -c "git config --global user.email 'tuimac.devadm01@gmail.com'"
+                  runuser -l ec2-user -c "git config --global user.name 'tuimac'"
+                  reboot
+              - {
+                  PRIMARYIP: !Ref PrimaryIP,
+                  SECONDARYIP: !Ref SecondaryIP,
+                }
