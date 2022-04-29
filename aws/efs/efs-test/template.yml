@@ -215,8 +215,7 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  - "ec2:*"
-                  - "s3:*"
+                  - "*"
                 Resource:
                   - "*"
       Tags:
@@ -246,6 +245,27 @@ Resources:
       Path: /
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonEC2SpotFleetTaggingRole
+      Tags:
+        - Key: !Ref TagKey
+          Value: !Ref TagValue
+
+  AWSBackupServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: AWSBackupServiceRole
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - backup.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForBackup
+        - arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForRestores
       Tags:
         - Key: !Ref TagKey
           Value: !Ref TagValue
@@ -304,6 +324,7 @@ Resources:
                     dnf update -y
                     dnf install -y python3-pip nfs-utils git vim*
                     pip3 install --upgrade requests
+                    pip3 install awscli
                     mkdir -p /etc/vim/undo
                     mkdir -p /etc/vim/backup
                     rm /etc/vimrc
