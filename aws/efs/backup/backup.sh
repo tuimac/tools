@@ -2,15 +2,13 @@
 
 REGION='ap-northeast-3'
 VAULT_NAME='efs-test'
+FILESYSTEM_ID='fs-03a8fc2a282ec858f'
 
 function backup(){
     aws backup start-backup-job \
         --backup-vault-name ${VAULT_NAME} \
         --resource-arn ${EFS_ARN} \
         --iam-role-arn ${BACKUP_ROLE_ARN} \
-        --start-window-minutes 60 \
-        --complete-window-minutes 10080 \
-        --lifecycle DeleteAfterDays=1 \
         --region ${REGION}
 }
 
@@ -20,7 +18,7 @@ function restore(){
         --iam-role-arn ${BACKUP_ROLE_ARN} \
         --region ${REGION} \
         --metadata '{
-            "file-system-id": "'${FILESYS_ID}'",
+            "file-system-id": "'${FILESYSTEM_ID}'",
             "Encrypted": "true",
             "PerformanceMode": "generalPurpose",
             "newFileSystem": "false"
@@ -28,7 +26,7 @@ function restore(){
 }
 
 function backup_list(){
-    aws backup describe-backup-vault \
+    aws backup list-recovery-points-by-backup-vault \
         --backup-vault-name ${VAULT_NAME} \
         --region ${REGION}
 }
