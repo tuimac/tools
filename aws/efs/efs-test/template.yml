@@ -365,8 +365,8 @@ Resources:
                 - {
                     PRIMARYEC2IP: !Ref PrimaryEC2IP,
                     BACKUP_VAULT: !Ref AWSBackupVault,
-                    BACKUP_ROLE_ARN: !GetAtt AWSBackupServiceRole.Arn
-                    EFS_ARN: !GetAtt EFSFileSystem.Arn
+                    BACKUP_ROLE_ARN: !GetAtt AWSBackupServiceRole.Arn,
+                    EFS_ARN: !GetAtt EFSFileSystem.Arn,
                     SECONDARYEC2IP: !Ref SecondaryEC2IP,
                     EFSIP: !Ref PrimaryEFSIP,
                   }
