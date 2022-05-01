@@ -199,8 +199,8 @@ Resources:
     Properties:
       BackupVaultName: !Ref TagValue
       BackupVaultTags:
-        - Key: !Ref TagKey
-          Value: !Ref TagValue
+        Key: !Ref TagKey
+        Value: !Ref TagValue
 
   # IAM Role
   EC2InstanceRole:
