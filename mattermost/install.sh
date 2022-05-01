@@ -12,6 +12,11 @@ PG_LOG_DIR='/var/log/postgresql'
 ## Mattermost
 VERSION='6.6.0'
 MM_CONF='config.json'
+DB_USER='mmuser'
+DB_PASSWORD='password'
+DB_NAME='mattermost'
+DB_CONN='postgres://'${DB_USER}':'${DB_PASSWORD}'@localhost/'${DB_NAME}'?sslmode=disable\u0026connect_timeout=10\u0026binary_parameters=yes'
+SITE_URL='http://localhost'
 
 ####################################################################
 
@@ -26,9 +31,9 @@ systemctl start postgresql.service
 systemctl enable postgresql.service
 
 # Configure database for Mattermost
-sudo -u postgres -i psql -c "CREATE DATABASE mattermost WITH ENCODING 'UTF8' LC_COLLATE='en_US.UTF-8' LC_CTYPE='en_US.UTF-8' TEMPLATE=template0;"
-sudo -u postgres -i psql -c "CREATE USER mmuser WITH PASSWORD 'mmuser-password';"
-sudo -u postgres -i psql -c "GRANT ALL PRIVILEGES ON DATABASE mattermost to mmuser;"
+sudo -u postgres -i psql -c "CREATE DATABASE "${DB_NAME}" WITH ENCODING 'UTF8' LC_COLLATE='en_US.UTF-8' LC_CTYPE='en_US.UTF-8' TEMPLATE=template0;"
+sudo -u postgres -i psql -c "CREATE USER "${DB_USER}" WITH PASSWORD '"${DB_PASSWORD}"';"
+sudo -u postgres -i psql -c "GRANT ALL PRIVILEGES ON DATABASE "${DB_NAME}" to "${DB_USER}";"
 
 # Configure PostgreSQL for Mattermost
 
@@ -86,6 +91,10 @@ EOF
 systemctl reload postgresql
 
 # Install Mattermost
+## Install to configuration tool
+yum install -y jq
+
+## Download Mattermost package and install it
 curl -L https://releases.mattermost.com/${VERSION}/mattermost-${VERSION}-linux-amd64.tar.gz -o mattermost.tar.gz
 tar -xvzf mattermost.tar.gz
 mv mattermost /opt
@@ -93,5 +102,13 @@ mkdir /opt/mattermost/data
 useradd --system --user-group mattermost
 chown -R mattermost:mattermost /opt/mattermost
 chmod -R g+w /opt/mattermost
-cp config.json /opt/mattermost/config/
+
+## Overwrite the config file for Mattermost
+jq -r '.SqlSettings.DriverName = postgres' config.json > config_new.json
+jq -r --arg DB_CONN "$DB_CONN" '.SqlSettings.DataSource = $DB_CONN' config.json > config_new.json
+sed -i 's/\\\\/\\/g' config_new.json
+mv config_new.json config.json
+
+
+
 
