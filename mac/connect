@@ -5,8 +5,8 @@ function connectionList(){
 }
 
 function connectToSession(){
-    local hostname=$1
-    local username=
+    local username=`echo $1 | awk -F '@' '{print $1}'`
+    local hostname=`echo $1 | awk -F '@' '{print $2}'`
     # Search the target instance ID
     local instanceId=`aws ssm describe-instance-information | jq -r --arg hostname "$hostname" '.InstanceInformationList[] | select(.Name==$hostname) | .InstanceId'`
     # Connect to the target host
@@ -14,11 +14,11 @@ function connectToSession(){
 }
 
 function userguide(){
-    echo -e "usage: connect [start | list ]"
+    echo -e "usage: connect [start <user>@<session name> | list ]"
     echo -e "
 optional arguments:
-start          Install 389 Directory Service into your server.
-client-install          Install SSSD into your server.
+start           Start the connection to the target host.
+list            List the available connections.
 "
 
 }
