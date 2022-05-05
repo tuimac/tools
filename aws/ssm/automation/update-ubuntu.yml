@@ -12,7 +12,7 @@ mainSteps:
       Service: ssm
       Api: DescribeInstanceInformation
       Filters:
-        - Name: tag:Name
+        - Key: tag:Name
           Values:
             - '{{ NodeName }}'
     outputs:
