@@ -17,8 +17,9 @@ function runContainer(){
                 -h ${NAME} \
                 -p 5432:5432 \
                 ${NAME}
-    cp conf/postgresql.conf volume/
-    cp conf/pg_hba.conf volume/
+    sleep 3
+    sudo cp conf/postgresql.conf ${VOLUME}
+    sudo cp conf/pg_hba.conf ${VOLUME}
     docker restart ${NAME}
 }
 

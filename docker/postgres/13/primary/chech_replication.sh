@@ -2,6 +2,8 @@
 
 export PGPASSWORD='password'
 
-docker exec -it postgresql psql -U test -h localhost -c 'select * from pg_stat_replication;'
+docker exec postgresql psql -U test -h localhost -c 'select * from pg_stat_replication;'
 echo '########################################################################################'
-docker exec -it postgresql psql -U test -h localhost -c 'select * from pg_stat_activity;'
+docker exec postgresql psql -t -U test -h localhost -c "select sync_state from pg_stat_replication where application_name = 'node1';"
+echo '########################################################################################'
+docker exec postgresql psql -U test -h localhost -c 'select * from pg_stat_activity;'
