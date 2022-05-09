@@ -5,24 +5,21 @@
 NAME='postgresql'
 VOLUME="${PWD}/volume"
 BACKUP="${PWD}/backup"
-DATA='/var/lib/postgresql/data'
 ##############################
 
 function runContainer(){
     docker run -itd --name ${NAME} \
-                -v ${VOLUME}:${DATA}:Z \
-                -v $(pwd)/conf:/etc/postgresql:Z \
-                -v ${BACKUP}:/var/lib/postgresql/backup:Z \
+                -v ${VOLUME}:/var/lib/postgresql/data \
+                -v ${BACKUP}:/var/lib/postgresql/backup \
                 -e POSTGRES_PASSWORD=password \
                 -e POSTGRES_USER=test \
                 -e POSTGRES_DB=test \
                 -h ${NAME} \
                 -p 5432:5432 \
-                ${NAME} \
-                postgres -c config_file=/etc/postgresql/postgresql.conf \
-                -c hba_file=/etc/postgresql/pg_hba.conf
-    docker stop ${NAME}
-    docker start ${NAME}
+                ${NAME}
+    cp conf/postgresql.conf volume/
+    cp conf/pg_hba.conf volume/
+    docker restart ${NAME}
 }
 
 function cleanup(){
