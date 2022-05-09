@@ -206,6 +206,7 @@ Resources:
           PrivateIpAddress: !Ref PrimaryIP
       IamInstanceProfile: !Ref EC2InstanceProfile
       SourceDestCheck: false
+      KeyName: !Ref SSHPemFilename
       Tags:
         - Key: Name
           Value: primary
