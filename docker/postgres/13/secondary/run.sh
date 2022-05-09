@@ -4,20 +4,16 @@
 ##############################
 NAME="postgresql"
 VOLUME="${PWD}/volume"
-DATA='/var/lib/postgresql/data'
 ##############################
 
 function runContainer(){
+    cp conf/postgresql.conf ${VOLUME}
+    sudo rm ${VOLUME}/postgresql.auto.conf
     docker run -itd --name ${NAME} \
-                -v ${VOLUME}:${DATA}:Z \
-		        -v $(pwd)/conf:/etc/postgresql:Z \
+                -v ${VOLUME}:/var/lib/postgresql/data \
                 -h ${NAME} \
                 -p 5432:5432 \
-                ${NAME} \
-		        postgres -c config_file=/etc/postgresql/postgresql.conf \
-                -c hba_file=/etc/postgresql/pg_hba.conf
-    docker stop ${NAME}
-    docker start ${NAME}
+                ${NAME}
 }
 
 function cleanup(){
