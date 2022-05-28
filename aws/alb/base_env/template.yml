@@ -1,0 +1,500 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Create RedHat Enterprise Linux 389 directory service replication environment
+
+Parameters:
+  VpcCidr:
+    Type: String
+    Default: 10.0.0.0/27
+
+  SubnetACidr:
+    Type: String
+    Default: 10.0.0.0/28
+
+  SubnetBCidr:
+    Type: String
+    Default: 10.0.0.16/28
+
+  AMIID:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
+    Description: Latest Amazon Linux 2 AMI
+
+  SSHPemFilename:
+    Type: String
+    Default: tuimac
+
+  TagKey:
+    Type: String
+    Default: Name
+
+  TagValue:
+    Type: String
+    Default: alb-sorry
+
+  Port:
+    Type: String
+    Default: 80
+
+Resources:
+  # VPC
+  Vpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCidr
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      InstanceTenancy: default
+      Tags:
+        - Key: !Ref TagKey
+          Value: !Ref TagValue
+ 
+  # Internet Gateway
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: !Ref TagKey
+          Value: !Ref TagValue
+
+  InternetGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref Vpc
+
+  # Subnet
+  SubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      CidrBlock: !Ref SubnetACidr
+      AvailabilityZone: ap-northeast-3a
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: !Ref TagKey
+          Value: !Ref TagValue
+
+  SubnetB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      CidrBlock: !Ref SubnetBCidr
+      AvailabilityZone: ap-northeast-3b
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: !Ref TagKey
+          Value: !Ref TagValue
+
+  # RouteTable
+  RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref Vpc
+      Tags:
+        - Key: !Ref TagKey
+          Value: !Ref TagValue
+
+  InternetRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref RouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  RouteTableAccociationA:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref RouteTable
+      SubnetId: !Ref SubnetA
+
+  RouteTableAccociationB:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref RouteTable
+      SubnetId: !Ref SubnetB
+
+  # Security Group
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Ref TagValue
+      GroupDescription: for test
+      VpcId: !Ref Vpc
+      SecurityGroupIngress:
+        - IpProtocol: -1
+          CidrIp: !Ref VpcCidr
+          Description: ANY
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+          Description: ANY
+      Tags:
+        - Key: !Ref TagKey
+          Value: !Ref TagValue
+
+  # Endpoint
+  S3Endpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PolicyDocument: '{
+        "Version": "2012-10-17",
+        "Statement":[{
+          "Effect": "Allow",
+          "Principal": "*",
+          "Action": "*",
+          "Resource": "*"
+        }]
+      }'
+      RouteTableIds:
+        - !Ref RouteTable
+      ServiceName: !Sub com.amazonaws.${AWS::Region}.s3
+      VpcId: !Ref Vpc
+
+  EC2InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: EC2InstanceRole
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: EC2InstancePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "ec2:*"
+                  - "s3:*"
+                Resource:
+                  - "*"
+      Tags:
+        - Key: !Ref TagKey
+          Value: !Ref TagValue
+
+  EC2InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+        - !Ref EC2InstanceRole
+
+  # EC2 Instance
+  Primary1:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref AMIID
+      InstanceType: t3.micro
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: true
+          DeleteOnTermination: true
+          Description: Primary1 ENI
+          GroupSet:
+            - !Ref SecurityGroup
+          SubnetId: !Ref SubnetA
+          DeviceIndex: 0
+      IamInstanceProfile: !Ref EC2InstanceProfile
+      SourceDestCheck: false
+      KeyName: !Ref SSHPemFilename
+      Tags:
+        - Key: Name
+          Value: primary1
+      UserData:
+        Fn::Base64: !Sub
+          - |
+            #!/bin/bash
+            LOG=/var/log/user-data.log
+            touch $LOG
+            exec >> $LOG 2>&1
+              yum update -y
+              yum install -y docker git
+              mkdir -p /etc/vim/undo
+              mkdir -p /etc/vim/backup
+              rm /etc/vimrc
+              curl -L https://raw.githubusercontent.com/tuimac/tools/master/vim/vimrc -o /etc/vimrc
+              chmod -R 777 /etc/vim
+              echo 'if [ -n "$BASH_VERSION" -o -n "$KSH_VERSION" -o -n "$ZSH_VERSION" ]; then
+                [ -x /usr/bin/id ] || return
+                ID=`/usr/bin/id -u`
+                #[ -n "$ID" -a "$ID" -le 200 ] && return
+                # for bash and zsh, only if no alias is already set
+                alias vi >/dev/null 2>&1 || alias vi=vim
+              fi' > /etc/profile.d/vim.sh
+              systemctl enable docker
+              systemctl start docker
+              usermod -aG docker ec2-user
+              CONTENT=`curl http://169.254.169.254/latest/dynamic/instance-identity/document`
+              cat << EOF > index.html
+<pre>${CONTENT}</pre>
+              EOF
+              docker run -itd --name nginx -p ${PORT}:80 nginx
+              docker cp index.html nginx:/usr/share/nginx/html/
+          - {
+              PORT: !Ref Port,
+            }
+
+  Primary2:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref AMIID
+      InstanceType: t3.micro
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: true
+          DeleteOnTermination: true
+          Description: Primary2 ENI
+          GroupSet:
+            - !Ref SecurityGroup
+          SubnetId: !Ref SubnetA
+          DeviceIndex: 0
+      IamInstanceProfile: !Ref EC2InstanceProfile
+      SourceDestCheck: false
+      KeyName: !Ref SSHPemFilename
+      Tags:
+        - Key: Name
+          Value: primary2
+      UserData:
+        Fn::Base64: !Sub
+          - |
+            #!/bin/bash
+            LOG=/var/log/user-data.log
+            touch $LOG
+            exec >> $LOG 2>&1
+              yum update -y
+              yum install -y docker git
+              mkdir -p /etc/vim/undo
+              mkdir -p /etc/vim/backup
+              rm /etc/vimrc
+              curl -L https://raw.githubusercontent.com/tuimac/tools/master/vim/vimrc -o /etc/vimrc
+              chmod -R 777 /etc/vim
+              echo 'if [ -n "$BASH_VERSION" -o -n "$KSH_VERSION" -o -n "$ZSH_VERSION" ]; then
+                [ -x /usr/bin/id ] || return
+                ID=`/usr/bin/id -u`
+                #[ -n "$ID" -a "$ID" -le 200 ] && return
+                # for bash and zsh, only if no alias is already set
+                alias vi >/dev/null 2>&1 || alias vi=vim
+              fi' > /etc/profile.d/vim.sh
+              systemctl enable docker
+              systemctl start docker
+              usermod -aG docker ec2-user
+              CONTENT=`curl http://169.254.169.254/latest/dynamic/instance-identity/document`
+              cat << EOF > index.html
+<pre>${CONTENT}</pre>
+              EOF
+              docker run -itd --name nginx -p ${PORT}:80 nginx
+              docker cp index.html nginx:/usr/share/nginx/html/
+          - {
+              PORT: !Ref Port,
+            }
+
+  Secondary1:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref AMIID
+      InstanceType: t3.micro
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: true
+          DeleteOnTermination: true
+          Description: Secondary1 ENI
+          GroupSet:
+            - !Ref SecurityGroup
+          SubnetId: !Ref SubnetB
+          DeviceIndex: 0
+      IamInstanceProfile: !Ref EC2InstanceProfile
+      SourceDestCheck: false
+      KeyName: !Ref SSHPemFilename
+      Tags:
+        - Key: Name
+          Value: secondary1
+      UserData:
+        Fn::Base64: !Sub
+          - |
+            #!/bin/bash
+            LOG=/var/log/user-data.log
+            touch $LOG
+            exec >> $LOG 2>&1
+              yum update -y
+              yum install -y docker git
+              mkdir -p /etc/vim/undo
+              mkdir -p /etc/vim/backup
+              rm /etc/vimrc
+              curl -L https://raw.githubusercontent.com/tuimac/tools/master/vim/vimrc -o /etc/vimrc
+              chmod -R 777 /etc/vim
+              echo 'if [ -n "$BASH_VERSION" -o -n "$KSH_VERSION" -o -n "$ZSH_VERSION" ]; then
+                [ -x /usr/bin/id ] || return
+                ID=`/usr/bin/id -u`
+                #[ -n "$ID" -a "$ID" -le 200 ] && return
+                # for bash and zsh, only if no alias is already set
+                alias vi >/dev/null 2>&1 || alias vi=vim
+              fi' > /etc/profile.d/vim.sh
+              systemctl enable docker
+              systemctl start docker
+              usermod -aG docker ec2-user
+              CONTENT=`curl http://169.254.169.254/latest/dynamic/instance-identity/document`
+              cat << EOF > index.html
+<pre>${CONTENT}</pre>
+              EOF
+              docker run -itd --name nginx -p ${PORT}:80 nginx
+              docker cp index.html nginx:/usr/share/nginx/html/
+          - {
+              PORT: !Ref Port,
+            }
+
+  Secondary2:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref AMIID
+      InstanceType: t3.micro
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: true
+          DeleteOnTermination: true
+          Description: Secondary1 ENI
+          GroupSet:
+            - !Ref SecurityGroup
+          SubnetId: !Ref SubnetB
+          DeviceIndex: 0
+      IamInstanceProfile: !Ref EC2InstanceProfile
+      SourceDestCheck: false
+      KeyName: !Ref SSHPemFilename
+      Tags:
+        - Key: Name
+          Value: secondary1
+      UserData:
+        Fn::Base64: !Sub
+          - |
+            #!/bin/bash
+            LOG=/var/log/user-data.log
+            touch $LOG
+            exec >> $LOG 2>&1
+              yum update -y
+              yum install -y docker git
+              mkdir -p /etc/vim/undo
+              mkdir -p /etc/vim/backup
+              rm /etc/vimrc
+              curl -L https://raw.githubusercontent.com/tuimac/tools/master/vim/vimrc -o /etc/vimrc
+              chmod -R 777 /etc/vim
+              echo 'if [ -n "$BASH_VERSION" -o -n "$KSH_VERSION" -o -n "$ZSH_VERSION" ]; then
+                [ -x /usr/bin/id ] || return
+                ID=`/usr/bin/id -u`
+                #[ -n "$ID" -a "$ID" -le 200 ] && return
+                # for bash and zsh, only if no alias is already set
+                alias vi >/dev/null 2>&1 || alias vi=vim
+              fi' > /etc/profile.d/vim.sh
+              systemctl enable docker
+              systemctl start docker
+              usermod -aG docker ec2-user
+              CONTENT=`curl http://169.254.169.254/latest/dynamic/instance-identity/document`
+              cat << EOF > index.html
+<pre>${CONTENT}</pre>
+              EOF
+              docker run -itd --name nginx -p ${PORT}:80 nginx
+              docker cp index.html nginx:/usr/share/nginx/html/
+          - {
+              PORT: !Ref Port,
+            }
+
+  PrimaryTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckEnabled: true
+      HealthCheckIntervalSeconds: 5
+      HealthCheckPath: /
+      HealthCheckPort: !Ref Port
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 2
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 2
+      IpAddressType: ipv4
+      Name: !Sub ${TagValue}-primary
+      VpcId: !Ref Vpc
+      Port: !Ref Port
+      Protocol: HTTP
+      ProtocolVersion: HTTP1
+      Tags:
+        - Key: !Ref TagKey
+          Value: primary
+      TargetType: instance
+      Targets:
+        - Id: !Ref Primary1
+        - Id: !Ref Primary2
+
+  SecondaryTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckEnabled: true
+      HealthCheckIntervalSeconds: 5
+      HealthCheckPath: /
+      HealthCheckPort: !Ref Port
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 2
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 2
+      IpAddressType: ipv4
+      Name: !Sub ${TagValue}-secondary
+      VpcId: !Ref Vpc
+      Port: !Ref Port
+      Protocol: HTTP
+      ProtocolVersion: HTTP1
+      Tags:
+        - Key: !Ref TagKey
+          Value: secondary
+      TargetType: instance
+      Targets:
+        - Id: !Ref Secondary1
+        - Id: !Ref Secondary2
+
+  ALB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Type: application
+      IpAddressType: ipv4
+      Name: !Ref TagValue
+      Scheme: internet-facing
+      SecurityGroups:
+        - !Ref SecurityGroup
+      SubnetMappings:
+        - SubnetId: !Ref SubnetA
+        - SubnetId: !Ref SubnetB
+      Tags:
+        - Key: !Ref TagKey
+          Value: !Ref TagValue
+      LoadBalancerAttributes:
+        - Key: deletion_protection.enabled
+          Value: false
+        - Key: access_logs.s3.enabled
+          Value: false
+        - Key: idle_timeout.timeout_seconds
+          Value: 600
+        - Key: routing.http.desync_mitigation_mode
+          Value: defensive
+        - Key: routing.http.drop_invalid_header_fields.enabled
+          Value: false
+        - Key: routing.http.x_amzn_tls_version_and_cipher_suite.enabled
+          Value: false
+        - Key: routing.http.xff_client_port.enabled
+          Value: true
+        - Key: routing.http2.enabled
+          Value: true
+        - Key: waf.fail_open.enabled
+          Value: false
+
+  ALBListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref ALB
+      Port: !Ref Port
+      Protocol: HTTP
+      DefaultActions:
+        - Type: forward
+          ForwardConfig:
+            TargetGroups:
+              - TargetGroupArn: !Ref PrimaryTargetGroup
+                Weight: 1
+              - TargetGroupArn: !Ref SecondaryTargetGroup
+                Weight: 0
