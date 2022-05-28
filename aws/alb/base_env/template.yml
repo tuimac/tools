@@ -401,6 +401,9 @@ Resources:
 
   PrimaryTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    DependsOn:
+      - Primary1
+      - Primary2
     Properties:
       HealthCheckEnabled: true
       HealthCheckIntervalSeconds: 5
@@ -417,7 +420,7 @@ Resources:
       Protocol: HTTP
       ProtocolVersion: HTTP1
       Tags:
-        - Key: !Ref TagKey
+        - Key: Name
           Value: primary
       TargetType: instance
       Targets:
@@ -426,6 +429,9 @@ Resources:
 
   SecondaryTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    DependsOn:
+      - Secondary1
+      - Secondary2
     Properties:
       HealthCheckEnabled: true
       HealthCheckIntervalSeconds: 5
@@ -442,7 +448,7 @@ Resources:
       Protocol: HTTP
       ProtocolVersion: HTTP1
       Tags:
-        - Key: !Ref TagKey
+        - Key: Name
           Value: secondary
       TargetType: instance
       Targets:
@@ -451,6 +457,9 @@ Resources:
 
   ALB:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    DependsOn:
+      - PrimaryTargetGroup
+      - SecondaryTargetGroup
     Properties:
       Type: application
       IpAddressType: ipv4
