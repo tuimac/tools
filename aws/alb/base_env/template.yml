@@ -231,9 +231,9 @@ Resources:
               systemctl start docker
               usermod -aG docker ec2-user
               CONTENT=`curl http://169.254.169.254/latest/dynamic/instance-identity/document`
-              cat << EOF > index.html
-<pre>${CONTENT}</pre>
-              EOF
+              cat <<EOF > index.html
+            <pre>$CONTENT</pre>
+            EOF
               docker run -itd --name nginx -p ${PORT}:80 nginx
               docker cp index.html nginx:/usr/share/nginx/html/
           - {
@@ -285,8 +285,8 @@ Resources:
               usermod -aG docker ec2-user
               CONTENT=`curl http://169.254.169.254/latest/dynamic/instance-identity/document`
               cat << EOF > index.html
-<pre>${CONTENT}</pre>
-              EOF
+            <pre>$CONTENT</pre>
+            EOF
               docker run -itd --name nginx -p ${PORT}:80 nginx
               docker cp index.html nginx:/usr/share/nginx/html/
           - {
@@ -338,8 +338,8 @@ Resources:
               usermod -aG docker ec2-user
               CONTENT=`curl http://169.254.169.254/latest/dynamic/instance-identity/document`
               cat << EOF > index.html
-<pre>${CONTENT}</pre>
-              EOF
+            <pre>$CONTENT</pre>
+            EOF
               docker run -itd --name nginx -p ${PORT}:80 nginx
               docker cp index.html nginx:/usr/share/nginx/html/
           - {
@@ -391,8 +391,8 @@ Resources:
               usermod -aG docker ec2-user
               CONTENT=`curl http://169.254.169.254/latest/dynamic/instance-identity/document`
               cat << EOF > index.html
-<pre>${CONTENT}</pre>
-              EOF
+            <pre>$CONTENT</pre>
+            EOF
               docker run -itd --name nginx -p ${PORT}:80 nginx
               docker cp index.html nginx:/usr/share/nginx/html/
           - {
