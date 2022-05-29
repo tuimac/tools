@@ -150,6 +150,36 @@ Resources:
       ServiceName: !Sub com.amazonaws.${AWS::Region}.s3
       VpcId: !Ref Vpc
 
+  # IAM Role
+  SorryLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${TagValue}-Role
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: !Sub ${TagValue}-Policy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "elbv2:CreateRule"
+                  - "logs:*"
+                Resource:
+                  - "*"
+      Tags:
+        - Key: !Ref TagKey
+          Value: !Ref TagValue
+
   EC2InstanceRole:
     Type: AWS::IAM::Role
     Properties:
@@ -430,7 +460,8 @@ Resources:
           - {
               PORT: !Ref Port,
             }
-
+  
+  # Application LoadBalancer
   PrimaryTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     DependsOn:
@@ -540,3 +571,45 @@ Resources:
                 Weight: 1
               - TargetGroupArn: !Ref SecondaryTargetGroup
                 Weight: 0
+  
+  # Lambda
+  SorryLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        ZipFile: |
+          import json
+          import boto3
+
+          def lambda_handler(event, context):
+              elbv2 = boto3.client('elbv2')
+              elbv2.create_rule(
+                  ListenerArn = '',
+                  Conditions = [
+                      {
+                          'Field': 'path-pattern',
+                          'Values': ['*']
+                      }
+                  ],
+                  Priority = 1,
+                  Actions = [
+                      {
+                          'Type': 'fixed-response',
+                          'Order': 1,
+                          'FixedResponseConfig': {
+                              'MessageBody': '<h1>Sorry!</h1>',
+                              'StatusCode': '503',
+                              'ContentType': 'text/html'
+                          }
+                      }
+                  ]
+              )
+      Runtime: python3.8
+      Timeout: 90
+      Handler: index.handler
+      MemorySize: 128
+      FunctionName: SorryLambda
+      Role: !GetAtt SorryLambdaRole.Arn
+      Tags:
+        - Key: !Ref TagKey
+          Value: !Ref TagValue
