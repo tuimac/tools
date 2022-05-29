@@ -1,0 +1,318 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Create private container registry environment
+
+Parameters:
+  VpcCidr:
+    Type: String
+    Default: 10.0.0.0/28
+
+  SubnetACidr:
+    Type: String
+    Default: 10.0.0.0/28
+
+  LDAPIP:
+    Type: String
+    Default: 10.0.0.4
+
+  ClientIP:
+    Type: String
+    Default: 10.0.0.5
+
+  LDAPDomain:
+    Type: String
+    Default: ldap.tuimac.com
+
+  ClientDomain:
+    Type: String
+    Default: client.tuimac.com
+
+  AMIID:
+    Type: String
+    Default: ami-0a46491bf29e538d1
+    Description: RHEL-8.4.0_HVM-20210825-x86_64-0-Hourly2-GP2
+
+  SSHPemFilename:
+    Type: String
+    Default: tuimac
+
+  TagKey:
+    Type: String
+    Default: Name
+
+  TagValue:
+    Type: String
+    Default: 389-test
+
+Resources:
+  # VPC
+  Vpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCidr
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      InstanceTenancy: default
+      Tags:
+        - Key: !Ref TagKey
+          Value: !Ref TagValue
+ 
+  # Internet Gateway
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: !Ref TagKey
+          Value: !Ref TagValue
+
+  InternetGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref Vpc
+
+  # Subnet
+  SubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      CidrBlock: !Ref SubnetACidr
+      AvailabilityZone: ap-northeast-3a
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: !Ref TagKey
+          Value: !Ref TagValue
+
+  # RouteTable
+  RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref Vpc
+      Tags:
+        - Key: !Ref TagKey
+          Value: !Ref TagValue
+
+  InternetRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref RouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  RouteTableAccociationA:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref RouteTable
+      SubnetId: !Ref SubnetA
+
+  # Security Group
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Ref TagValue
+      GroupDescription: for test
+      VpcId: !Ref Vpc
+      SecurityGroupIngress:
+        - IpProtocol: -1
+          CidrIp: !Ref VpcCidr
+          Description: ANY
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+          Description: ANY
+      Tags:
+        - Key: !Ref TagKey
+          Value: !Ref TagValue
+
+  # IAM Role
+  EC2InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: EC2InstanceRole
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: EC2InstancePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "ec2:*"
+                Resource:
+                  - "*"
+      Tags:
+        - Key: !Ref TagKey
+          Value: !Ref TagValue
+
+  EC2InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+        - !Ref EC2InstanceRole
+
+  SpotFleetInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: SpotFleetInstance
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - spotfleet.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonEC2SpotFleetTaggingRole
+      Tags:
+        - Key: !Ref TagKey
+          Value: !Ref TagValue
+
+  # EC2 Instance
+  LDAPServer:
+    Type: AWS::EC2::SpotFleet
+    Properties:
+      SpotFleetRequestConfigData:
+        IamFleetRole: !GetAtt SpotFleetInstanceRole.Arn
+        TerminateInstancesWithExpiration: false
+        InstanceInterruptionBehavior: stop
+        TargetCapacity: 1
+        LaunchSpecifications:
+          - BlockDeviceMappings:
+              - DeviceName: /dev/sda1
+                Ebs:
+                  DeleteOnTermination: true
+                  Encrypted: true
+                  Iops: 3000
+                  VolumeSize: 10
+                  VolumeType: gp3
+            IamInstanceProfile:
+              Arn: !GetAtt EC2InstanceProfile.Arn
+            ImageId: !Ref AMIID
+            InstanceType: t3.small
+            Monitoring:
+              Enabled: false
+            NetworkInterfaces:
+              - AssociatePublicIpAddress: true
+                DeleteOnTermination: true
+                Description: LDAP Server
+                Groups:
+                  - !Ref SecurityGroup
+                SubnetId: !Ref SubnetA
+                DeviceIndex: 0
+                PrivateIpAddresses: 
+                  - Primary: true
+                    PrivateIpAddress: !Ref LDAPIP
+            IamInstanceProfile:
+              Arn: !GetAtt EC2InstanceProfile.Arn
+            SpotPrice: 1
+            KeyName: !Ref SSHPemFilename
+            TagSpecifications:
+              - ResourceType: instance
+                Tags:
+                  - Key: Name
+                    Value: ldap
+            UserData:
+              Fn::Base64:
+                - |
+                  #!/bin/bash
+                  LOG=/var/log/user-data.log
+                  touch $LOG
+                  exec >> $LOG 2>&1
+                    echo '8.4' > /etc/yum/vars/releasever
+                    echo '8.4' > /etc/dnf/vars/releasever
+                    dnf update -y
+                    dnf install -y git
+                    mkdir -p /etc/vim/undo
+                    mkdir -p /etc/vim/backup
+                    rm /etc/vimrc
+                    echo ${LDAP_IP}' '${LDAP_DOMAIN} >> /etc/hosts
+                    echo ${CLIENT_IP}' '${CLIENT_DOMAIN} >> /etc/hosts
+                    hostnamectl set-hostname ${LDAP_DOMAIN}
+                    sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
+
+                    reboot
+                - {
+                    LDAP_IP: !Ref LDAPIP,
+                    CLIENT_IP: !Ref ClientIP,
+                    LDAP_DOMAIN: !Ref LDAPDomain,
+                    CLIENT_DOMAIN: !Ref ClientDomain,
+                  }
+
+  ClientServer:
+    Type: AWS::EC2::SpotFleet
+    Properties:
+      SpotFleetRequestConfigData:
+        IamFleetRole: !GetAtt SpotFleetInstanceRole.Arn
+        TerminateInstancesWithExpiration: false
+        InstanceInterruptionBehavior: stop
+        TargetCapacity: 1
+        LaunchSpecifications:
+          - BlockDeviceMappings:
+              - DeviceName: /dev/sda1
+                Ebs:
+                  DeleteOnTermination: true
+                  Encrypted: true
+                  Iops: 3000
+                  VolumeSize: 10
+                  VolumeType: gp3
+            IamInstanceProfile:
+              Arn: !GetAtt EC2InstanceProfile.Arn
+            ImageId: !Ref AMIID
+            InstanceType: t3.small
+            Monitoring:
+              Enabled: false
+            NetworkInterfaces:
+              - AssociatePublicIpAddress: true
+                DeleteOnTermination: true
+                Description: Client Server
+                Groups:
+                  - !Ref SecurityGroup
+                SubnetId: !Ref SubnetA
+                DeviceIndex: 0
+                PrivateIpAddresses: 
+                  - Primary: true
+                    PrivateIpAddress: !Ref ClientIP
+            IamInstanceProfile:
+              Arn: !GetAtt EC2InstanceProfile.Arn
+            SpotPrice: 1
+            KeyName: !Ref SSHPemFilename
+            TagSpecifications:
+              - ResourceType: instance
+                Tags:
+                  - Key: Name
+                    Value: client
+            UserData:
+              Fn::Base64:
+                - |
+                  #!/bin/bash
+                  LOG=/var/log/user-data.log
+                  touch $LOG
+                  exec >> $LOG 2>&1
+                    echo '8.4' > /etc/yum/vars/releasever
+                    echo '8.4' > /etc/dnf/vars/releasever
+                    dnf update -y
+                    dnf install -y podman git nfs-utils
+                    echo ${LDAP_IP}' '${LDAP_DOMAIN} >> /etc/hosts
+                    echo ${CLIENT_IP}' '${CLIENT_DOMAIN} >> /etc/hosts
+                    hostnamectl set-hostname ${CLIENT_DOMAIN}
+                    sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
+                    reboot
+                - {
+                    LDAP_IP: !Ref LDAPIP,
+                    CLIENT_IP: !Ref ClientIP,
+                    LDAP_DOMAIN: !Ref LDAPDomain,
+                    CLIENT_DOMAIN: !Ref ClientDomain,
+                  }
+                
