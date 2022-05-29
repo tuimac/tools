@@ -192,6 +192,14 @@ Resources:
     Properties:
       ImageId: !Ref AMIID
       InstanceType: t3.micro
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs:
+            DeleteOnTermination: true
+            Encrypted: true
+            Iops: 3000
+            VolumeSize: 8
+            VolumeType: gp3
       NetworkInterfaces:
         - AssociatePublicIpAddress: true
           DeleteOnTermination: true
@@ -245,6 +253,14 @@ Resources:
     Properties:
       ImageId: !Ref AMIID
       InstanceType: t3.micro
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs:
+            DeleteOnTermination: true
+            Encrypted: true
+            Iops: 3000
+            VolumeSize: 8
+            VolumeType: gp3
       NetworkInterfaces:
         - AssociatePublicIpAddress: true
           DeleteOnTermination: true
@@ -298,6 +314,14 @@ Resources:
     Properties:
       ImageId: !Ref AMIID
       InstanceType: t3.micro
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs:
+            DeleteOnTermination: true
+            Encrypted: true
+            Iops: 3000
+            VolumeSize: 8
+            VolumeType: gp3
       NetworkInterfaces:
         - AssociatePublicIpAddress: true
           DeleteOnTermination: true
@@ -351,6 +375,14 @@ Resources:
     Properties:
       ImageId: !Ref AMIID
       InstanceType: t3.micro
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs:
+            DeleteOnTermination: true
+            Encrypted: true
+            Iops: 3000
+            VolumeSize: 8
+            VolumeType: gp3
       NetworkInterfaces:
         - AssociatePublicIpAddress: true
           DeleteOnTermination: true
@@ -501,6 +533,7 @@ Resources:
       Protocol: HTTP
       DefaultActions:
         - Type: forward
+          Order: 1
           ForwardConfig:
             TargetGroups:
               - TargetGroupArn: !Ref PrimaryTargetGroup
