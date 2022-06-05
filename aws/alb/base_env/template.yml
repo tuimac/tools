@@ -580,8 +580,7 @@ Resources:
         ZipFile: |
           import json
           import boto3
-
-          def lambda_handler(event, context):
+          def handler(event, context):
               elbv2 = boto3.client('elbv2')
               elbv2.create_rule(
                   ListenerArn = '',
