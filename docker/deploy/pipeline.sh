@@ -33,12 +33,10 @@ function check(){
     fi
     cd $PJT_DIR
     git checkout $REPO_BRANCH
-    git fetch $REPO_URL
-    local local=`git rev-parse HEAD`
-    local remote=`git rev-parse ${REPO_BRANCH}@{upstream}`
-    echo $local
-    echo $remote
-    if [ "$local" == "$remote" ]; then
+    git fetch origin
+    local result=`git diff origin/${REPO_BRANCH}`
+    echo $result
+    if [[ $result == '' ]]; then
         CHECK_FLAG=0
     else
         git merge
