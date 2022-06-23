@@ -3,7 +3,6 @@
 # Change variables below if you need
 ##############################
 NAME="nginx-test"
-VOLUME="${PWD}/volume"
 DOCKERHUBUSER="tuimac"
 IMAGE=${DOCKERHUBUSER}/${NAME}
 ##############################
@@ -11,20 +10,18 @@ IMAGE=${DOCKERHUBUSER}/${NAME}
 function runContainer(){
     docker run -itd --name ${NAME} \
                 -p 80:80 \
-                -v ${VOLUME}:/var/log/nginx \
-                -v $(pwd)/index.html:/tmp/index.html \
+                -v $(pwd)/log:/var/log/nginx \
+                -v $(pwd)/webapp:/usr/share/nginx \
+                -v $(pwd)/conf:/etc/nginx \
                 -h ${NAME} \
-                --network="bridge" \
                 ${NAME}
 }
 
 function cleanup(){
     docker image prune -f
-    docker container prune -f
 }
 
 function createContainer(){
-    mkdir ${VOLUME}
     docker build -t ${NAME} .
     runContainer
     cleanup
@@ -47,7 +44,6 @@ function deleteAll(){
     docker rm ${NAME}
     docker rmi ${NAME}
     cleanup
-    rm -rf ${VOLUME}
 }
 
 function commitImage(){

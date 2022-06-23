@@ -2,8 +2,6 @@ FROM alpine
 
 EXPOSE 80
 
-ADD nginx.conf /etc/nginx/nginx.conf
-
 RUN apk update && \
     apk upgrade && \
     apk add --no-cache nginx
