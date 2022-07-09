@@ -5,8 +5,8 @@ function genCert(){
     mkdir -p certs
     openssl req \
         -newkey rsa:4096 -nodes -sha256 -keyout certs/domain.key \
-        -addext "subjectAltName = DNS:"${DOMAIM} \
-        -subj "/C=JP/ST=Osaka/L=Osaka/O=tuimac/OU=tuimac/CN="${DOMAIM} \
+        -addext "subjectAltName = DNS:"${DOMAIN} \
+        -subj "/C=JP/ST=Osaka/L=Osaka/O=tuimac/OU=tuimac/CN="${DOMAIN} \
         -x509 -days 3650 -out certs/domain.crt
 }
 
@@ -57,8 +57,8 @@ function create_container(){
             -v $(pwd)/config.yml:/etc/docker/registry/config.yml \
             -e REGISTRY_STORAGE_S3_REGIONENDPOINT=s3.${REGION}.amazonaws.com \
             registry
-        sudo mkdir -p /etc/docker/certs.d/$DOMAIM
-        sudo cp certs/domain.crt /etc/docker/certs.d/$DOMAIM/ca.crt
+        sudo mkdir -p /etc/docker/certs.d/$DOMAIN
+        sudo cp certs/domain.crt /etc/docker/certs.d/$DOMAIN/ca.crt
     else
         which podman > /dev/null
         if [ $? -eq 0 ]; then
@@ -70,8 +70,8 @@ function create_container(){
                 -v $(pwd)/config.yml:/etc/docker/registry/config.yml \
                 -e REGISTRY_STORAGE_S3_REGIONENDPOINT=s3.${REGION}.amazonaws.com \
                 registry
-            sudo mkdir -p /etc/containers/certs.d/$DOMAIM
-            sudo cp certs/domain.crt /etc/containers/certs.d/$DOMAIM/ca.crt
+            sudo mkdir -p /etc/containers/certs.d/$DOMAIN
+            sudo cp certs/domain.crt /etc/containers/certs.d/$DOMAIN/ca.crt
         else
             echo 'There is no container CLI!!' | logger
             exit 1
