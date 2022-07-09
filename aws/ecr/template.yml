@@ -283,7 +283,7 @@ Resources:
                   - Key: Name
                     Value: registry
             UserData:
-              Fn::Base64:
+              Fn::Base64: !Sub
                 - |
                   #!/bin/bash
                   LOG=/var/log/user-data.log
@@ -294,8 +294,8 @@ Resources:
                       dnf update -y
                       dnf install -y podman git vim*
                       pip3 install --upgrade requests
-                      echo ${SERVERIP}' '${DOMAIN} >> /etc/hosts
-                      hostnamectl set-hostname registry.tuimac.com
+                      echo ${IP}' '${DOMAIN} >> /etc/hosts
+                      hostnamectl set-hostname ${DOMAIN}
                       sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
                       cd /home/ec2-user
                       git clone https://github.com/tuimac/tools; echo "cloned"
@@ -306,6 +306,6 @@ Resources:
                 - {
                     IP: !Ref IPaddress,
                     DOMAIN: !Ref Domain,
-                    BUCKET_NAME: !Ref S3Bucket
-                    REGION: !Ref 'AWS::Region'
+                    BUCKET_NAME: !Ref S3Bucket,
+                    REGION: !Ref 'AWS::Region',
                   }
