@@ -386,7 +386,7 @@ Resources:
                       cd /home/ec2-user
                       git clone https://github.com/tuimac/tools; echo "cloned"
                       chown ec2-user:ec2-user -R /home/ec2-user/tools
-                      sudo -u ec2-user -i bash -c 'cd '$HOME'/tools/aws/ecr && ./run.sh create'
+                      sudo -u ec2-user -i bash -c 'cd /home/ec2-user/tools/aws/ecr && ./run.sh create'
                       reboot
                 - {
                     IP: !Ref IPaddress,
