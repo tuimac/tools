@@ -119,6 +119,21 @@ Resources:
         - Key: !Ref TagKey
           Value: !Ref TagValue
 
+
+  # S3 Bucket
+  Bucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Delete
+    Properties:
+      BucketName: !Ref S3Bucket
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      Tags:
+        - Key: !Ref TagKey
+          Value: !Ref TagValue
+
   # Endpoint
   S3Endpoint:
     Type: AWS::EC2::VPCEndpoint
@@ -238,6 +253,77 @@ Resources:
         - Key: !Ref TagKey
           Value: !Ref TagValue
 
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${AWS::StackName}-LambdaRole
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: !Sub ${AWS::StackName}-LambdaPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "s3:*"
+                Resource:
+                  - "*"
+      Tags:
+        - Key: !Ref TagKey
+          Value: !Ref TagValue 
+
+  # Custom Resource
+  DeleteS3Objects:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: python3.6
+      Timeout: 60
+      Handler: index.handler
+      MemorySize: 128
+      Role: !GetAtt LambdaRole.Arn
+      FunctionName: DeleteS3Objects
+      Tags:
+        - Key: !Ref TagKey
+          Value: !Ref TagValue
+      Code:
+        ZipFile: |
+          import json
+          import traceback
+          import cfnresponse
+          import boto3
+          import os
+          import time
+          def handler(event, context):
+            response = {}
+            try:
+              if event['RequestType'] == 'Delete':
+                s3 = boto3.resource('s3')
+                bucket = s3.Bucket(BUCKET_NAME)
+                bucket.objects.all().delete()
+                client = boto3.client('s3')
+                client.delete_bucket(Bucket=BUCKET_NAME)
+                cfnresponse.send(event, context, cfnresponse.SUCCESS, response)
+              else:
+                cfnresponse.send(event, context, cfnresponse.SUCCESS, response)
+            except:
+              cfnresponse.send(event, context, cfnresponse.FAILED, response)
+  
+  DeleteS3ObjectsResource:
+    Type: Custom::DeleteS3ObjectsResource
+    DependsOn: Bucket
+    Properties:
+      ServiceToken: !GetAtt DeleteS3Objects.Arn
+      BUCKET_NAME: !Ref S3Bucket
+
   # EC2 Instance
   RegistryServer:
     Type: AWS::EC2::SpotFleet
@@ -292,7 +378,7 @@ Resources:
                       echo '8.4' > /etc/yum/vars/releasever
                       echo '8.4' > /etc/dnf/vars/releasever
                       dnf update -y
-                      dnf install -y podman git vim*
+                      dnf install -y podman git python3 python3-pip vim*
                       pip3 install --upgrade requests
                       echo ${IP}' '${DOMAIN} >> /etc/hosts
                       hostnamectl set-hostname ${DOMAIN}
@@ -300,8 +386,7 @@ Resources:
                       cd /home/ec2-user
                       git clone https://github.com/tuimac/tools; echo "cloned"
                       chown ec2-user:ec2-user -R /home/ec2-user/tools
-                      cd tools/aws/ecr 
-                      sudo -u ec2-user -i 'bash run.sh create'
+                      sudo -u ec2-user -i bash -c 'cd '$HOME'/tools/aws/ecr && ./run.sh create'
                       reboot
                 - {
                     IP: !Ref IPaddress,
