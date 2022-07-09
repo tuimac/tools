@@ -1,0 +1,305 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Create environment for testing the transport the container images from S3 to ECR.
+
+Parameters:
+  VpcCidr:
+    Type: String
+    Default: 10.0.0.0/27
+
+  SubnetCidr:
+    Type: String
+    Default: 10.0.0.0/28
+
+  IPaddress:
+    Type: String
+    Default: 10.0.0.4
+
+  Domain:
+    Type: String
+    Default: registry.tuimac.com
+
+  AMIID:
+    Type: String
+    Default: ami-0a46491bf29e538d1
+    Description: RHEL-8.4.0_HVM-20210825-x86_64-0-Hourly2-GP2
+
+  SSHPemFilename:
+    Type: String
+    Default: tuimac
+
+  TagKey:
+    Type: String
+    Default: Name
+
+  TagValue:
+    Type: String
+    Default: s3toecr
+
+Resources:
+  # VPC
+  Vpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCidr
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      InstanceTenancy: default
+      Tags:
+        - Key: !Ref TagKey
+          Value: !Ref TagValue
+ 
+  # Internet Gateway
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: !Ref TagKey
+          Value: !Ref TagValue
+
+  InternetGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref Vpc
+
+  # Subnet
+  Subnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      CidrBlock: !Ref SubnetCidr
+      AvailabilityZone: ap-northeast-3a
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: !Ref TagKey
+          Value: !Ref TagValue
+
+  # RouteTable
+  RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref Vpc
+      Tags:
+        - Key: !Ref TagKey
+          Value: !Ref TagValue
+
+  InternetRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref RouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  RouteTableAccociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref RouteTable
+      SubnetId: !Ref Subnet
+
+  # Security Group
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Ref TagValue
+      GroupDescription: for test
+      VpcId: !Ref Vpc
+      SecurityGroupIngress:
+        - IpProtocol: -1
+          CidrIp: !Ref VpcCidr
+          Description: ANY
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+          Description: ANY
+      Tags:
+        - Key: !Ref TagKey
+          Value: !Ref TagValue
+
+  # Endpoint
+  S3Endpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PolicyDocument: '{
+        "Version": "2012-10-17",
+        "Statement":[{
+          "Effect": "Allow",
+          "Principal": "*",
+          "Action": "*",
+          "Resource": "*"
+        }]
+      }'
+      RouteTableIds:
+        - !Ref RouteTable
+      ServiceName: !Sub com.amazonaws.${AWS::Region}.s3
+      VpcEndpointType: Gateway
+      VpcId: !Ref Vpc
+
+  ECRAPIEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PolicyDocument: '{
+        "Version": "2012-10-17",
+        "Statement":[{
+          "Effect": "Allow",
+          "Principal": "*",
+          "Action": "*",
+          "Resource": "*"
+        }]
+      }'
+      PrivateDnsEnabled: true
+      SecurityGroupIds:
+        - !Ref SecurityGroup
+      ServiceName: !Sub com.amazonaws.${AWS::Region}.ecr.api
+      SubnetIds:
+        - !Ref Subnet
+      VpcEndpointType: Interface
+      VpcId: !Ref Vpc
+
+  ECRDKREndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PolicyDocument: '{
+        "Version": "2012-10-17",
+        "Statement":[{
+          "Effect": "Allow",
+          "Principal": "*",
+          "Action": "*",
+          "Resource": "*"
+        }]
+      }'
+      PrivateDnsEnabled: true
+      SecurityGroupIds:
+        - !Ref SecurityGroup
+      ServiceName: !Sub com.amazonaws.${AWS::Region}.ecr.dkr
+      SubnetIds:
+        - !Ref Subnet
+      VpcEndpointType: Interface
+      VpcId: !Ref Vpc
+
+  # IAM Role
+  EC2InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: EC2InstanceRole
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: EC2InstancePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "ecr:*"
+                  - "ec2:*"
+                  - "s3:*"
+                Resource:
+                  - "*"
+      Tags:
+        - Key: !Ref TagKey
+          Value: !Ref TagValue
+
+  EC2InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+        - !Ref EC2InstanceRole
+
+  SpotFleetInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: SpotFleetInstance
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - spotfleet.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonEC2SpotFleetTaggingRole
+      Tags:
+        - Key: !Ref TagKey
+          Value: !Ref TagValue
+
+  # EC2 Instance
+  RegistryServer:
+    Type: AWS::EC2::SpotFleet
+    Properties:
+      SpotFleetRequestConfigData:
+        IamFleetRole: !GetAtt SpotFleetInstanceRole.Arn
+        TerminateInstancesWithExpiration: false
+        InstanceInterruptionBehavior: stop
+        TargetCapacity: 1
+        LaunchSpecifications:
+          - BlockDeviceMappings:
+              - DeviceName: /dev/sda1
+                Ebs:
+                  DeleteOnTermination: true
+                  Encrypted: true
+                  Iops: 3000
+                  VolumeSize: 10
+                  VolumeType: gp3
+            IamInstanceProfile:
+              Arn: !GetAtt EC2InstanceProfile.Arn
+            ImageId: !Ref AMIID
+            InstanceType: t3.small
+            Monitoring:
+              Enabled: false
+            NetworkInterfaces:
+              - AssociatePublicIpAddress: true
+                DeleteOnTermination: true
+                Description: ContainerCLI Container Resitry Server
+                Groups:
+                  - !Ref SecurityGroup
+                SubnetId: !Ref Subnet
+                DeviceIndex: 0
+                PrivateIpAddresses: 
+                  - Primary: true
+                    PrivateIpAddress: !Ref IPaddress
+            IamInstanceProfile:
+              Arn: !GetAtt EC2InstanceProfile.Arn
+            SpotPrice: 2
+            KeyName: !Ref SSHPemFilename
+            TagSpecifications:
+              - ResourceType: instance
+                Tags:
+                  - Key: Name
+                    Value: registry
+            UserData:
+              Fn::Base64:
+                - |
+                  #!/bin/bash
+                  LOG=/var/log/user-data.log
+                  touch $LOG
+                  exec >> $LOG 2>&1
+                      echo '8.4' > /etc/yum/vars/releasever
+                      echo '8.4' > /etc/dnf/vars/releasever
+                      dnf update -y
+                      dnf install -y podman git vim*
+                      pip3 install --upgrade requests
+                      echo ${SERVERIP}' '${DOMAIN} >> /etc/hosts
+                      hostnamectl set-hostname registry.tuimac.com
+                      sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
+                      cd /home/ec2-user
+                      git clone https://github.com/tuimac/tools; echo "cloned"
+                      chown ec2-user:ec2-user -R /home/ec2-user/tools
+                      cd tools/aws/ecr 
+                      sudo -u ec2-user -i 'bash run.sh create'
+                      reboot
+                - {
+                    IP: !Ref IPaddress,
+                    DOMAIN: !Ref Domain,
+                  }
