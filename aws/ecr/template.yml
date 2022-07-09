@@ -382,6 +382,7 @@ Resources:
                       pip3 install --upgrade requests
                       echo ${IP}' '${DOMAIN} >> /etc/hosts
                       hostnamectl set-hostname ${DOMAIN}
+                      setenforce 0
                       sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
                       cd /home/ec2-user
                       git clone https://github.com/tuimac/tools; echo "cloned"
