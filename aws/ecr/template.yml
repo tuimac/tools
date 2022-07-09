@@ -18,6 +18,10 @@ Parameters:
     Type: String
     Default: registry.tuimac.com
 
+  S3Bucket:
+    Type: String
+    Default: tuimac-registry
+
   AMIID:
     Type: String
     Default: ami-0a46491bf29e538d1
@@ -302,4 +306,6 @@ Resources:
                 - {
                     IP: !Ref IPaddress,
                     DOMAIN: !Ref Domain,
+                    BUCKET_NAME: !Ref S3Bucket
+                    REGION: !Ref 'AWS::Region'
                   }
