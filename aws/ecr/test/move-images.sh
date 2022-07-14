@@ -8,7 +8,7 @@ IMAGE_LIST=(
     'tuimac/dev/nginx'
     'tuimac/test/tomcat'
 )
-ECR_URL='xxxxxxxxxxxxxx.dkr.ecr.ap-northeast-3.amazonaws.com'
+ECR_URL='xxxxxxxxxx.dkr.ecr.ap-northeast-3.amazonaws.com'
 
 # Main processes
 
@@ -34,6 +34,8 @@ function move_image_to_ecr(){
         create_ecr $image
         for tag in ${IMAGE_TAGS[@]}; do
             podman pull $PRIVATE_URL/$image:$tag
+            aws ecr get-login-password | podman login --username AWS --password-stdin $ECR_URL
+            podman tag $PRIVATE_URL/$image:$tag $ECR_URL/$image:$tag
             podman push $ECR_URL/$image:$tag 
         done
     done

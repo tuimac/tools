@@ -8,3 +8,6 @@ aws ecr create-repository \
     --encryption-configuration 'encryptionType=AES256' \
     --image-tag-mutability IMMUTABLE \
     --tags 'Key=Name,Value='$NAME
+
+
+docker system prune -a
