@@ -2,3 +2,5 @@
 volume
 *.class
 ecs-agent.tar
+aws/ecr/certs
+aws/ecr/config.yml
