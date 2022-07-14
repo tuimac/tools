@@ -9,16 +9,17 @@ IMAGES=(
 
 for image in ${IMAGES[@]}; do
     podman pull docker.io/library/$image
-    local version=$RANDOM
+    version=$(($RANDOM / 1))
+    echo $version
     podman tag docker.io/library/$image $REG_URL/tuimac/dev/$image:$version
     podman push $REG_URL/tuimac/dev/$image:$version
-    local version=$RANDOM
+    version=$(($RANDOM / 1))
     podman tag docker.io/library/$image $REG_URL/tuimac/dev/$image:$version
     podman push $REG_URL/tuimac/dev/$image:$version
-    local version=$RANDOM
+    version=$(($RANDOM / 1))
     podman tag docker.io/library/$image $REG_URL/tuimac/test/$image:$version
     podman push $REG_URL/tuimac/test/$image:$version
-    local version=$RANDOM
+    version=$(($RANDOM / 1))
     podman tag docker.io/library/$image $REG_URL/tuimac/test/$image:$version
     podman push $REG_URL/tuimac/test/$image:$version
 done

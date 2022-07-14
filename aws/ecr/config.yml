@@ -1,0 +1,31 @@
+version: 0.1
+log:
+  accesslog:
+    disabled: true
+  level: info
+  formatter: text
+loglevel: debug
+storage:
+  s3:
+    region: ap-northeast-3
+    bucket: tuimac-registry
+    encrypt: false
+    secure: true
+    v4auth: true
+    chunksize: 5242880
+    multipartcopychunksize: 33554432
+    multipartcopymaxconcurrency: 100
+    multipartcopythresholdsize: 33554432
+    rootdirectory: /
+http:
+  addr: 0.0.0.0:443
+  headers:
+    X-Content-Type-Options: [nosniff]
+  tls:
+    certificate: /certs/domain.crt
+    key: /certs/domain.key
+health:
+  storagedriver:
+    enabled: true
+    interval: 10s
+    threshold: 3

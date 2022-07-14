@@ -378,7 +378,7 @@ Resources:
                       echo '8.4' > /etc/yum/vars/releasever
                       echo '8.4' > /etc/dnf/vars/releasever
                       dnf update -y
-                      dnf install -y podman git python3 python3-pip vim*
+                      dnf install -y podman git python3 python3-pip jq vim*
                       pip3 install --upgrade requests
                       echo ${IP}' '${DOMAIN} >> /etc/hosts
                       hostnamectl set-hostname ${DOMAIN}
