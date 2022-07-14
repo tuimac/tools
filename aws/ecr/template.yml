@@ -305,6 +305,7 @@ Resources:
           def handler(event, context):
             response = {}
             try:
+              BUCKET_NAME = event["ResourceProperties"]["BUCKET_NAME"]
               if event['RequestType'] == 'Delete':
                 s3 = boto3.resource('s3')
                 bucket = s3.Bucket(BUCKET_NAME)
