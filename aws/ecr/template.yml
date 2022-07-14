@@ -390,6 +390,8 @@ Resources:
                       git clone https://github.com/tuimac/tools; echo "cloned"
                       chown ec2-user:ec2-user -R /home/ec2-user/tools
                       echo 'REGION='${REGION} >> /etc/environment
+                      echo 'DOMAIN='${DOMAIN} >> /etc/environment
+                      echo 'BUCKET_NAME='${BUCKET_NAME} >> /etc/environment
                       echo 'net.ipv4.ip_unprivileged_port_start=443' >> /etc/sysctl.conf
                       sysctl -p
                       reboot
