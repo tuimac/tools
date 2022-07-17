@@ -1,6 +1,8 @@
 #!/bin/bash
 
 function runContainer(){
+    mkdir -p redmine/{files,logs,plugins}
+    sudo chown 999:999 -R redmine/
     docker-compose up -d
     docker ps -a
 }
@@ -17,6 +19,9 @@ function createContainer(){
 
 function deleteAll(){
     docker-compose down
+    sudo rm -rf mysql/
+    sudo rm -rf redmine/{files,logs,plugins}
+    sudo chown -R $USER:$USER redmine/
     cleanup
 }
 

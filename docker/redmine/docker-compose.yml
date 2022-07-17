@@ -7,10 +7,13 @@ services:
     restart: always
     environment:
       TZ: Asia/Tokyo
+      MYSQL_DATABASE: redmine
       MYSQL_USER: redmine
       MYSQL_PASSWORD: ${DB_PASSWORD}
-      MYSQL_DATABASE: redmine
       MYSQL_RANDOM_ROOT_PASSWORD: yes
+    volumes:
+      - ./mysql/data:/var/lib/mysql
+      - ./mysql/logs:/var/log/mysql
     expose:
       - 3306
     command: --default-authentication-plugin=mysql_native_password
@@ -30,6 +33,11 @@ services:
       REDMINE_DB_DATABASE: redmine
       REDMINE_DB_USERNAME: redmine
       REDMINE_DB_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - ./redmine/files:/usr/src/redmine/files
+      - ./redmine/config:/usr/src/redmine/config
+      - ./redmine/logs:/usr/src/redmine/log
+      - ./redmine/plugins:/usr/src/redmine/plugins
     networks:
       - redmine.local
 networks:
