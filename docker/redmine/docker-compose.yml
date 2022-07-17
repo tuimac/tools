@@ -1,0 +1,31 @@
+version: '3.9'
+services:
+  mysql:
+    image: mysql:8.0.29
+    container_name: mysql
+    hostname: mysql
+    restart: always
+    environment:
+      MYSQL_USER: redmine
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: redmine
+      MYSQL_RANDOM_ROOT_PASSWORD: yes
+    expose:
+      - 3306
+    command: --default-authentication-plugin=mysql_native_password
+    networks:
+      - redmine.local
+  redmine:
+    image: redmine:4
+    container_name: redmine
+    hostname: redmine
+    restart: always
+    environment:
+      REDMINE_DB_MYSQL: mysql
+      REDMINE_DB_PORT: 3306
+      REDMINE_DB_DATABASE: redmine
+      REDMINE_DB_USERNAME: redmine
+      REDMINE_DB_PASSWORD: ${DB_PASSWORD}
+networks:
+  redmine.local:
+    name: redmine.local
