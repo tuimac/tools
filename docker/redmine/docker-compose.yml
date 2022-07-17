@@ -6,6 +6,7 @@ services:
     hostname: mysql
     restart: always
     environment:
+      TZ: Asia/Tokyo
       MYSQL_USER: redmine
       MYSQL_PASSWORD: ${DB_PASSWORD}
       MYSQL_DATABASE: redmine
@@ -20,12 +21,17 @@ services:
     container_name: redmine
     hostname: redmine
     restart: always
+    ports:
+      - 8080:3000
     environment:
+      TZ: Asia/Tokyo
       REDMINE_DB_MYSQL: mysql
       REDMINE_DB_PORT: 3306
       REDMINE_DB_DATABASE: redmine
       REDMINE_DB_USERNAME: redmine
       REDMINE_DB_PASSWORD: ${DB_PASSWORD}
+    networks:
+      - redmine.local
 networks:
   redmine.local:
     name: redmine.local

@@ -2,6 +2,7 @@
 
 function runContainer(){
     docker-compose up -d
+    docker ps -a
 }
 
 function cleanup(){
@@ -16,7 +17,6 @@ function createContainer(){
 
 function deleteAll(){
     docker-compose down
-    docker rmi mattermost_db
     cleanup
 }
 
