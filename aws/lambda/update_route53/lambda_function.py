@@ -1,14 +1,17 @@
-#!/usr/bin/env python3
-
 import boto3
 import traceback
 import re
+import os
 
 HOSTED_ZONE = 'tuimac.com'
+EXCLUDE_LIST = 'home,test'
 
 def validate_name_tag_value(name_tag_value) -> str:
     name_tag_value = name_tag_value.lower()
     fqdn_regex = '((?=^.{4,253}$)(^((?!-)[a-zA-Z0-9-]{0,62}[a-zA-Z0-9-])*(\.[a-zA-Z-]{2,63})*$))'
+    
+    if name_tag_value in EXCLUDE_LIST:
+        raise Exception(name_tag_value + ' is in excluded list!!')
 
     if re.match(fqdn_regex, name_tag_value):
         return name_tag_value
@@ -17,17 +20,19 @@ def validate_name_tag_value(name_tag_value) -> str:
 
 def get_ec2instance_info(instance_id, ec2) -> dict:
     result = dict()
-    instance = ec2.describe_instances(
+    reservations = ec2.describe_instances(
         InstanceIds = [instance_id]
-    )['Reservations'][0]['Instances'][0]
+    )['Reservations']
 
-    for tag in instance['Tags']:
-        if tag['Key'] == 'Name':
-            name_tag_value = tag['Value']
-            break
+    for reservation in reservations:
+        for instance in reservation['Instances']:
+            for tag in instance['Tags']:
+                if tag['Key'] == 'Name':
+                    name_tag_value = tag['Value']
+                    break
     result['private_ip'] = instance['NetworkInterfaces'][0]['PrivateIpAddress']
     try:
-        result['public_ip'] = instance['NetworkInterfaces'][0]['PrivateIpAddresses'][0]['Association']['PublicIp']
+        result['public_ip'] = instance['NetworkInterfaces'][0]['Association']['PublicIp']
     except:
         traceback.print_exc()
         pass
@@ -123,13 +128,13 @@ def delete_record(tag, hosted_zone_id, info, route53):
         }
     )
 
-def lambda_handler(event, context)
+def lambda_handler(event, context):
     try:
         hosted_zone_id = ''
         ec2 = boto3.client('ec2')
         route53 = boto3.client('route53')
         state = event['detail']['state']
-        instance_id = event['detail']['state']
+        instance_id = event['detail']['instance-id']
 
         info = get_ec2instance_info(instance_id, ec2)
         tag = validate_name_tag_value(info['tag'])
