@@ -1,0 +1,37 @@
+description: Create AMI for Backup
+schemaVersion: '0.3'
+assumeRole: 'arn:aws:iam::xxxxxxxxxxx:role/xxxxxx'
+parameters:
+  Generation:
+    type: Integer
+    description: (Required)
+
+mainSteps:
+  - name: ListTargetEC2Instances
+    action: aws:executeAwsApi
+    timeoutSeconds: 60
+    inputs:
+      Service: ec2
+      Api: DescribeInstances
+      Filters:
+        - Name: 'AutoBackup'
+          Values:
+            - 'yes'
+    outputs:
+      - Name: InstanceIds
+        Selector: $.Reservations..Instances..InstanceId
+        Type: StringList
+    nextStep: CreateImages
+  - name: CreateImages
+    action: aws:executeScript
+    timeoutSeconds: 900
+    onFailure: Abort
+    inputs:
+      Runtime: python3.7
+      Handler: handler
+      InputPayload:
+        InputPayload:
+          EC2Instances: '{{ ListTargetEC2Instances.InstanceIds }}'
+          Generations: '{{ Generations }}'
+      Script: |-
+
