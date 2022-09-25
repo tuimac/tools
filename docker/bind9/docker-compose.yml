@@ -1,0 +1,22 @@
+version: '3.9'
+services:
+  bind9:
+    image: bind9
+    container_name: bind9
+    hostname: bind9.tuimac.com
+    build: .
+    restart: always
+    ports:
+      - '53:53'
+      - '53:53/udp'
+    volumes:
+      - ./log:/var/log/bind
+      - ./etc:/etc/bind
+    environment:
+      - TZ
+    networks:
+      bind9:
+
+networks:
+  bind9:
+    name: bind9
