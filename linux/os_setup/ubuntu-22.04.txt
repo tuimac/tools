@@ -1,0 +1,25 @@
+#################################################################
+# Disable port 53
+## Confirm the port 53 has already been used
+lsof -i :53
+
+## Configuration
+
+## /etc/systemd/resolved.conf
+[Resolve]
+DNS=1.1.1.1
+#FallbackDNS=
+#Domains=
+#LLMNR=no
+#MulticastDNS=no
+#DNSSEC=no
+#DNSOverTLS=no
+#Cache=no
+DNSStubListener=no
+#ReadEtcHosts=yes
+
+## Create link
+ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf
+reboot
+
+#################################################################
