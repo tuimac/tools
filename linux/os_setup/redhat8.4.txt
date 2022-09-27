@@ -1,0 +1,10 @@
+########################################################
+# Subscription
+subscription-manager register --username <username> --password <password> --auto-attach
+subscription-manager config –rhsm.manage_repos=1
+subscription-manager repos --enable=rhel-8-for-x86_64-appstream-rpms
+subscription-manager repos --enable=rhel-8-for-x86_64-baseos-rpms
+
+
+
+########################################################
