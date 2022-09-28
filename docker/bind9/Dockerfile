@@ -2,6 +2,9 @@ FROM alpine
 
 WORKDIR /root
 
+EXPOSE 53/UDP
+EXPOSE 53/TCP
+
 ADD entrypoint.sh /root/entrypoint.sh
 
 RUN apk update && \
@@ -13,6 +16,7 @@ RUN apk update && \
     mkdir /etc/vim/undo && \
     rm /etc/vim/vimrc && \
     curl -L https://raw.githubusercontent.com/tuimac/tools/master/vim/vimrc -o /etc/vim/vimrc && \
-    curl -L https://raw.githubusercontent.com/tuimac/tools/master/linux/bashrc/.bashrc_node_docker -o /root/.bashrc
+    curl -L https://raw.githubusercontent.com/tuimac/tools/master/linux/bashrc/.bashrc_node_docker -o /root/.bashrc && \
+    mkdir -p /etc/bind/files
 
 ENTRYPOINT ["/root/entrypoint.sh"]

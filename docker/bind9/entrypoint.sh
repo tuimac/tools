@@ -7,9 +7,16 @@ DOMAIN='tuimac.com'
 function genConfFile(){
     IP=$(hostname -i)
     cat <<EOF > ${CONFFILE}
-acl allowed-network { localhost; 0.0.0.0/0; };
+acl "allowed-network" { 
+    localhost;
+    10.0.222.0/24;
+    0.0.0.0/0;
+};
 options {
     directory "/var/bind";
+    dump-file "/var/bind/named_dump.db";
+    statistics-file "/var/bind/named.stats.log";
+    zone-statistics yes;
     forward only;
     recursion yes;
     forwarders {
@@ -24,6 +31,7 @@ options {
     };
     allow-query { allowed-network; };
     allow-recursion { allowed-network; };
+    allow-query-cache { allowed-network; };
     version none;
 };
 
@@ -33,22 +41,23 @@ logging {
         print-time yes;
         print-severity yes;
         print-category yes;
-        severity debug;
+        severity dynamic;
     };
 };
 
 zone "tuimac.com" IN {
-    type hint;
+    type master;
     file "${ZONEFILE}";
 };
 EOF
 }
 
 function genZoneFile(){
-    HOSTNAME=$(hostname -s)
+    HOST_NAME=$(hostname -s)
     cat <<EOF > ${ZONEFILE}
+\$ORIGIN ${DOMAIN}.
 \$TTL 86400
-@   IN  SOA ${HOSTNAME}.${DOMAIN}. root.${DOMAIN}. (
+@   IN  SOA ${HOST_NAME}.${DOMAIN}. root.${DOMAIN}. (
     2011071001; Serial
     604800; Refresh
     86400; Retry
@@ -56,8 +65,8 @@ function genZoneFile(){
     604800; Negative Cache TTL
 )
 ;
-@   IN  NS  ${HOSTNAME}.${DOMAIN}.
-${HOSTNAME} IN  A   ${IP}
+@   IN  NS  ${HOST_NAME}.${DOMAIN}.
+${HOST_NAME} IN  A   ${IP}
 ;
 EOF
 }

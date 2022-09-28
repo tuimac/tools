@@ -3,7 +3,7 @@ services:
   bind9:
     image: bind9
     container_name: bind9
-    hostname: bind9.tuimac.com
+    hostname: node3.tuimac.com
     build: .
     restart: always
     ports:
