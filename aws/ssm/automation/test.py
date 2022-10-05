@@ -3,6 +3,7 @@
 import boto3
 import datetime
 import json
+import time
 
 def stub(ec2):
     instance_ids = []
@@ -19,13 +20,8 @@ def stub(ec2):
             instance_ids.append(instance['InstanceId'])
     return instance_ids
 
-if __name__ == '__main__':
-    # Initialization
-    ec2 = boto3.client('ec2')
-    instance_ids = stub(ec2)
-    generations = 2
-    now = datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
-
+def create_images(ec2):
+    name_tag_list = []
     for instance_id in instance_ids:
         # Get EC2 Instance Name tag value
         tags = ec2.describe_tags(
@@ -60,9 +56,29 @@ if __name__ == '__main__':
                 }
             ]
         )
+        name_tag_list.append(name_tag)
+    return name_tag_list
 
+def monitor_create_images(ec2):
+    time.sleep(5)
+    while True:
+        pending_images = ec2.describe_images(
+            Owners = ['self'],
+            Filters = [
+                {'Name': 'tag:AutoBackup', 'Values': ['yes']},
+                {'Name': 'state', 'Values': ['pending']}
+            ]
+        )['Images']
+        if len(pending_images) == 0:
+            break
+        else:
+            time.sleep(5)
+
+def delete_images(ec2, name_tag_list):
+    for name_tag in name_tag_list:
         # Delete old images
         images = ec2.describe_images(
+            Owners = ['self'],
             Filters = [
                 {'Name': 'tag:AutoBackup', 'Values': ['yes']},
                 {'Name': 'tag:Name_Tag', 'Values': [name_tag]}
@@ -79,3 +95,14 @@ if __name__ == '__main__':
             ec2.deregister_image(ImageId=image['ImageId'])
             for snapshot_id in snapshot_ids:
                 ec2.delete_snapshot(SnapshotId=snapshot_id)
+
+if __name__ == '__main__':
+    # Initialization
+    ec2 = boto3.client('ec2')
+    instance_ids = stub(ec2)
+    generations = 2
+    now = datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
+
+    name_tag_list = create_images(ec2)
+    monitor_create_images(ec2)
+    delete_images(ec2, name_tag_list)
