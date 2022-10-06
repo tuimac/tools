@@ -1,4 +1,4 @@
 #!/bin/bash
 
-docker logs postgresql
-docker exec -it postgresql cat /var/log/postgresql/postgresql.log
+podman logs postgresql
+podman exec -it postgresql cat /var/log/postgresql/postgresql.log

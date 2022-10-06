@@ -3,28 +3,30 @@
 # Change variables below if you need
 ##############################
 NAME="postgresql"
-VOLUME="${PWD}/volume"
+DATA="${PWD}/data"
+LOG="${PWD}/log"
 ##############################
 
 function runContainer(){
-    cp conf/postgresql.conf ${VOLUME}
-    sudo rm ${VOLUME}/postgresql.auto.conf
-    docker run -itd --name ${NAME} \
-                -v ${VOLUME}:/var/lib/postgresql/data \
-                -h ${NAME} \
-                -p 5432:5432 \
-                ${NAME}
+    cp conf/postgresql.conf ${DATA}
+    sudo rm ${DATA}/postgresql.auto.conf
+    podman run -itd --name ${NAME} \
+            -v ${DATA}:/var/lib/postgresql/data \
+            -h ${NAME} \
+            --network host \
+            ${NAME}
 }
 
 function cleanup(){
-    docker image prune -f
-    docker container prune -f
+    podman image prune -f
+    podman container prune -f
 }
 
 function createContainer(){
-    #docker unshare chown -R 999:999 ${VOLUME}
-    #docker unshare chown -R 999:999 conf/
-    docker build -t ${NAME} .
+    mkdir ${LOG}
+    podman unshare chown -R 999:999 ${DATA}
+    podman unshare chown -R 999:999 ${LOG}
+    podman build -t ${NAME} .
     runContainer
 }
 
@@ -34,38 +36,38 @@ function rerunContainer(){
     if [ "$answer" != "n" ]; then
         commitImage ${NAME}
     fi
-    docker stop ${NAME}
-    docker rm ${NAME}
+    podman stop ${NAME}
+    podman rm ${NAME}
     runContainer
     cleanup
 }
 
 function deleteAll(){
-    docker stop ${NAME}
-    docker rm ${NAME}
-    docker rmi ${NAME}
+    podman stop ${NAME}
+    podman rm ${NAME}
+    podman rmi ${NAME}
     cleanup
-    sudo rm -rf ${VOLUME}
-    sudo chown ${USER}:${USER} -R conf/
+    sudo rm -rf ${DATA}
+    sudo rm -rf ${LOG}
 }
 
 function commitImage(){
-    docker stop ${NAME}
-    docker commit ${NAME} $1
-    docker start ${NAME}
+    podman stop ${NAME}
+    podman commit ${NAME} $1
+    podman start ${NAME}
 }
 
 function pushImage(){
     commitImage ${IMAGE}
-    docker push ${IMAGE}
+    podman push ${IMAGE}
     if [ $? -ne 0 ]; then
-        cat .password.txt | base64 -d | docker login --username ${dockerHUBUSER} --password-stdin
+        cat .password.txt | base64 -d | podman login --username ${podmanHUBUSER} --password-stdin
         if [ $? -ne 0 ]; then
-            docker login --username ${dockerHUBUSER}
+            podman login --username ${podmanHUBUSER}
         fi
-        docker push ${IMAGE}
+        podman push ${IMAGE}
     fi
-    docker rmi ${IMAGE}
+    podman rmi ${IMAGE}
     cleanup
 }
 
@@ -101,7 +103,7 @@ create              Create image and container after that run the container.
 rerun               Delete only container and rerun container with new settings.
 delete              Delete image and container.
 commit              Create image from target container and push the image to remote repository.
-push                Push image you create to docker Hub.
+push                Push image you create to podman Hub.
 register-secret     Create password.txt for make it login process within 'commit' operation.
     "
 }
