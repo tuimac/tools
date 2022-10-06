@@ -8,7 +8,7 @@ LOG="${PWD}/log"
 ##############################
 
 function runContainer(){
-    cp conf/postgresql.conf ${DATA}
+    sudo cp conf/postgresql.conf ${DATA}
     sudo rm ${DATA}/postgresql.auto.conf
     podman run -itd --name ${NAME} \
             -v ${DATA}:/var/lib/postgresql/data \
