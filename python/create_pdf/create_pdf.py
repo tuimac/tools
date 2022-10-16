@@ -1,59 +1,16 @@
 import openpyxl
+import json
+import time
+import os
 import traceback
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-import json
-import time
 
 EXCEL_NAME = 'pdf.xlsx'
 EXCEL_SHEET_NAME = 'シート1'
-
-def _PrintSetUp():
-    chopt=webdriver.ChromeOptions()
-    appState = {
-        "recentDestinations": [
-            {
-                "id": "Save as PDF",
-                "origin": "local",
-                "account":""
-            }
-        ],
-        "selectedDestinationId": "Save as PDF",
-        "version": 2,
-        "isLandscapeEnabled": True,
-        "pageSize": 'A4',
-        #"mediaSize": {"height_microns": 355600, "width_microns": 215900}, #紙のサイズ　（10000マイクロメートル = １cm）
-        #"marginsType": 0, #余白タイプ #0:デフォルト 1:余白なし 2:最小
-        #"scalingType": 3 , #0：デフォルト 1：ページに合わせる 2：用紙に合わせる 3：カスタム
-        #"scaling": "141" ,#倍率
-        #"profile.managed_default_content_settings.images": 2,  #画像を読み込ませな
-        "isHeaderFooterEnabled": False,
-        "isCssBackgroundEnabled": True,
-        #"isDuplexEnabled": False, #両面印刷 tureで両面印刷、falseで片面印刷
-        #"isColorEnabled": True, #カラー印刷 trueでカラー、falseで白黒
-        #"isCollateEnabled": True #部単位で印刷
-    }
-    
-    prefs = {
-        'printing.print_preview_sticky_settings.appState': json.dumps(appState),
-        'download.default_directory': '.'
-    }
-    chopt.add_experimental_option('prefs', prefs)
-    chopt.add_argument('--kiosk-printing')
-    return chopt
-
-def _main_WebToPDF(BlogURL):
-    chopt = _PrintSetUp()
-    driver_path = './chromedriver'
-    driver = webdriver.Chrome(executable_path=driver_path, options=chopt)
-    driver.implicitly_wait(10)
-    driver.get(BlogURL)
-    WebDriverWait(driver, 15).until(EC.presence_of_all_elements_located)
-    driver.execute_script('return window.print()')
-    time.sleep(1)
-    driver.quit()
+DRIVER_PATH = './chromedriver'
 
 def import_excel() -> dict:
     data = dict()
@@ -73,8 +30,50 @@ def import_excel() -> dict:
     return data
 
 def create_pdf(data):
+       
+    # Setup Chrome options for prinr page as PDF
+    chrome_option = webdriver.ChromeOptions()
+    printer_config = {
+        "recentDestinations": [
+            {
+                "id": "Save as PDF",
+                "origin": "local",
+                "account":""
+            }
+        ],
+        "selectedDestinationId": "Save as PDF",
+        "version": 2,
+        "isLandscapeEnabled": True,
+        "pageSize": 'A4',
+        #"mediaSize": {"height_microns": 355600, "width_microns": 215900}, #紙のサイズ　（10000マイクロメートル = １cm）
+        "marginsType": 0,
+        "scalingType": 0,
+        #"scaling": "141" ,#倍率
+        "isHeaderFooterEnabled": False,
+        "isCssBackgroundEnabled": True,
+        "isDuplexEnabled": False,
+        "isColorEnabled": True,
+        "isCollateEnabled": True
+    }
+    
+    prefs = {
+        'printing.print_preview_sticky_settings.appState': json.dumps(printer_config),
+        'download.default_directory': os.getcwd()
+    }
+
+    chrome_option.add_experimental_option('prefs', prefs)
+    chrome_option.add_argument('--kiosk-printing')
+
+    # Create PDF from each url website
+    driver = webdriver.Chrome(executable_path=DRIVER_PATH, options=chrome_option)
     for key in data:
-        _main_WebToPDF(data[key])
+        url = data[key]
+        driver.implicitly_wait(10)
+        driver.get(url)
+        WebDriverWait(driver, 15).until(EC.presence_of_all_elements_located)
+        driver.execute_script('document.title="' + key + '";window.print();')
+        time.sleep(1)
+    driver.quit()
 
 if __name__ == '__main__':
     try:
