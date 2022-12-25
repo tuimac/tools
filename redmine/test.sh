@@ -1,6 +1,6 @@
 #!/bin/bash
 
-API_KEY=''
+API_KEY='a708e193b32b1f6dd9c8595b94e2ec9555a4011'
 PARENT="1"
 
 INFO=$(curl -X GET -H 'X-Redmine-API-Key:'${API_KEY} http://localhost:8003/projects/test/issues.json?limit=5)
