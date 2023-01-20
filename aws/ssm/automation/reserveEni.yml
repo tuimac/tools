@@ -41,13 +41,13 @@ mainSteps:
         import boto3
         def handler(events, context):
           ec2 = boto3.client('ec2')
-					for ip in events['IpAddresses']:
-						try:
-							ec2.create_network_interface(
+          for ip in events['IpAddresses']:
+            try:
+              ec2.create_network_interface(
                 PrivateIpAddress = ip,
                 SubnetId = events['SubnetId']
-							)
-						except:
+              )
+            except:
               pass
   - name: DeleteNetworkInterfaces
     action: aws:executeScript
@@ -64,7 +64,7 @@ mainSteps:
         import boto3
         def handler(events, context):
           ec2 = boto3.client('ec2')
-					for ip in events['IpAddresses']:
+          for ip in events['IpAddresses']:
             try:
               eni_info = ec2.describe_network_interfaces(
                 Filters = [
