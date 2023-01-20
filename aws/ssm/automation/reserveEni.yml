@@ -18,12 +18,14 @@ mainSteps:
     action: aws:branch
     inputs:
       Choices:
-      - NextStep: CreateNetworkInterfaces
-        Variable: '{{ CreateOrDelete }}'
-        StringEquals: Create
-      - NextStep: DeleteNetworkInterfaces
-        Variable: '{{ CreateOrDelete }}'
-        StringEquals: Delete
+        - NextStep: CreateNetworkInterfaces
+          Variable: '{{ CreateOrDelete }}'
+          StringEquals: Create
+        - NextStep: DeleteNetworkInterfaces
+          Variable: '{{ CreateOrDelete }}'
+          StringEquals: Delete
+      Default:
+        Sleep
   - name: CreateNetworkInterfaces
     action: aws:executeScript
     timeoutSeconds: 3600
