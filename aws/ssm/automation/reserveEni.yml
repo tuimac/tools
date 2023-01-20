@@ -46,6 +46,7 @@ mainSteps:
               )
             except:
               pass
+    isEnd: true
   - name: DeleteNetworkInterfaces
     action: aws:executeScript
     timeoutSeconds: 3600
@@ -74,3 +75,4 @@ mainSteps:
                 )
             except:
               pass
+    isEnd: true
