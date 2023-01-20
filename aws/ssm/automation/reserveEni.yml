@@ -1,5 +1,6 @@
 description: Create and Delete Network Interfaces
 schemaVersion: '0.3'
+assumeRole: 
 parameters:
   SubnetId:
     type: String
@@ -39,13 +40,10 @@ mainSteps:
         def handler(events, context):
           ec2 = boto3.client('ec2')
           for ip in events['IpAddresses']:
-            try:
-              ec2.create_network_interface(
-                PrivateIpAddress = ip,
-                SubnetId = events['SubnetId']
-              )
-            except:
-              pass
+            ec2.create_network_interface(
+              PrivateIpAddress = ip,
+              SubnetId = events['SubnetId']
+            )
     isEnd: true
   - name: DeleteNetworkInterfaces
     action: aws:executeScript
@@ -62,17 +60,14 @@ mainSteps:
         def handler(events, context):
           ec2 = boto3.client('ec2')
           for ip in events['IpAddresses']:
-            try:
-              eni_info = ec2.describe_network_interfaces(
-                Filters = [
-                  { 'Name': 'subnet-id', 'Values': [events['SubnetId']] },
-                  { 'Name': 'addresses.private-ip-address', 'Values': events['IpAddresses'] }
-                ]
-              )['NetworkInterfaces']
-              for eni in eni_info:
-                ec2.delete_network_interface(
-                  NetworkInterfaceId = eni['NetworkInterfaceId']
-                )
-            except:
-              pass
+            eni_info = ec2.describe_network_interfaces(
+              Filters = [
+                { 'Name': 'subnet-id', 'Values': [events['SubnetId']] },
+                { 'Name': 'addresses.private-ip-address', 'Values': events['IpAddresses'] }
+              ]
+            )['NetworkInterfaces']
+            for eni in eni_info:
+              ec2.delete_network_interface(
+                NetworkInterfaceId = eni['NetworkInterfaceId']
+              )
     isEnd: true
