@@ -1,0 +1,78 @@
+description: Create and Delete Network Interfaces
+schemaVersion: '0.3'
+parameters:
+  SubnetId:
+    type: String
+    description: (Required)
+  IpAddresses:
+    type: StringList
+    description: (Required)
+  CreateOrDelete:
+    type: String
+    description: (Required)
+    allowedValue:
+      - Create
+      - Delete
+mainSteps:
+  - name: CreateOrDelete
+    action: aws:branch
+    inputs:
+      Choices:
+      - NextStep: CreateNetworkInterfaces
+        Variable: '{{ CreateOrDelete }}'
+        StringEquals: Create
+      - NextStep: DeleteNetworkInterfaces
+        Variable: '{{ CreateOrDelete }}'
+        StringEquals: Delete
+  - name: CreateNetworkInterfaces
+    action: aws:executeScript
+    timeoutSeconds: 3600
+    onFailure: Abort
+    inputs:
+      Runtime: python3.7
+      Handler: handler
+      InputPayload:
+        InputPayload:
+          SubnetId: '{{ SubnetId }}'
+          IpAddresses: '{{ IpAddresses }}'
+      Script: |-
+        import boto3
+        def handler(events, context):
+          ec2 = boto3.client('ec2')
+					for ip in events['IpAddresses']:
+						try:
+							ec2.create_network_interface(
+                PrivateIpAddress = ip,
+                SubnetId = events['SubnetId']
+							)
+						except:
+              pass
+  - name: DeleteNetworkInterfaces
+    action: aws:executeScript
+    timeoutSeconds: 3600
+    onFailure: Abort
+    inputs:
+      Runtime: python3.7
+      Handler: handler
+      InputPayload:
+        InputPayload:
+          SubnetId: '{{ SubnetId }}'
+          IpAddresses: '{{ IpAddresses }}'
+      Script: |-
+        import boto3
+        def handler(events, context):
+          ec2 = boto3.client('ec2')
+					for ip in events['IpAddresses']:
+            try:
+              eni_info = ec2.describe_network_interfaces(
+                Filters = [
+                  { 'Name': 'subnet-id', 'Values': [events['SubnetId']] },
+                  { 'Name': 'addresses.private-ip-address', 'Values': events['IpAddresses'] }
+                ]
+              )['NetworkInterfaces']
+              for eni in eni_info:
+                ec2.delete_network_interface(
+                  NetworkInterfaceId = eni['NetworkInterfaceId']
+                )
+            except:
+              pass
