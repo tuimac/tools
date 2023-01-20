@@ -10,7 +10,7 @@ parameters:
   CreateOrDelete:
     type: String
     description: (Required)
-    allowedValue:
+    allowedValues:
       - Create
       - Delete
 mainSteps:
@@ -24,8 +24,6 @@ mainSteps:
         - NextStep: DeleteNetworkInterfaces
           Variable: '{{ CreateOrDelete }}'
           StringEquals: Delete
-      Default:
-        Sleep
   - name: CreateNetworkInterfaces
     action: aws:executeScript
     timeoutSeconds: 3600
