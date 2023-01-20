@@ -32,9 +32,8 @@ mainSteps:
       Runtime: python3.7
       Handler: handler
       InputPayload:
-        InputPayload:
-          SubnetId: '{{ SubnetId }}'
-          IpAddresses: '{{ IpAddresses }}'
+        SubnetId: '{{ SubnetId }}'
+        IpAddresses: '{{ IpAddresses }}'
       Script: |-
         import boto3
         def handler(events, context):
@@ -55,9 +54,8 @@ mainSteps:
       Runtime: python3.7
       Handler: handler
       InputPayload:
-        InputPayload:
-          SubnetId: '{{ SubnetId }}'
-          IpAddresses: '{{ IpAddresses }}'
+        SubnetId: '{{ SubnetId }}'
+        IpAddresses: '{{ IpAddresses }}'
       Script: |-
         import boto3
         def handler(events, context):
