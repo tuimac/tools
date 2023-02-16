@@ -1,0 +1,44 @@
+description: Create Image
+schemaVersion: '0.3'
+assumeRole: 'arn:aws:iam::xxxxxxxxxxx:role/xxxxxx'
+
+parameters:
+  NameTag:
+    type: StringList
+    description: (Required)
+
+mainSteps:
+  - name: ListTargetEC2Instances
+    action: aws:executeAwsApi
+    timeoutSeconds: 60
+    inputs:
+      Service: ec2
+      Api: DescribeInstances
+      Filters:
+        - Name: tag:Name
+          Values: '{{ NameTag }}'
+    outputs:
+      - Name: InstanceIds
+        Selector: $.Reservations..Instances..InstanceId
+        Type: StringList
+    nextStep: RebootInstances
+  - name: RebootOS
+    action: aws:executeAwsApi
+    timeoutSeconds: 60
+    inputs:
+      Service: ec2
+      Api: RebootInstances
+      InstanceIds: '{{ ListTargetEC2Instances.InstanceIds }}'
+    nextStep: Sleep
+  - name: Sleep
+    action: aws:sleep
+    inputs:
+        Duration: PT1M
+    nextStep: CheckOS
+  - name: CheckOS
+    action: aws:runCommand
+    TimeoutSeconds: 300
+    InstanceIds: '{{ ListTargetEC2Instances.InstanceIds }}'
+    Parameters:
+      commmands:
+        - last reboot -1
