@@ -1,21 +1,19 @@
 description: Reboot OS
 schemaVersion: '0.3'
-assumeRole: 'arn:aws:iam::xxxxxxxxxxxxxxx:role/xxxxxxxxxxxxx'
-
+assumeRole: 'arn:aws:iam::xxxxxxxxxxxxx:role/xxxxxxxxxxxxxxxxxx'
 parameters:
   NameTag:
     type: StringList
     description: (Required)
-
 mainSteps:
   - name: ListTargetEC2Instances
-    action: aws:executeAwsApi
+    action: 'aws:executeAwsApi'
     timeoutSeconds: 60
     inputs:
       Service: ec2
       Api: DescribeInstances
       Filters:
-        - Name: tag:Name
+        - Name: 'tag:Name'
           Values: '{{ NameTag }}'
     outputs:
       - Name: InstanceIds
@@ -23,7 +21,7 @@ mainSteps:
         Type: StringList
     nextStep: RebootOS
   - name: RebootOS
-    action: aws:executeAwsApi
+    action: 'aws:executeAwsApi'
     timeoutSeconds: 60
     inputs:
       Service: ec2
@@ -31,16 +29,16 @@ mainSteps:
       InstanceIds: '{{ ListTargetEC2Instances.InstanceIds }}'
     nextStep: Sleep
   - name: Sleep
-    action: aws:sleep
+    action: 'aws:sleep'
     inputs:
-        Duration: PT1M
+      Duration: PT1M
     nextStep: CheckOS
   - name: CheckOS
-    action: aws:runCommand
+    action: 'aws:runCommand'
     inputs:
       DocumentName: AWS-RunShellScript
       InstanceIds: '{{ ListTargetEC2Instances.InstanceIds }}'
       TimeoutSeconds: 300
       Parameters:
-        commmands:
+        commands:
           - 'last reboot -1'
