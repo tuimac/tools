@@ -1,6 +1,6 @@
-description: Create Image
+description: Reboot OS
 schemaVersion: '0.3'
-assumeRole: 'arn:aws:iam::xxxxxxxxxxx:role/xxxxxx'
+assumeRole: 'arn:aws:iam::xxxxxxxxxxxxxxx:role/xxxxxxxxxxxxx'
 
 parameters:
   NameTag:
@@ -21,7 +21,7 @@ mainSteps:
       - Name: InstanceIds
         Selector: $.Reservations..Instances..InstanceId
         Type: StringList
-    nextStep: RebootInstances
+    nextStep: RebootOS
   - name: RebootOS
     action: aws:executeAwsApi
     timeoutSeconds: 60
@@ -37,10 +37,10 @@ mainSteps:
     nextStep: CheckOS
   - name: CheckOS
     action: aws:runCommand
-    TimeoutSeconds: 300
     inputs:
       DocumentName: AWS-RunShellScript
       InstanceIds: '{{ ListTargetEC2Instances.InstanceIds }}'
+      TimeoutSeconds: 300
       Parameters:
         commmands:
-          - last reboot -1
+          - 'last reboot -1'
