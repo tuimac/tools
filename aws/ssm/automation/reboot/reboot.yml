@@ -50,6 +50,8 @@ mainSteps:
           if [ -f $(hostname -s) ]; then
             if [[ $(cat $(hostname -s)) == $(who -b) ]]; then
               exit 1
+            else
+              who -b > $(hostname -s)
             fi
           else
             who -b > $(hostname -s)
