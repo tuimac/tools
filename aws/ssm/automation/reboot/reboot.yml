@@ -48,10 +48,10 @@ mainSteps:
           #!/bin/bash
           cd '{{ WorkDirectory }}'
           if [ -f $(hostname -s) ]; then
-            who -b > $(hostname -s)
-          else
             if [[ $(cat $(hostname -s)) == $(who -b) ]]; then
               exit 1
             fi
+          else
+            who -b > $(hostname -s)
           fi
           exit 0
