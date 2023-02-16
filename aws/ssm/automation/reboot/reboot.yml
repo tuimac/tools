@@ -5,7 +5,11 @@ parameters:
   NameTag:
     type: StringList
     description: (Required)
-mainSteps:
+  WorkDirectory:
+    type: String
+    default: /opt/infra/flagfile
+
+mainSteps:  
   - name: ListTargetEC2Instances
     action: 'aws:executeAwsApi'
     timeoutSeconds: 60
@@ -40,5 +44,14 @@ mainSteps:
       InstanceIds: '{{ ListTargetEC2Instances.InstanceIds }}'
       TimeoutSeconds: 300
       Parameters:
-        commands:
-          - 'last reboot -1'
+        commands: |
+          #!/bin/bash
+          cd '{{ WorkDirectory }}'
+          if [ -f $(hostname -s) ]; then
+            who -b > $(hostname -s)
+          else
+            if [[ $(cat $(hostname -s)) == $(who -b) ]]; then
+              exit 1
+            fi
+          fi
+          exit 0
