@@ -38,7 +38,9 @@ mainSteps:
   - name: CheckOS
     action: aws:runCommand
     TimeoutSeconds: 300
-    InstanceIds: '{{ ListTargetEC2Instances.InstanceIds }}'
-    Parameters:
-      commmands:
-        - last reboot -1
+    inputs:
+      DocumentName: AWS-RunShellScript
+      InstanceIds: '{{ ListTargetEC2Instances.InstanceIds }}'
+      Parameters:
+        commmands:
+          - last reboot -1
