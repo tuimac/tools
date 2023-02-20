@@ -1,37 +1,37 @@
 version: '3.9'
 services:
   mysql:
-    image: mysql:8.0.29
+    image: mysql:${MYSQL_VERSION}
     container_name: mysql
     hostname: mysql
     restart: always
     environment:
-      TZ: Asia/Tokyo
-      MYSQL_DATABASE: redmine
-      MYSQL_USER: redmine
+      TZ: ${TIMEZONE}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
       MYSQL_PASSWORD: ${DB_PASSWORD}
       MYSQL_RANDOM_ROOT_PASSWORD: yes
     volumes:
       - ./mysql/data:/var/lib/mysql
       - ./mysql/logs:/var/log/mysql
     expose:
-      - 3306
+      - ${MYSQL_PORT}
     command: --default-authentication-plugin=mysql_native_password
     networks:
       - redmine.local
   redmine:
-    image: redmine:4
+    image: redmine:${REDMINE_VERSION}
     container_name: redmine
     hostname: redmine
     restart: always
     ports:
       - 8080:3000
     environment:
-      TZ: Asia/Tokyo
+      TZ: ${TIMEZONE}
       REDMINE_DB_MYSQL: mysql
-      REDMINE_DB_PORT: 3306
-      REDMINE_DB_DATABASE: redmine
-      REDMINE_DB_USERNAME: redmine
+      REDMINE_DB_PORT: $MYSQL_PORT
+      REDMINE_DB_DATABASE: ${DB_NAME}
+      REDMINE_DB_USERNAME: ${DB_USER}
       REDMINE_DB_PASSWORD: ${DB_PASSWORD}
     volumes:
       - ./redmine/files:/usr/src/redmine/files
