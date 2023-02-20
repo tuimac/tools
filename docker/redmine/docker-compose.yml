@@ -7,15 +7,15 @@ services:
     restart: always
     environment:
       TZ: ${TIMEZONE}
-      MYSQL_DATABASE: ${DB_NAME}
-      MYSQL_USER: ${DB_USER}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_NAME}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       MYSQL_RANDOM_ROOT_PASSWORD: yes
     volumes:
       - ./mysql/data:/var/lib/mysql
       - ./mysql/logs:/var/log/mysql
     expose:
-      - ${MYSQL_PORT}
+      - $MYSQL_PORT
     command: --default-authentication-plugin=mysql_native_password
     networks:
       - redmine.local
@@ -25,14 +25,14 @@ services:
     hostname: redmine
     restart: always
     ports:
-      - 8080:3000
+      - 8003:3000
     environment:
       TZ: ${TIMEZONE}
       REDMINE_DB_MYSQL: mysql
       REDMINE_DB_PORT: $MYSQL_PORT
-      REDMINE_DB_DATABASE: ${DB_NAME}
-      REDMINE_DB_USERNAME: ${DB_USER}
-      REDMINE_DB_PASSWORD: ${DB_PASSWORD}
+      REDMINE_DB_DATABASE: ${MYSQL_NAME}
+      REDMINE_DB_USERNAME: ${MYSQL_USER}
+      REDMINE_DB_PASSWORD: ${MYSQL_PASSWORD}
     volumes:
       - ./redmine/files:/usr/src/redmine/files
       - ./redmine/config:/usr/src/redmine/config
