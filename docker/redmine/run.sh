@@ -2,6 +2,7 @@
 
 function runContainer(){
     mkdir -p redmine/{files,logs,plugins,config}
+    sudo chown 999:999 -R redmine/
     docker-compose up -d
     docker ps -a
 }
