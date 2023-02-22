@@ -33,11 +33,7 @@ services:
       REDMINE_DB_DATABASE: ${MYSQL_NAME}
       REDMINE_DB_USERNAME: ${MYSQL_USER}
       REDMINE_DB_PASSWORD: ${MYSQL_PASSWORD}
-    volumes:
-      - ./redmine/files:/usr/src/redmine/files
-      - ./redmine/config:/usr/src/redmine/config
-      - ./redmine/logs:/usr/src/redmine/log
-      - ./redmine/plugins:/usr/src/redmine/plugins
+      REDMINE_SECRET_KEY_BASE: supersecretkey
     networks:
       - redmine.local
 networks:
