@@ -1,6 +1,10 @@
 #!/bin/bash
 
+ENV_FILE_PATH='.env'
+
 function runContainer(){
+    sed -i "s|MYSQL_PASSWD|'$(echo $RANDOM | base64)'|g" .env
+    sed -i "s|MYSQL_ROOT_PASSWD|'$(echo $RANDOM | base64)'|g" .env
     docker-compose up -d
     docker ps -a
 }
