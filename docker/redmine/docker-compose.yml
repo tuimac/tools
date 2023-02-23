@@ -10,7 +10,8 @@ services:
       MYSQL_DATABASE: ${MYSQL_NAME}
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-      MYSQL_RANDOM_ROOT_PASSWORD: 'yes'
+      MYSQL_RANDOM_ROOT_PASSWORD: 'no'
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql
       - mysql_logs:/var/log/mysql
@@ -36,6 +37,20 @@ services:
       REDMINE_SECRET_KEY_BASE: supersecretkey
     volumes:
       - redmine:/usr/src/redmine
+    networks:
+      redmine.local:
+  management:
+    build: ./management
+    image: redmine-management
+    container_name: redmine-management
+    hostname: redmine-management
+    restart: always
+    environment:
+      TZ: ${TIMEZONE}
+      MYSQL_DATABASE: ${MYSQL_NAME}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     networks:
       redmine.local:
 networks:

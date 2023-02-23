@@ -17,6 +17,7 @@ function createContainer(){
 
 function deleteAll(){
     docker-compose down
+    docker rmi redmine-management
     cleanup
 }
 
