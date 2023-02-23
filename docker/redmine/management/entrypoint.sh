@@ -2,7 +2,7 @@
 
 sleep $BACKUP_INTERVAL 
 if [[ $INIT_RESTORE == 'yes' ]]; then
-    aws s3 ${BACKUP_S3_FILE_PATH} ${BACKUP_FILE_NAME}
+    aws s3 cp ${BACKUP_S3_FILE_PATH} ${BACKUP_FILE_NAME}
     mysql -u ${MYSQL_USER} -p${MYSQL_PASSWORD} -h ${MYSQL_HOSTNAME} < ${BACKUP_FILE_NAME}
 fi
 

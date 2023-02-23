@@ -50,7 +50,6 @@ services:
       MYSQL_DATABASE: ${MYSQL_NAME}
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_HOSTNAME: redmine-mysql.redmine.local
       BACKUP_FILE_NAME: redmine-backup.sql
       BACKUP_S3_FILE_PATH: s3://tuimac-redmine/backup/redmine-backup.sql
