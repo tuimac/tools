@@ -84,8 +84,8 @@ $(function() {
       if($('#issue_tracker_id').val() === '6') {
         var defered = new $.Deferred();
         var promise = defered.promise();
-        var childrenTickets = getChildrenTickets(isDevEffectFlag, pjtId, parentTicketId, createdDate, planedEndDate)
-
+        var childrenTickets = getChildTickets(isDevEffectFlag, pjtId, parentTicketId, createdDate, planedEndDate)
+        alert(childrenTickets);
         for (var i = 0; i < childrenTickets.length; i++) {
           promise = promise.then(createTickets(childrenTickets[i]));
         }
