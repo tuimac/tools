@@ -1,0 +1,267 @@
+[
+  {
+    "issues": [
+      {
+        "id": 4,
+        "project": {
+          "id": 1,
+          "name": "設計書管理"
+        },
+        "tracker": {
+          "id": 8,
+          "name": "開発親チケット"
+        },
+        "status": {
+          "id": 8,
+          "name": "未着手"
+        },
+        "priority": {
+          "id": 2,
+          "name": "通常"
+        },
+        "author": {
+          "id": 1,
+          "name": "Redmine Admin"
+        },
+        "assigned_to": {
+          "id": 6,
+          "name": "test 2"
+        },
+        "parent": {
+          "id": 2
+        },
+        "subject": "testdev1",
+        "description": "",
+        "start_date": null,
+        "due_date": null,
+        "done_ratio": 0,
+        "is_private": false,
+        "estimated_hours": null,
+        "custom_fields": [
+          {
+            "id": 14,
+            "name": "起票日",
+            "value": "2023-02-26"
+          },
+          {
+            "id": 15,
+            "name": "予定完了日",
+            "value": "2023-02-28"
+          },
+          {
+            "id": 16,
+            "name": "完了日",
+            "value": ""
+          }
+        ],
+        "created_on": "2023-02-26T07:17:12Z",
+        "updated_on": "2023-02-26T07:17:12Z",
+        "closed_on": null
+      },
+      {
+        "id": 3,
+        "project": {
+          "id": 1,
+          "name": "設計書管理"
+        },
+        "tracker": {
+          "id": 7,
+          "name": "本線コミットチケット"
+        },
+        "status": {
+          "id": 8,
+          "name": "未着手"
+        },
+        "priority": {
+          "id": 2,
+          "name": "通常"
+        },
+        "author": {
+          "id": 1,
+          "name": "Redmine Admin"
+        },
+        "assigned_to": {
+          "id": 6,
+          "name": "test 2"
+        },
+        "parent": {
+          "id": 2
+        },
+        "subject": "test1",
+        "description": "",
+        "start_date": null,
+        "due_date": null,
+        "done_ratio": 0,
+        "is_private": false,
+        "estimated_hours": null,
+        "custom_fields": [
+          {
+            "id": 14,
+            "name": "起票日",
+            "value": "2023-02-26"
+          },
+          {
+            "id": 15,
+            "name": "予定完了日",
+            "value": "2023-02-28"
+          },
+          {
+            "id": 16,
+            "name": "完了日",
+            "value": ""
+          }
+        ],
+        "created_on": "2023-02-26T07:03:48Z",
+        "updated_on": "2023-02-26T07:03:48Z",
+        "closed_on": null
+      },
+      {
+        "id": 2,
+        "project": {
+          "id": 1,
+          "name": "設計書管理"
+        },
+        "tracker": {
+          "id": 6,
+          "name": "子チケット"
+        },
+        "status": {
+          "id": 7,
+          "name": "対応中"
+        },
+        "priority": {
+          "id": 2,
+          "name": "通常"
+        },
+        "author": {
+          "id": 1,
+          "name": "Redmine Admin"
+        },
+        "assigned_to": {
+          "id": 5,
+          "name": "test 1"
+        },
+        "parent": {
+          "id": 1
+        },
+        "subject": "子チケットテスト1",
+        "description": "",
+        "start_date": null,
+        "due_date": null,
+        "done_ratio": 0,
+        "is_private": false,
+        "estimated_hours": null,
+        "custom_fields": [
+          {
+            "id": 14,
+            "name": "起票日",
+            "value": "2023-02-26"
+          },
+          {
+            "id": 15,
+            "name": "予定完了日",
+            "value": "2023-03-03"
+          },
+          {
+            "id": 16,
+            "name": "完了日",
+            "value": ""
+          },
+          {
+            "id": 5,
+            "name": "開発影響有無",
+            "value": "0"
+          },
+          {
+            "id": 6,
+            "name": "修正対象機能ID",
+            "value": "1"
+          },
+          {
+            "id": 7,
+            "name": "(修正前)リビジョン番号",
+            "value": "1"
+          },
+          {
+            "id": 8,
+            "name": "(修正後)リビジョン番号",
+            "value": "2"
+          },
+          {
+            "id": 9,
+            "name": "ACTS/SAP区分",
+            "multiple": true,
+            "value": [
+              "ACTS"
+            ]
+          }
+        ],
+        "created_on": "2023-02-26T06:30:32Z",
+        "updated_on": "2023-02-26T06:49:29Z",
+        "closed_on": null
+      },
+      {
+        "id": 1,
+        "project": {
+          "id": 1,
+          "name": "設計書管理"
+        },
+        "tracker": {
+          "id": 4,
+          "name": "設計書修正用チケット"
+        },
+        "status": {
+          "id": 7,
+          "name": "対応中"
+        },
+        "priority": {
+          "id": 2,
+          "name": "通常"
+        },
+        "author": {
+          "id": 1,
+          "name": "Redmine Admin"
+        },
+        "assigned_to": {
+          "id": 5,
+          "name": "test 1"
+        },
+        "subject": "テスト1",
+        "description": "",
+        "start_date": null,
+        "due_date": null,
+        "done_ratio": 0,
+        "is_private": false,
+        "estimated_hours": null,
+        "custom_fields": [
+          {
+            "id": 1,
+            "name": "設計書修正予定台帳ID",
+            "value": "1"
+          },
+          {
+            "id": 14,
+            "name": "起票日",
+            "value": "2023-02-26"
+          },
+          {
+            "id": 15,
+            "name": "予定完了日",
+            "value": "2023-03-01"
+          },
+          {
+            "id": 16,
+            "name": "完了日",
+            "value": ""
+          }
+        ],
+        "created_on": "2023-02-26T06:29:29Z",
+        "updated_on": "2023-02-26T06:29:29Z",
+        "closed_on": null
+      }
+    ],
+    "total_count": 4,
+    "offset": 0,
+    "limit": 25
+  }
+]
