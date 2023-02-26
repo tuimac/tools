@@ -75,7 +75,7 @@ $(function() {
   try {
 
     var pjtId = $('#issue_project_id').val();
-    var parentTicketId =  ViewCustomize.context.issue.id;
+    var parentTicketId = $('#issue_parent_issue_id').val();
     var isDevEffectFlag = $('#issue_custom_field_values_5').val();
     var createdDate = $('#issue_custom_field_values_14').val();
     var planedEndDate = $('#issue_custom_field_values_15').val();
