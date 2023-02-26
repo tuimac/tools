@@ -81,6 +81,7 @@ $(function() {
     var planedEndDate = $('#issue_custom_field_values_15').val();
 
     $('#issue-form').submit(function() {
+      $('#issue-form').submit();
       if($('#issue_tracker_id').val() === '6') {
         var defered = new $.Deferred();
         var promise = defered.promise();
@@ -97,9 +98,9 @@ $(function() {
           .fail(function() {
             alert('失敗しました');
           });
-
         defered.resolve();
       }
+      $('#issue-form').off('submit');
     });
   } catch(e) {
     alert(e);
