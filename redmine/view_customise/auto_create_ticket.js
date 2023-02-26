@@ -1,52 +1,56 @@
 const getChildTickets = function(isDevEffectFlag, pjtId, parentTicketId, createdDate, planedEndDate) {
-  if(isDevEffectFlag === '0') {
-    return [
-      {
-        'issue': {
-          'project_id': pjtId,
-          'tracker_id': '7',
-          'subject': 'テスト子チケット1',
-          'priority_id': '2',
-          'parent_issue_id': parentTicketId,
-          'status_id': '8',
-          'custom_fields': [
-            { 'id': '14', 'value': createdDate },
-            { 'id': '15', 'value': planedEndDate }
-          ]
+  try { 
+    if(isDevEffectFlag === '0') {
+      return [
+        {
+          'issue': {
+            'project_id': pjtId,
+            'tracker_id': '7',
+            'subject': 'テスト子チケット1',
+            'priority_id': '2',
+            'parent_issue_id': parentTicketId,
+            'status_id': '8',
+            'custom_fields': [
+              { 'id': '14', 'value': createdDate },
+              { 'id': '15', 'value': planedEndDate }
+            ]
+          }
         }
-      }
-    ]
-  } else {
-     return [
-      {
-        'issue': {
-          'project_id': pjtId,
-          'tracker_id': '7',
-          'subject': 'テスト子チケット1',
-          'priority_id': '2',
-          'parent_issue_id': parentTicketId,
-          'status_id': '8',
-          'custom_fields': [
-            { 'id': '14', 'value': createdDate },
-            { 'id': '15', 'value': planedEndDate }
-          ]
+      ]
+    } else {
+       return [
+        {
+          'issue': {
+            'project_id': pjtId,
+            'tracker_id': '7',
+            'subject': 'テスト子チケット1',
+            'priority_id': '2',
+            'parent_issue_id': parentTicketId,
+            'status_id': '8',
+            'custom_fields': [
+              { 'id': '14', 'value': createdDate },
+              { 'id': '15', 'value': planedEndDate }
+            ]
+          }
+        },
+        {
+          'issue': {
+            'project_id': pjtId,
+            'tracker_id': '8',
+            'subject': 'テスト子チケット2',
+            'priority_id': '2',
+            'parent_issue_id': parentTicketId,
+            'status_id': '8',
+            'custom_fields': [
+              { 'id': '14', 'value': createdDate },
+              { 'id': '15', 'value': planedEndDate }
+            ]
+          }
         }
-      },
-      {
-        'issue': {
-          'project_id': pjtId,
-          'tracker_id': '8',
-          'subject': 'テスト子チケット2',
-          'priority_id': '2',
-          'parent_issue_id': parentTicketId,
-          'status_id': '8',
-          'custom_fields': [
-            { 'id': '14', 'value': createdDate },
-            { 'id': '15', 'value': planedEndDate }
-          ]
-        }
-      }
-    ]
+      ]
+    }
+  } catch(e) {
+    alert(e);
   }
 }
 
