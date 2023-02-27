@@ -80,28 +80,24 @@ $(function() {
     var createdDate = $('#issue_custom_field_values_14').val();
     var planedEndDate = $('#issue_custom_field_values_15').val();
 
-    $('#issue-form').submit(function() {
-      $('#issue-form').submit();
-      if($('#issue_tracker_id').val() === '6') {
-        var defered = new $.Deferred();
-        var promise = defered.promise();
-        var childrenTickets = getChildTickets(isDevEffectFlag, pjtId, parentTicketId, createdDate, planedEndDate)
-        alert(childrenTickets);
-        for (var i = 0; i < childrenTickets.length; i++) {
-          promise = promise.then(createTickets(childrenTickets[i]));
-        }
-
-        promise
-          .done(function() {
-            location.reload();
-          })
-          .fail(function() {
-            alert('失敗しました');
-          });
-        defered.resolve();
+    if($('#issue_tracker_id').val() === '6') {
+      var defered = new $.Deferred();
+      var promise = defered.promise();
+      var childrenTickets = getChildTickets(isDevEffectFlag, pjtId, parentTicketId, createdDate, planedEndDate)
+      alert(childrenTickets);
+      for (var i = 0; i < childrenTickets.length; i++) {
+        promise = promise.then(createTickets(childrenTickets[i]));
       }
-      $('#issue-form').off('submit');
-    });
+
+      promise
+        .done(function() {
+          location.reload();
+        })
+        .fail(function() {
+          alert('失敗しました');
+        });
+      defered.resolve();
+    } else if($('#issue_tracker_id').val() === '1')
   } catch(e) {
     alert(e);
   }
