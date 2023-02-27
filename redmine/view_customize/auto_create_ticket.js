@@ -73,31 +73,15 @@ const createTickets = function(childrenTickets) {
 // メイン処理
 $(function() {
   try {
-
-    var pjtId = $('#issue_project_id').val();
-    var parentTicketId = $('#issue_parent_issue_id').val();
-    var isDevEffectFlag = $('#issue_custom_field_values_5').val();
-    var createdDate = $('#issue_custom_field_values_14').val();
-    var planedEndDate = $('#issue_custom_field_values_15').val();
-
-    if($('#issue_tracker_id').val() === '6') {
-      var defered = new $.Deferred();
-      var promise = defered.promise();
-      var childrenTickets = getChildTickets(isDevEffectFlag, pjtId, parentTicketId, createdDate, planedEndDate)
-      alert(childrenTickets);
-      for (var i = 0; i < childrenTickets.length; i++) {
-        promise = promise.then(createTickets(childrenTickets[i]));
-      }
-
-      promise
-        .done(function() {
-          location.reload();
-        })
-        .fail(function() {
-          alert('失敗しました');
-        });
-      defered.resolve();
-    } else if($('#issue_tracker_id').val() === '1')
+    // 親チケット画面
+    if($('#issue_tracker_id').val() === '4') {
+      var ticketNumber = ViewCustomize.context.issue.id;
+      alert(ticketNumber);
+    // 子チケット画面
+    } else if($('#issue_tracker_id').val() === '6') {
+      var ticketNumber = ViewCustomize.context.issue.id;
+      alert(ticketNumber);
+    }
   } catch(e) {
     alert(e);
   }
