@@ -4,7 +4,7 @@
 
 yum install -y httpd
 mkdir /svn
-yum install subversion mod_dav_svn
+yum install -y subversion mod_dav_svn
 cd /svn
 mkdir repos
 cd repos
