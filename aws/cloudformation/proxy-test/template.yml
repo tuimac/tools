@@ -1,0 +1,42 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Testing NLB proxy environment
+
+Parameters:
+  Vpc1Cidr:
+    Type: String
+    Default: 10.0.0.0/24
+
+  Subnet1Cidr:
+    Type: String
+    Default: 10.0.0.0/24
+
+  Vpc2Cidr:
+    Type: String
+    Default: 10.0.1.0/24
+
+  Subnet2Cidr:
+    Type: String
+    Default: 10.0.1.0/24
+
+Resources:
+  # VPC
+  Vpc1:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref Vpc1Cidr
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      InstanceTenancy: default
+      Tags:
+        - Key: Name
+          Value: proxy-test-1 
+  Vpc2:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref Vpc1Cidr
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      InstanceTenancy: default
+      Tags:
+        - Key: Name
+          Value: proxy-test-1 
