@@ -1,6 +1,5 @@
 description: Recreate EC2 instances
 schemaVersion: '0.3'
-assumeRole: 
 parameters:
   EC2InstanceID:
     type: String
@@ -21,7 +20,7 @@ mainSteps:
           ec2 = boto3.client('ec2')
           return [ tag['Value'] for tag in ec2.describe_instances(InstanceIds=[instance_id])['Reservations'][0]['Instances'][0]['Tags'] if tag['Key'] == 'Name' ][0]
     outputs:
-      - Name: NameTag
+      - Name: InstanceNameTag
         Selector: $.Payload
         Type: String
     nextStep: CreateImage
@@ -46,7 +45,7 @@ mainSteps:
       Runtime: python3.7
       Handler: handler
       InputPayload:
-        InstanceName: '{{ InstanceName }}'
+        InstanceName: '{{ GetNameTag.InstanceNameTag }}'
         InstanceId: '{{ EC2InstanceID }}'
         ImageId: '{{ CreateImage.ImageId }}'
       Script: |-
