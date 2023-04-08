@@ -35,7 +35,7 @@ mainSteps:
       ImageDescription: Before recreating EC2 instance
     outputs:
       - Name: ImageId
-        Selector: $.ImageId
+        Selector: $.AmiId
         Type: String
     nextStep: CreateLaunchTemplate
   - name: CreateLaunchTemplate
@@ -47,7 +47,7 @@ mainSteps:
       InputPayload:
         InstanceName: '{{ GetNameTag.InstanceNameTag }}'
         InstanceId: '{{ EC2InstanceID }}'
-        ImageId: '{{ CreateImage.ImageId }}'
+        ImageId: '{{ CreateImage.AmiId }}'
       Script: |-
         import boto3
         import datetime
