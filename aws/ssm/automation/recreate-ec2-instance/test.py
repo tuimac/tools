@@ -4,8 +4,8 @@ import boto3
 import json
 
 if __name__ == '__main__':
-    image_id = ''
-    instance_id = ''
+    image_id = 'ami-007c31053547c7ee5'
+    instance_id = 'i-0333ac8c7e4b9e1e9'
     name_tag = 'recreate'
     tag_info = {}
 
@@ -24,7 +24,6 @@ if __name__ == '__main__':
     instance_data['BlockDeviceMappings'] = []
     for device in devices:
         if 'Ebs' in device:
-            print('hello')
             instance_data['BlockDeviceMappings'].append(device)
     
     # Get the tag information
@@ -34,14 +33,20 @@ if __name__ == '__main__':
     volume_details = ec2.describe_volumes(VolumeIds = volume_id_list)
     tag_info['volume'] = []
     for detail in volume_details['Volumes']:
-        tag_info['volume'].append({ detail['Attachments'][0]['Device']: detail['Tags'] })
+        try:
+            tag_info['volume'].append({ detail['Attachments'][0]['Device']: detail['Tags'] })
+        except:
+            pass
 
     ## Network Interfaces Tag
     nic_id_list = [nic['NetworkInterfaceId'] for nic in instance_detail['NetworkInterfaces']]
     nic_details = ec2.describe_network_interfaces(NetworkInterfaceIds = nic_id_list)
     tag_info['nic'] = []
     for detail in nic_details['NetworkInterfaces']:
-        tag_info['nic'].append({ detail['Attachment']['DeviceIndex']: detail['TagSet'] })
+        try:
+            tag_info['nic'].append({ detail['Attachment']['DeviceIndex']: detail['TagSet'] })
+        except:
+            pass
 
     if len(template_info) == 0:
         ec2.create_launch_template(
