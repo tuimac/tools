@@ -51,8 +51,7 @@ mainSteps:
         ImageId: '{{ CreateImage.AmiId }}'
       Script: |-
         import boto3
-        import datetime
-        import botocore
+        import json
 
         def handler(events, context):
           name_tag = events['InstanceName']
@@ -138,3 +137,5 @@ mainSteps:
       Api: RunInstances
       LaunchTemplate:
         LaunchTemplateName: '{{ GetNameTag.InstanceNameTag }}'
+      MaxCount: 1
+      MinCount: 1
