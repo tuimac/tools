@@ -84,14 +84,20 @@ mainSteps:
           volume_details = ec2.describe_volumes(VolumeIds = volume_id_list)
           tag_info['volume'] = []
           for detail in volume_details['Volumes']:
-              tag_info['volume'].append({ detail['Attachments'][0]['Device']: detail['Tags'] })
+              try:
+                  tag_info['volume'].append({ detail['Attachments'][0]['Device']: detail['Tags'] })
+              except:
+                  pass
 
           ## Network Interfaces Tag
           nic_id_list = [nic['NetworkInterfaceId'] for nic in instance_detail['NetworkInterfaces']]
           nic_details = ec2.describe_network_interfaces(NetworkInterfaceIds = nic_id_list)
           tag_info['nic'] = []
           for detail in nic_details['NetworkInterfaces']:
-              tag_info['nic'].append({ detail['Attachment']['DeviceIndex']: detail['TagSet'] })
+              try:
+                  tag_info['nic'].append({ detail['Attachment']['DeviceIndex']: detail['TagSet'] })
+              except:
+                  pass
 
           if len(template_info) == 0:
               ec2.create_launch_template(
