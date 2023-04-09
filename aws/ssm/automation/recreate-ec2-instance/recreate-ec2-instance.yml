@@ -17,6 +17,7 @@ mainSteps:
       Script: |-
         import boto3
         def handler(events, context):
+          instance_id = events['EC2InstanceId']
           ec2 = boto3.client('ec2')
           return [ tag['Value'] for tag in ec2.describe_instances(InstanceIds=[instance_id])['Reservations'][0]['Instances'][0]['Tags'] if tag['Key'] == 'Name' ][0]
     outputs:
@@ -30,23 +31,23 @@ mainSteps:
     onFailure: Abort
     inputs:
       InstanceId: '{{ EC2InstanceID }}'
-      ImageName: '{{ GetNameTag.NameTag }}-{{ global: DATE_TIME }}'
+      ImageName: '{{ GetNameTag.InstanceNameTag }}_{{ global:DATE_TIME }}'
       NoReboot: true
       ImageDescription: Before recreating EC2 instance
     outputs:
-      - Name: ImageId
-        Selector: $.AmiId
+      - Name: AmiId
+        Selector: $.ImageId
         Type: String
     nextStep: CreateLaunchTemplate
   - name: CreateLaunchTemplate
     action: 'aws:executeScript'
     onFailure: Abort
     inputs:
-      Runtime: python3.7
+      Runtime: python3.8
       Handler: handler
       InputPayload:
         InstanceName: '{{ GetNameTag.InstanceNameTag }}'
-        InstanceId: '{{ EC2InstanceID }}'
+        EC2InstanceId: '{{ EC2InstanceID }}'
         ImageId: '{{ CreateImage.AmiId }}'
       Script: |-
         import boto3
@@ -55,7 +56,7 @@ mainSteps:
 
         def handler(events, context):
           name_tag = events['InstanceName']
-          instance_id = events['InstanceId']
+          instance_id = events['EC2InstanceId']
           image_id = events['ImageId']
           print(name_tag)
           print(instance_id)
