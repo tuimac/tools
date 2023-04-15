@@ -78,13 +78,16 @@ mainSteps:
           
           # Get the tag information
           instance_detail = ec2.describe_instances(InstanceIds = [instance_id])['Reservations'][0]['Instances'][0]
+          ## AMI Tag
+          tag_info['image'] = image_id
+
           ## EBS Tag
           volume_id_list = [volume['Ebs']['VolumeId'] for volume in instance_detail['BlockDeviceMappings']]
           volume_details = ec2.describe_volumes(VolumeIds = volume_id_list)
           tag_info['volume'] = []
           for detail in volume_details['Volumes']:
               try:
-                  tag_info['volume'].append({ detail['Attachments'][0]['Device']: detail['Tags'] })
+                  tag_info['volume'] = { detail['Attachments'][0]['Device']: detail['Tags'] }
               except:
                   pass
 
@@ -94,7 +97,7 @@ mainSteps:
           tag_info['nic'] = []
           for detail in nic_details['NetworkInterfaces']:
               try:
-                  tag_info['nic'].append({ detail['Attachment']['DeviceIndex']: detail['TagSet'] })
+                  tag_info['nic'] = { detail['Attachment']['DeviceIndex']: detail['TagSet'] }
               except:
                   pass
 
@@ -139,3 +142,21 @@ mainSteps:
         LaunchTemplateName: '{{ GetNameTag.InstanceNameTag }}'
       MaxCount: 1
       MinCount: 1
+    outputs:
+      - Name: InstanceId
+        Selector: $.InstanceIds
+        Type: StringList
+    nextStep: CreateTags
+  - name: CreateTags
+    action: aws:executeScript
+    timeoutSeconds: 3600
+    onFailure: Abort
+    inputs:
+      Runtime: python3.8
+      Handler: handler
+      InputPayload:
+        EC2InstanceId: '{{ CreateEC2Instance.InstanceId  }}'
+      Script: |-
+        import boto3
+        def handler(events, context):
+

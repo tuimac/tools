@@ -4,63 +4,31 @@ import boto3
 import json
 
 if __name__ == '__main__':
-    image_id = 'ami-007c31053547c7ee5'
-    instance_id = 'i-0333ac8c7e4b9e1e9'
-    name_tag = 'recreate'
-    tag_info = {}
-
+    instance_id = 'i-05227056247327811'
+    tag_data = {"image": "ami-09dede1f111e1a7de", "volume": {"/dev/xvda": [{"Key": "Name", "Value": "test"}], "/dev/xvdb": [{"Key": "Name", "Value": "test"}]}, "nic": {"0": [{"Key": "Name", "Value": "test"}]}}
     ec2 = boto3.client('ec2')
-    # Get Information
-    instance_data = ec2.get_launch_template_data(InstanceId = instance_id)['LaunchTemplateData']
-    template_info = ec2.describe_launch_templates(
-        Filters = [
-            { 'Name': 'launch-template-name', 'Values': [name_tag] }
-        ]
-    )['LaunchTemplates']
-    
-    # Update template information
-    instance_data['ImageId'] = image_id
-    devices = ec2.describe_images(ImageIds=[image_id])['Images'][0]['BlockDeviceMappings']
-    instance_data['BlockDeviceMappings'] = []
-    for device in devices:
-        if 'Ebs' in device:
-            instance_data['BlockDeviceMappings'].append(device)
-    
-    # Get the tag information
-    instance_detail = ec2.describe_instances(InstanceIds = [instance_id])['Reservations'][0]['Instances'][0]
-    ## EBS Tag
-    volume_id_list = [volume['Ebs']['VolumeId'] for volume in instance_detail['BlockDeviceMappings']]
-    volume_details = ec2.describe_volumes(VolumeIds = volume_id_list)
-    tag_info['volume'] = []
-    for detail in volume_details['Volumes']:
-        try:
-            tag_info['volume'].append({ detail['Attachments'][0]['Device']: detail['Tags'] })
-        except:
-            pass
+    ec2_info = ec2.describe_instances(InstanceIds=[instance_id])['Reservations'][0]['Instances'][0]
+    # AMI tag
+    image_name = ec2.describe_images(ImageIds=[tag_data['image']])['Images'][0]['Name']
+    ec2.create_tags(
+        Resources = [tag_data['image']],
+        Tags = [{ 'Key': 'Name', 'Value': image_name }]
+    )
 
-    ## Network Interfaces Tag
-    nic_id_list = [nic['NetworkInterfaceId'] for nic in instance_detail['NetworkInterfaces']]
-    nic_details = ec2.describe_network_interfaces(NetworkInterfaceIds = nic_id_list)
-    tag_info['nic'] = []
-    for detail in nic_details['NetworkInterfaces']:
-        try:
-            tag_info['nic'].append({ detail['Attachment']['DeviceIndex']: detail['TagSet'] })
-        except:
-            pass
+    # Volume tag
+    for target in tag_data['volume']:
+        for device_info in ec2_info['BlockDeviceMappings']:
+            if target == device_info['DeviceName']:
+                ec2.create_tags(
+                    Resources = [device_info['Ebs']['VolumeId']],
+                    Tags = tag_data['volume'][target]
+                )
 
-    if len(template_info) == 0:
-        ec2.create_launch_template(
-            LaunchTemplateName = name_tag,
-            VersionDescription = json.dumps(tag_info),
-            LaunchTemplateData = instance_data
-        )
-    else:
-        version = ec2.create_launch_template_version(
-            LaunchTemplateName = name_tag,
-            VersionDescription = json.dumps(tag_info),
-            LaunchTemplateData = instance_data
-        )['LaunchTemplateVersion']['VersionNumber']
-        ec2.modify_launch_template(
-            LaunchTemplateName = name_tag,
-            DefaultVersion = str(version)
-        )
+    # Network Interface tag
+    for target in tag_data['nic']:
+        for nic_info in ec2_info['NetworkInterfaces']:
+            if target == str(nic_info['Attachment']['DeviceIndex']):
+                ec2.create_tags(
+                    Resources = [nic_info['NetworkInterfaceId']],
+                    Tags = tag_data['nic'][target]
+                )
