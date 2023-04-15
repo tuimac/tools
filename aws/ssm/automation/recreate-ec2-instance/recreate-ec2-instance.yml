@@ -155,8 +155,36 @@ mainSteps:
       Runtime: python3.8
       Handler: handler
       InputPayload:
-        EC2InstanceId: '{{ CreateEC2Instance.InstanceId  }}'
+        EC2InstanceId: '{{ CreateEC2Instance.InstanceId }}'
+        TagData: '{{ CreateLaunchTemplate.TagInfo }}'
       Script: |-
         import boto3
         def handler(events, context):
+            instance_id = events['EC2InstanceId'][0]
+            tag_data = events['TagData']
+            ec2 = boto3.client('ec2')
+            ec2_info = ec2.describe_instances(InstanceIds=[instance_id])['Reservations'][0]['Instances'][0]
+            # AMI tag
+            image_name = ec2.describe_images(ImageIds=[tag_data['image']])['Images'][0]['Name']
+            ec2.create_tags(
+                Resources = [tag_data['image']],
+                Tags = [{ 'Key': 'Name', 'Value': image_name }]
+            )
 
+            # Volume tag
+            for target in tag_data['volume']:
+                for device_info in ec2_info['BlockDeviceMappings']:
+                    if target == device_info['DeviceName']:
+                        ec2.create_tags(
+                            Resources = [device_info['Ebs']['VolumeId']],
+                            Tags = tag_data['volume'][target]
+                        )
+
+            # Network Interface tag
+            for target in tag_data['nic']:
+                for nic_info in ec2_info['NetworkInterfaces']:
+                    if target == str(nic_info['Attachment']['DeviceIndex']):
+                        ec2.create_tags(
+                            Resources = [nic_info['NetworkInterfaceId']],
+                            Tags = tag_data['nic'][target]
+                        )
