@@ -1,0 +1,16 @@
+description: Runcommand
+schemaVersion: '0.3'
+mainSteps:
+  - name: CheckOS
+    action: 'aws:runCommand'
+    inputs:
+      DocumentName: AWS-RunShellScript
+      InstanceIds:
+        - i-xxxxxxxxxxxxxxxxxxxxx
+      TimeoutSeconds: 300
+      Parameters:
+        commands: |
+          #!/bin/bash
+          sudo su -
+          echo $USER
+          whoami
