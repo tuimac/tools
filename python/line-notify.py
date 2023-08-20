@@ -1,19 +1,20 @@
-#!/usr/bin/env python3
-
+import os
 import urllib.request
 import urllib.parse
-
-TOKEN = ''
-URL = 'https://notify-api.line.me/api/notify'
+import traceback
 
 def send_notify(message):
-    headers = { 'Authorization': f'Bearer {TOKEN}', 'Content-Type': 'application/x-www-form-urlencoded' }
-    payload = { 'message': f'message: {message}' }
-
-    request = urllib.request.Request(URL, urllib.parse.urlencode(payload).encode('utf-8'), headers, method='POST')
+    token = os.environ['TOKEN']
+    url = os.environ['URL']
+    headers = { 'Authorization': f'Bearer { token }', 'Content-Type': 'application/x-www-form-urlencoded' }
+    payload = { 'message': f'message: { message }' }
+    
+    request = urllib.request.Request(url, urllib.parse.urlencode(payload).encode('utf-8'), headers, method='POST')
     with urllib.request.urlopen(request) as response:
         pass
 
-if __name__ == '__main__':
-    message = 'test'
-    send_notify(message)
+def lambda_handler(event, context):
+    try:
+        send_notify(str(event['Records'][0]['Sns']['Message']))
+    except:
+        send_notify(str(traceback.format_exc()))
