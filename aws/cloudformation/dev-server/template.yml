@@ -1,0 +1,342 @@
+Parameters:
+  EC2InstanceType:
+    Type: String
+    Default: r5.large
+
+  PublicAMIParamter:
+    Type: String
+    Default: ami-0b9bc7dcdbcff394e
+
+  SSHPemFilename:
+    Type: String
+    Default: tuimac
+
+  MyIP:
+    Type: String
+
+Resources:
+  # VPC
+  Vpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/28
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      InstanceTenancy: default
+      Tags:
+        - Key: Name
+          Value: !Ref AWS::StackName
+
+  # Internet Gateway
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Ref AWS::StackName
+
+  InternetGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref Vpc
+
+  # Subnet
+  Subnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      CidrBlock: 10.0.0.0/28
+      AvailabilityZone: ap-northeast-3a
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Ref AWS::StackName
+
+  # RouteTable
+  RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref Vpc
+      Tags:
+        - Key: Name
+          Value: !Ref AWS::StackName
+
+  InternetRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref RouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  RouteTableAccociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref RouteTable
+      SubnetId: !Ref Subnet
+
+  # Security Group
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Ref AWS::StackName
+      GroupDescription: !Ref AWS::StackName
+      VpcId: !Ref Vpc
+      SecurityGroupIngress:
+        - IpProtocol: -1
+          CidrIp: !Sub ${MyIP}/32
+          Description: Allow from my public IP
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+          Description: Allow to anywhere
+      Tags:
+        - Key: Name
+          Value: !Ref AWS::StackName
+
+  # IAM Role
+  EC2InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Ref AWS::StackName
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: !Ref AWS::StackName
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "ec2:*"
+                Resource:
+                  - "*"
+      Tags:
+        - Key: Name
+          Value: !Ref AWS::StackName
+
+  EC2InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+        - !Ref EC2InstanceRole
+
+  SpotFleetInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${AWS::StackName}-SpotFleetInstance
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - spotfleet.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonEC2SpotFleetTaggingRole
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-SpotFleetInstance
+
+  # Custom Resource
+  CustomResourceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${AWS::StackName}-CustomResourceRole
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: !Sub ${AWS::StackName}-CustomResourceRole
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "ec2:*"
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                Resource:
+                  - '*'
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-CustomResourceRole
+
+  GetAMIIDLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: python3.12
+      Timeout: 60
+      Handler: index.handler
+      MemorySize: 128
+      Role: !GetAtt CustomResourceRole.Arn
+      FunctionName: !Sub ${AWS::StackName}-GetAMIIDLambda
+      Code:
+        ZipFile: |
+          import json
+          import traceback
+          import cfnresponse
+          import boto3
+          def handler(event, context):
+            response = {}
+            try:
+              ec2 = boto3.client('ec2')
+              response['AMIID'] = ec2.describe_images(
+                Owners = ['self'],
+                Filters = [{'Name': 'name', 'Values': [event['ResourceProperties']['AMIName']]}]
+              )['Images'][0]['ImageId']
+              cfnresponse.send(event, context, cfnresponse.SUCCESS, response)
+              return
+            except IndexError:
+              try:
+                response['AMIID'] = event['ResourceProperties']['PublicAMIParamter']
+                cfnresponse.send(event, context, cfnresponse.SUCCESS, response)
+                return
+              except:
+                print(traceback.format_exc())
+                cfnresponse.send(event, context, cfnresponse.FAILED, response)
+                return
+            except:
+              print(traceback.format_exc())
+              cfnresponse.send(event, context, cfnresponse.FAILED, response)
+              return
+
+  GetAMIID:
+    Type: Custom::GetAMIID
+    Properties:
+      ServiceToken: !GetAtt GetAMIIDLambda.Arn
+      AMIName: !Ref AWS::StackName
+      PublicAMIParamter: !Ref PublicAMIParamter
+
+  # EC2 Instance
+  EC2Instance:
+    Type: AWS::EC2::SpotFleet
+    DependsOn: GetAMIID
+    Properties:
+      SpotFleetRequestConfigData:
+        IamFleetRole: !GetAtt SpotFleetInstanceRole.Arn
+        TerminateInstancesWithExpiration: false
+        InstanceInterruptionBehavior: stop
+        TargetCapacity: 1
+        LaunchSpecifications:
+          - BlockDeviceMappings:
+              - DeviceName: /dev/sda1
+                Ebs:
+                  DeleteOnTermination: true
+                  Encrypted: true
+                  Iops: 3000
+                  VolumeSize: 50
+                  VolumeType: gp3
+            IamInstanceProfile:
+              Arn: !GetAtt EC2InstanceProfile.Arn
+            ImageId: !GetAtt GetAMIID.AMIID
+            InstanceType: !Ref EC2InstanceType
+            Monitoring:
+              Enabled: false
+            NetworkInterfaces:
+              - AssociatePublicIpAddress: true
+                DeleteOnTermination: true
+                Description: ${AWS:StackName}
+                Groups:
+                  - !Ref SecurityGroup
+                SubnetId: !Ref Subnet
+                DeviceIndex: 0
+            IamInstanceProfile:
+              Arn: !GetAtt EC2InstanceProfile.Arn
+            SpotPrice: 2
+            KeyName: !Ref SSHPemFilename
+            TagSpecifications:
+              - ResourceType: instance
+                Tags:
+                  - Key: Name
+                    Value: !Ref AWS::StackName
+                  - Key: StackId
+                    Value: !Ref AWS::StackId
+
+  BackupLambda:
+    Type: AWS::Lambda::Function
+    DependsOn: EC2Instance
+    Properties:
+      Runtime: python3.12
+      Timeout: 900
+      Handler: index.handler
+      MemorySize: 128
+      Role: !GetAtt CustomResourceRole.Arn
+      FunctionName: !Sub ${AWS::StackName}-BackupLambda
+      Code:
+        ZipFile: |
+          import json
+          import traceback
+          import cfnresponse
+          import boto3
+          import time
+          def handler(event, context):
+            response = {}
+            try:
+              if event['RequestType'] == 'Delete':
+                ec2 = boto3.client('ec2')
+                images = ec2.describe_images(
+                  Owners = ['self'],
+                  Filters = [{'Name': 'name', 'Values': [event['ResourceProperties']['AMIName']]}]
+                )['Images']
+                if len(images) != 0:
+                  try:
+                    ec2.deregister_image(ImageId = images[0]['ImageId'])
+                    time.sleep(1)
+                    for snapshot in images[0]['BlockDeviceMappings']:
+                      try:
+                        ec2.delete_snapshot(SnapshotId = snapshot['Ebs']['SnapshotId'])
+                      except:
+                        pass
+                  except:
+                    pass
+                time.sleep(2)
+                imageId = ec2.create_image(
+                  Name = event['ResourceProperties']['AMIName'],
+                  InstanceId = ec2.describe_instances(
+                    Filters = [{'Name': 'tag:StackId', 'Values': [event['ResourceProperties']['StackId']]}]
+                  )['Reservations'][0]['Instances'][0]['InstanceId'],
+                  NoReboot = False,
+                  TagSpecifications = [
+                    {'ResourceType': 'image','Tags': [{'Key': 'Name', 'Value': event['ResourceProperties']['AMIName']}]},
+                    {'ResourceType': 'snapshot','Tags': [{'Key': 'Name', 'Value': event['ResourceProperties']['AMIName']}]}
+                  ]
+                )['ImageId']
+                while True:
+                  if ec2.describe_images(ImageIds=[imageId])['Images'][0]['State'] == 'available':
+                    break
+                  else:
+                    time.sleep(5)
+              cfnresponse.send(event, context, cfnresponse.SUCCESS, response)
+              return
+            except:
+              print(traceback.format_exc())
+              cfnresponse.send(event, context, cfnresponse.FAILED, response)
+              return
+
+  Backup:
+    Type: Custom::Backup
+    Properties:
+      ServiceToken: !GetAtt BackupLambda.Arn
+      AMIName: !Ref AWS::StackName
+      StackId: !Ref AWS::StackId
