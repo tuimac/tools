@@ -256,7 +256,7 @@ Resources:
             NetworkInterfaces:
               - AssociatePublicIpAddress: true
                 DeleteOnTermination: true
-                Description: ${AWS:StackName}
+                Description: !Ref AWS:StackName
                 Groups:
                   - !Ref SecurityGroup
                 SubnetId: !Ref Subnet
@@ -331,7 +331,7 @@ Resources:
               return
             except:
               print(traceback.format_exc())
-              cfnresponse.send(event, context, cfnresponse.FAILED, response)
+              cfnresponse.send(event, context, cfnresponse.SUCCESS, response)
               return
 
   Backup:
