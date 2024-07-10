@@ -33,10 +33,10 @@ function cleanup(){
 function createContainer(){
     mkdir ${DATA}
     mkdir ${BACKUP}
-    docker unshare chown 999:999 ${LOG}
-    docker unshare chown 999:999 ${LOG}
-    docker unshare chown 999:999 ${LOG}
     mkdir ${LOG}
+    sudo chown -R 999:999 ${DATA}
+    sudo chown -R 999:999 ${BACKUP}
+    sudo chown -R 999:999 ${LOG}
     docker build -t ${NAME} .
     runContainer
 }
