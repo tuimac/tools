@@ -86,9 +86,9 @@ def create_server_cert(ca_cert, ca_key, server_key):
         .public_key(server_key.public_key())
         .serial_number(x509.random_serial_number())
         .not_valid_before(datetime.datetime.now(datetime.timezone.utc))
-        .not_valid_after(datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days = 36499))
+        .not_valid_after(datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days = EXPIRE))
         .add_extension(
-            x509.SubjectAlternativeName([x509.DNSName(u'myserver.local')]),
+            x509.SubjectAlternativeName([x509.DNSName(COMMON_NAME)]),
             critical=False,
         )
         .sign(ca_key, hashes.SHA256(), default_backend())
