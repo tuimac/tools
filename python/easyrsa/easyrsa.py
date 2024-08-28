@@ -91,6 +91,20 @@ def create_server_cert(ca_cert, ca_key, server_key):
             x509.SubjectAlternativeName([x509.DNSName(COMMON_NAME)]),
             critical=False,
         )
+        .add_extension(
+            x509.KeyUsage(
+                digital_signature=True,
+                key_encipherment=True,
+                key_agreement=False,
+                content_commitment=False,
+                data_encipherment=False,
+                key_cert_sign=False,
+                crl_sign=False,
+                encipher_only=False,
+                decipher_only=False,
+            ),
+            critical=True
+        )
         .sign(ca_key, hashes.SHA256(), default_backend())
     )
     with open(os.path.join(FILE_DIR, 'server.crt'), 'wb') as f:
