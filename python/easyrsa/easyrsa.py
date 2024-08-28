@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from cryptography import x509
-from cryptography.x509.oid import NameOID
+from cryptography.x509.oid import NameOID, ExtendedKeyUsageOID
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.backends import default_backend
@@ -14,13 +14,14 @@ import sys
 FILE_DIR = os.path.dirname(os.path.abspath(sys.argv[0]))
 
 ## Expiration(Days)
-EXPIRE = 3650
+EXPIRE = 36500
 
 ## Key size
-KEY_SIZE = 4096
+KEY_SIZE = 2048
 
 ## Common Name
 COMMON_NAME = 'tuimac.com'
+ISSUER_NAME = 'Easy-RSA CA'
 
 def create_ca_cert():
     ca_key = rsa.generate_private_key(
@@ -28,17 +29,12 @@ def create_ca_cert():
         key_size = KEY_SIZE,
         backend = default_backend()
     )
-    ca_name = x509.Name([
-        x509.NameAttribute(NameOID.COUNTRY_NAME, u'JP'),
-        x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, u'Tokyo'),
-        x509.NameAttribute(NameOID.LOCALITY_NAME, u'Chiyoda-ku'),
-        x509.NameAttribute(NameOID.ORGANIZATION_NAME, u'My CA'),
-        x509.NameAttribute(NameOID.COMMON_NAME, COMMON_NAME),
-    ])
+    ca_name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, COMMON_NAME)])
+    issuer_name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, ISSUER_NAME)])
     ca_cert = (
         x509.CertificateBuilder()
         .subject_name(ca_name)
-        .issuer_name(ca_name)
+        .issuer_name(issuer_name)
         .public_key(ca_key.public_key())
         .serial_number(x509.random_serial_number())
         .not_valid_before(datetime.datetime.now(datetime.timezone.utc))
@@ -72,23 +68,34 @@ def create_server_key():
     return server_key
 
 def create_server_cert(ca_cert, ca_key, server_key):
-    server_name = x509.Name([
-        x509.NameAttribute(NameOID.COUNTRY_NAME, u'JP'),
-        x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, u'Tokyo'),
-        x509.NameAttribute(NameOID.LOCALITY_NAME, u'Chiyoda-ku'),
-        x509.NameAttribute(NameOID.ORGANIZATION_NAME, u'My Organization'),
+    server_csr = x509.CertificateSigningRequestBuilder().subject_name(x509.Name([
         x509.NameAttribute(NameOID.COMMON_NAME, COMMON_NAME),
-    ])
+    ])).add_extension(
+        x509.SubjectAlternativeName([x509.DNSName(COMMON_NAME)]),
+        critical=False,
+    ).sign(server_key, hashes.SHA256(), default_backend())
     server_cert = (
         x509.CertificateBuilder()
-        .subject_name(server_name)
-        .issuer_name(ca_cert.subject)
-        .public_key(server_key.public_key())
+        .subject_name(server_csr.subject)
+        .issuer_name(ca_cert.issuer)
+        .public_key(server_csr.public_key())
         .serial_number(x509.random_serial_number())
         .not_valid_before(datetime.datetime.now(datetime.timezone.utc))
         .not_valid_after(datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days = EXPIRE))
         .add_extension(
-            x509.SubjectAlternativeName([x509.DNSName(COMMON_NAME)]),
+            x509.BasicConstraints(ca=False, path_length=None),
+            critical=True,
+        )
+        .add_extension(
+            x509.SubjectKeyIdentifier.from_public_key(server_key.public_key()),
+            critical=False,
+        )
+        .add_extension(
+            x509.AuthorityKeyIdentifier(
+                key_identifier=x509.SubjectKeyIdentifier.from_public_key(ca_key.public_key()).digest,
+                authority_cert_issuer=[x509.DirectoryName(ca_cert.subject)],
+                authority_cert_serial_number=ca_cert.serial_number,
+            ),
             critical=False,
         )
         .add_extension(
@@ -103,7 +110,11 @@ def create_server_cert(ca_cert, ca_key, server_key):
                 encipher_only=False,
                 decipher_only=False,
             ),
-            critical=True
+            critical=False,
+        )
+        .add_extension(
+            x509.ExtendedKeyUsage([ExtendedKeyUsageOID.SERVER_AUTH]),
+            critical=False,
         )
         .sign(ca_key, hashes.SHA256(), default_backend())
     )
