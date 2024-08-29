@@ -21,7 +21,6 @@ KEY_SIZE = 2048
 
 ## Common Name
 COMMON_NAME = 'tuimac.com'
-ISSUER_NAME = 'Easy-RSA CA'
 
 def create_ca_cert():
     ca_key = rsa.generate_private_key(
@@ -30,18 +29,49 @@ def create_ca_cert():
         backend = default_backend()
     )
     ca_name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, COMMON_NAME)])
-    issuer_name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, ISSUER_NAME)])
+    ca_csr = x509.CertificateSigningRequestBuilder().subject_name(x509.Name([
+        x509.NameAttribute(NameOID.COMMON_NAME, COMMON_NAME),
+    ])).add_extension(
+        x509.SubjectAlternativeName([x509.DNSName(COMMON_NAME)]),
+        critical=False,
+    ).sign(ca_key, hashes.SHA256(), default_backend())
     ca_cert = (
         x509.CertificateBuilder()
         .subject_name(ca_name)
-        .issuer_name(issuer_name)
-        .public_key(ca_key.public_key())
+        .issuer_name(ca_name)
+        .public_key(ca_csr.public_key())
         .serial_number(x509.random_serial_number())
         .not_valid_before(datetime.datetime.now(datetime.timezone.utc))
         .not_valid_after(datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days = EXPIRE))
         .add_extension(
             x509.BasicConstraints(ca=True, path_length=None),
-            critical=True,
+            critical=False,
+        )
+        .add_extension(
+            x509.SubjectKeyIdentifier.from_public_key(ca_key.public_key()),
+            critical=False,
+        )
+        .add_extension(
+            x509.AuthorityKeyIdentifier(
+                key_identifier=x509.SubjectKeyIdentifier.from_public_key(ca_key.public_key()).digest,
+                authority_cert_issuer=[x509.DirectoryName(ca_name)],
+                authority_cert_serial_number=x509.random_serial_number(),
+            ),
+            critical=False,
+        )
+        .add_extension(
+            x509.KeyUsage(
+                key_cert_sign=True,
+                crl_sign=True,
+                digital_signature=False,
+                key_encipherment=False,
+                data_encipherment=False,
+                content_commitment=False,
+                key_agreement=False,
+                encipher_only=False,
+                decipher_only=False
+            ),
+            critical=False,
         )
         .sign(ca_key, hashes.SHA256(), default_backend())
     )
@@ -83,8 +113,8 @@ def create_server_cert(ca_cert, ca_key, server_key):
         .not_valid_before(datetime.datetime.now(datetime.timezone.utc))
         .not_valid_after(datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days = EXPIRE))
         .add_extension(
-            x509.BasicConstraints(ca=False, path_length=None),
-            critical=True,
+            x509.BasicConstraints(ca=True, path_length=None),
+            critical=False,
         )
         .add_extension(
             x509.SubjectKeyIdentifier.from_public_key(server_key.public_key()),
