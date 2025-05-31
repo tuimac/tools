@@ -1,0 +1,18 @@
+services:
+  rockylinux:
+    image: rockylinux:9.3
+    build: .
+    container_name: rockylinux
+    hostname: rockylinux
+    restart: always
+    volumes:
+      - rockylinux:/opt/rockylinux
+    tty: true
+    stdin_open: true
+    networks:
+      - rockylinux
+volumes:
+  rockylinux:
+networks:
+  rockylinux:
+    name: rockylinux
