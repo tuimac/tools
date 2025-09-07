@@ -1,0 +1,19 @@
+services:
+  oracle:
+    image: oracle/database:19.3.0-ee
+    container_name: oracle
+    hostname: oracle
+    restart: always
+    ports:
+      - 1521:1521
+      - 5500:5500
+    environment:
+      - ORACLE_PWD=Oracle19
+      - ORACLE_PDB=oracle
+    volumes:
+      - oracle:/opt/oracle/oradata
+volumes:
+  oracle:
+networks:
+  oracle:
+    name: oracle
