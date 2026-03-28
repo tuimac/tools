@@ -1,0 +1,16 @@
+[Unit]
+Description=Register myip to AWS SSM ParameterStore
+Requires=network.target
+
+[Service]
+Type=simple
+ExecStart=/home/tuimac/github/tools/linux/scripts/register-myip/register-myip.sh
+User=tuimac
+Group=tuimac
+StandardOutput=journal
+StandardError=journal
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+Alias=myip-registration.service
